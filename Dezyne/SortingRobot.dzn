@@ -1,0 +1,6 @@
+import internal_belt.dzn;
+import ingest.dzn;
+
+component SortingRobot {
+	
+}
