@@ -1,0 +1,72 @@
+interface iInternalBeltControl {
+	in void ToStackBlack(); 	// request move to black stack
+	in void ToStackWhite();		// request move to white stack
+	in void ToPresent();		// request move to end of belt to present order
+	out void stackBlack();		// reached black stack
+	out void stackWhite();		// reached white stack
+	out void present();			// reached presentation location
+	
+	enum State { Black, White, Present, Unknown};
+	
+	behaviour {
+		State state = State.Unknown;
+		
+	}
+}
+
+interface iSensor {
+	in bool sensor();
+	out void detected();
+
+	
+	behaviour {
+		on sensor: detected();
+	}
+}
+
+interface iMotorControl {
+	in void initialise();
+	in void forward();
+	in void backward();
+	in void stop();
+	
+	behaviour {
+		enum State { NotReady, Ready };
+		enum Direction { Forwards, Backwards, Neutral };
+		
+		State state = State.NotReady;
+		Direction dir = Direction.Neutral;
+		
+		[state.Ready] {
+			on forward: dir = Direction.Forwards;
+			on backward: dir = Direction.Backwards;
+			on stop: dir = Direction.Neutral;
+			on initialise: illegal;
+		}
+		
+		[State.NotReady] {
+			on initialise: {
+				state = State.Ready;
+				dir = Direction.Neutral;
+			}
+			
+			on forward, backward, stop: illegal;
+		}
+	}
+}
+
+// Wrappers for hand written components
+component MotorControl {provides iMotorControl motorControl;}
+component SensorWhite {provides iSensor sensorWhite;}
+component SensorBlack {provides iSensor sensorBlack;}
+
+component InternalBeltControl {
+	provides iInternalBeltControl iBeltControl;
+	requires iMotorControl motorControl;
+	requires iSensor sensorBlack;
+	requires iSensor sensorWhite;
+	
+	behaviour {
+		
+	}
+}
