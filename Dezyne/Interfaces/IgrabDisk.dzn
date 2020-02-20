@@ -1,0 +1,39 @@
+interface IArm {
+	in void grabDisk();
+	in void moveDisk();
+	in void resetPos();
+	
+	out void finishedReq();
+	out void couldntFinish();
+	
+	behaviour {
+		enum State {initial, grabbing, moving, resetting};
+		State state = State.initial;
+		
+		[state.initial] {
+			on grabDisk:	state = State.grabbing;
+			on resetPos:	illegal;
+			on moveDisk:	illegal;
+		}
+		
+		[state.grabbing] {
+			on moveDisk:	state = State.moving;
+			on grabDisk:	illegal;
+			on resetPos:	state = State.initial;
+			} 
+		
+		[state.moving] {
+			on moveDisk:	illegal;
+			on grabDisk:	illegal;
+			on resetPos:	state = State.initial;
+			on inevitable:	{finishedReq; state = State.resetting;}
+			}
+		
+		[state.resetting] {
+			on grabDisk:	illegal;
+			on moveDisk:	illegal;
+			on resetPos:	illegal;
+		
+	}
+}
+}
