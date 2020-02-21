@@ -1,6 +1,8 @@
 import internal_belt.dzn;
 import ingest.dzn;
+import console.dzn;
 
-component SortingRobot {
-	
+component SortingRobot
+{
+	system {}
 }
