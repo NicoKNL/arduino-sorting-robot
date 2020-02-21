@@ -1,6 +1,25 @@
 import internal_belt.dzn;
 import ingest.dzn;
 
+component InternalBelt {
+	provides iInternalBeltControl iBeltControl;
+	
+	system {
+		InternalBeltControl beltControl;
+		MotorControl m;
+		SensorWhite sW;
+		SensorBlack sB;
+		SensorEnd sE;
+		
+		iBeltControl <=> beltControl.beltControl;
+		beltControl.motorControl <=> m.motorControl;
+		beltControl.sensorBlack <=> sB.sensorBlack;
+		beltControl.sensorWhite <=> sW.sensorWhite;
+		beltControl.sensorEnd <=> sE.sensorEnd;
+	}
+}
+
 component SortingRobot {
 	
 }
+
