@@ -33,7 +33,7 @@ interface IArm {
 			on grabDisk:	illegal;
 			on moveDisk:	illegal;
 			on resetPos:	illegal;
-		
+			on inevitable: state = State.initial;
+		}
 	}
-}
 }

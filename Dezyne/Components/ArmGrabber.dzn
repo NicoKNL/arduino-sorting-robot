@@ -1,20 +1,34 @@
-import IGrabDisk.dzn;
+import IgrabDisk.dzn;
 
 component Arm {
-	requires IdetectColour colour;
-	requires IdetectPresen presence;
+	provides IArm arm;
 	
 	//grab is move to belt and grab it
 	//move is move the object to internal system
 	//reset is move back to initial position
-	provides IArm arm;
 	
 	behaviour {
-		enum State {initial, final, moving};
+		enum State {initial, grabbing, moving, final};
 		State state = State.initial;
 		
 		[state.initial] {
-			on arm.grabDisk...
+			on arm.grabDisk(): state = State.grabbing;
+			on arm.moveDisk(), arm.resetPos(): illegal;
+		}
+		[state.grabbing] {
+			on arm.moveDisk(): state = State.moving;
+			on arm.resetPos(): state = State.initial;
+			on arm.grabDisk(): illegal;
+			on inevitable: { arm.finishedReq(); state = State.final; }
+		}
+		[state.moving] {
+			on arm.grabDisk(): state = State.grabbing;
+			on arm.resetPos(): state = State.initial;
+			on arm.moveDisk(): illegal;
+			on inevitable: { arm.finishedReq(); state = State.final; }
+		}
+		[state.final] {
+			on inevitable: state = State.initial;
 		}
 	}
 }
