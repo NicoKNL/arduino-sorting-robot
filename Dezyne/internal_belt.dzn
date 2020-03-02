@@ -7,16 +7,42 @@ interface iInternalBeltControl {
 	out void atWhite();		// reached white stack
 	out void atEnd();			// reached presentation location
 	
-	behaviour {}
+	behaviour {
+		enum State { Black, White, End, Unknown };
+		State state = State.Unknown;
+		
+		on initialise: state = State.Unknown;
+		
+		[state.Unknown] {
+			on toStackBlack: state = State.Black;
+			on toStackWhite: state = State.White;
+			on toEnd: state = State.End;
+			on initialise: illegal;
+		}
+		[state.Black] {
+			on toStackWhite: state = State.White;
+			on toEnd: state = State.End;
+			on toStackBlack, initialise: illegal;
+		}
+		[state.White] {
+			on toStackBlack: state = State.Black;
+			on toEnd: state = State.End;
+			on toStackWhite, initialise: illegal;
+		}
+		[state.End] {
+			on toStackWhite: state = State.White;
+			on toStackBlack: state = State.Black;
+			on toEnd, initialise: illegal;
+		}
+	}
 }
 
 interface iSensor {
-	in bool sensor();		// input from hardware
 	out void detected();	
 
 	
 	behaviour {
-		on sensor: detected();
+		on inevitable: detected;
 	}
 }
 
@@ -37,80 +63,88 @@ interface iMotorControl {
 		State state = State.NotReady;
 		Direction dir = Direction.Neutral;
 		
-		[state.Ready] {
-			on goForward: {dir = Direction.Forwards; forward();}
-			on goBackward: {dir = Direction.Backwards; backward();}
-			on stop: {dir = Direction.Neutral; neutral();}
-			on initialise: illegal;
-		}
-		
-		[State.NotReady] {
+		[state.NotReady] {
 			on initialise: {
 				dir = Direction.Neutral;
-				neutral();
+				neutral;
 				state = State.Ready;
 			}
 			
 			on goForward, goBackward, stop: illegal;
+		}
+		[state.Ready] {
+			on goForward: {dir = Direction.Forwards; forward;}
+			on goBackward: {dir = Direction.Backwards; backward;}
+			on stop: {dir = Direction.Neutral; neutral;}
+			on initialise: illegal;
 		}
 	}
 }
 
 // Wrappers for hand written components
 component MotorControl {provides iMotorControl motorControl;}
-component SensorBlack {provides iSensor sensorBlack;}
-component SensorWhite {provides iSensor sensorWhite;}
+component PresSensorBlackStack {provides iSensor sensorBlack;}
+component PresSensorWhiteStack {provides iSensor sensorWhite;}
 component SensorEnd {provides iSensor sensorEnd;}
 
 component InternalBeltControl {
 	provides iInternalBeltControl beltControl;
 	requires iMotorControl motorControl;
-	requires iSensor sensorBlack;
-	requires iSensor sensorWhite;
+	requires iSensor presSensorBlackStack;
+	requires iSensor presSensorWhiteStack;
 	requires iSensor sensorEnd;
 	
 	behaviour {
-		enum State { Black, White, End, Unknown };
-		State state;
+		// assumed order of stacks defined in state, might change later.
+		enum Goal { Black, White, End, None };
+		enum State { NotReady, Ready };
 		
-		on beltControl.initialise: {motorControl.initialise(); state = State.Unknown;}
+		Goal goal = Goal.None;
+		State state = State.NotReady;
 		
-		
-		[state.Unknown] {
-			on beltControl.toStackBlack: {motorControl.goForward(); state = State.Black;}
-			on beltControl.toStackWhite: {motorControl.goForward(); state = State.White;}
-			on beltControl.toEnd: {motorControl.goForward(); state = State.End;}
-			on sensorBlack.detected, sensorWhite.detected, sensorEnd.detected, beltControl.initialise: illegal;
+		[state.NotReady] {
+			on beltControl.initialise(): {motorControl.initialise(); state = State.Ready;}
+			on beltControl.toStackBlack, beltControl.toStackWhite, beltControl.toEnd,
+				presSensorBlackStack.detected, presSensorWhiteStack.detected, sensorEnd.detected: illegal;
 		}
-		[state.Black] {
-			on sensorBlack.detected: {
-				motorControl.stop(); 
-				beltControl.atBlack();
-				state = State.Unknown;
+		[state.Ready] {
+			// In case current goal is None, always go forward when getting a new goal
+			[goal.None] {
+				on beltControl.toStackBlack(): {motorControl.goForward(); goal = Goal.Black;}
+				on beltControl.toStackWhite(): {motorControl.goForward(); goal = Goal.White;}
+				on beltControl.toEnd(): {motorControl.goForward(); goal = Goal.End;}
+				on presSensorBlackStack.detected, presSensorWhiteStack.detected, sensorEnd.detected, beltControl.initialise: illegal;
 			}
-			on beltControl.toStackWhite: {motorControl.goForward(); state = State.White;}  
-			on beltControl.toEnd: {motorControl.goForward(); state = State.End;} 
-			on beltControl.toStackBlack, beltControl.initialise: illegal;
-		}
-		[state.White] {
-			on sensorWhite.detected: {
-				motorControl.stop();
-				beltControl.atWhite();
-				state = State.Unknown;
+			[goal.Black] {
+				on presSensorBlackStack.detected(): {
+					motorControl.stop(); 
+					beltControl.atBlack();
+					goal = Goal.None;
+				}
+				on beltControl.toStackWhite(): {motorControl.goForward(); goal = Goal.White;}  
+				on beltControl.toEnd(): {motorControl.goForward(); goal = Goal.End;} 
+				on beltControl.toStackBlack, beltControl.initialise: illegal;
 			}
-			on beltControl.toStackBlack: {motorControl.goBackward(); state = State.Black;}  
-			on beltControl.toEnd: {motorControl.goForward(); state = State.End;} 
-			on beltControl.toStackWhite, beltControl.initialise: illegal;
-		}
-		[state.End] {
-			on sensorEnd.detected: {
-				motorControl.stop();
-				beltControl.atEnd();
-				state = State.Unknown;
+			[goal.White] {
+				on presSensorWhiteStack.detected(): {
+					motorControl.stop();
+					beltControl.atWhite();
+					goal = Goal.None;
+				}
+				on beltControl.toStackBlack(): {motorControl.goBackward(); goal = Goal.Black;}  
+				on beltControl.toEnd(): {motorControl.goForward(); goal = Goal.End;} 
+				on beltControl.toStackWhite, beltControl.initialise: illegal;
 			}
-			on beltControl.toStackBlack: {motorControl.goBackward(); state = State.Black;}
-			on beltControl.toStackWhite: {motorControl.goBackward(); state = State.White;}  
-			on beltControl.toEnd, beltControl.initialise: illegal;
+			[goal.End] {
+				on sensorEnd.detected(): {
+					motorControl.stop();
+					beltControl.atEnd();
+					goal = Goal.None;
+				}
+				on beltControl.toStackBlack(): {motorControl.goBackward(); goal = Goal.Black;}
+				on beltControl.toStackWhite(): {motorControl.goBackward(); goal = Goal.White;}  
+				on beltControl.toEnd, beltControl.initialise: illegal;
+			}
 		}
 	}
 }
