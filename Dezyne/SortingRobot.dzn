@@ -20,6 +20,8 @@ component InternalBelt {
 }
 
 component SortingRobot {
-	
+	system {
+		InternalBelt belt;
+	}
 }
 
