@@ -1,8 +1,0 @@
-interface iInternalBelt {
-	in void Dummy(); // (Can be removed as soon as any other methods are added)
-	behaviour{}
-}
-
-component internalBelt {
-	provides iInternalBelt iInternalBelt;
-}

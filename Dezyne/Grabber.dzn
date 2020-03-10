@@ -1,0 +1,28 @@
+import IGrabber.dzn;
+import ISensor.dzn;
+import IMotor.dzn;
+
+component Grabber {
+	requires ISensor presence;
+	requires IMotor motor;
+	provides IGrabber grabber;
+	
+	behaviour {
+		enum State {initial, grabbing, resetting};
+		State state = State.initial;
+		
+		[state.initial] {
+			on grabber.grabDisk(): state = State.grabbing;
+		}
+		
+		[state.grabbing] {
+			on presence.detected(): motor.next();
+			on motor.finished(): {grabber.finished(); state = State.initial;} 
+			on optional: {state = State.resetting; motor.reset(); grabber.error();} 
+		}
+		
+		[state.resetting] {
+			on optional: state = State.initial;
+		}
+	}
+}
