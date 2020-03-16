@@ -14,11 +14,17 @@ component Reporter {
 
 interface IReporter {
 	in void report();
-	in void setState();
+	in void turnOff();
+	in void setWaiting();
+	in void setReceived();
+	in void setDispensing();
 	
 	behaviour {
 		on report: {}
-		on setState: {}
+		on turnOff: {}
+		on setWaiting: {}
+		on setReceived: {}
+		on setDispensing: {}
 	}
 }
 
@@ -32,7 +38,18 @@ component SateReporter {
 		enum State{Off, Waiting, Received, Dispensing};
 		State state = State.Off;
 		
-		on iStateReport.setState(): {}
+		on iStateReport.turnOff(): {
+			state = State.Off;
+		}
+		on iStateReport.setWaiting(): {
+			state = State.Waiting;
+		}
+		on iStateReport.setReceived(): {
+			state = State.Waiting;
+		}
+		on iStateReport.setDispensing(): {
+			state = State.Waiting;
+		}
 		
 		[state == State.Off]
 			on iStateReport.report(): {
