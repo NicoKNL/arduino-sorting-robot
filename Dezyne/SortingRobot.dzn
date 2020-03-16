@@ -1,6 +1,7 @@
-import internal_belt.dzn;
-import ingest.dzn;
+import Grabber.dzn;
 
 component SortingRobot {
-	
+	system {
+		Grabber grabber;
+	}
 }

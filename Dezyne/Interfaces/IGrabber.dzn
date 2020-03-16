@@ -14,11 +14,13 @@ interface IGrabber {
 		[state.grabbing] {
 			on grabDisk:	illegal;
 			on optional: 	{ state = State.resetting; error; }
+			on inevitable:	state = State.resetting;
 		} 
 		
 		[state.resetting] {
 			on grabDisk:	illegal;
 			on optional:	state = State.initial;
+			on inevitable:	state = State.initial;
 		}
 	}
 }

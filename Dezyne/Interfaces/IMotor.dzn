@@ -14,12 +14,15 @@ interface IMotor {
 		}
 		
 		[state.moving] {
+			on next:	illegal;
 			on reset: 	state = State.resetting;
 			on inevitable: 	{state = State.initial; finished;}
 			on optional: 	{state = State.resetting; error;}
 		} 
 		
 		[state.resetting] {
+			on next:	illegal;
+			on reset:	{}
 			on optional:	state = State.initial;
 		}
 	}

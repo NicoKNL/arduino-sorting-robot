@@ -18,11 +18,15 @@ component Grabber {
 		[state.grabbing] {
 			on presence.detected(): motor.next();
 			on motor.finished(): {grabber.finished(); state = State.initial;} 
-			on optional: {state = State.resetting; motor.reset(); grabber.error();} 
+			on grabber.grabDisk(): {}
+			// Below: error state, currently not implemented
+			// on optional: {state = State.resetting; motor.reset(); grabber.error();} 
 		}
 		
 		[state.resetting] {
-			on optional: state = State.initial;
+			on motor.finished(): state = State.initial;
+			// Below: error state, currently not implemented
+			// on optional: state = State.initial;
 		}
 	}
 }
