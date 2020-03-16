@@ -1,8 +1,166 @@
-interface iInternalBelt {
-	in void Dummy(); // (Can be removed as soon as any other methods are added)
-	behaviour{}
+interface iInternalBeltControl {
+	in void initialise();		// initialise state after power on
+	in void toStackBlack(); 	// request move to black stack
+	in void toStackWhite();		// request move to white stack
+	in void toEnd();		// request move to end of belt to present order
+	out void atBlack();		// reached black stack
+	out void atWhite();		// reached white stack
+	out void atEnd();			// reached presentation location
+	
+	behaviour {
+		enum State { Black, White, End, Unknown };
+		State state = State.Unknown;
+		
+		on initialise: state = State.Unknown;
+		
+		[state.Unknown] {
+			on toStackBlack: state = State.Black;
+			on toStackWhite: state = State.White;
+			on toEnd: state = State.End;
+			on initialise: {}
+		}
+		[state.Black] {
+			on toStackWhite: state = State.White;
+			on toEnd: state = State.End;
+			on toStackBlack, initialise: {}
+		}
+		[state.White] {
+			on toStackBlack: state = State.Black;
+			on toEnd: state = State.End;
+			on toStackWhite, initialise: {}
+		}
+		[state.End] {
+			on toStackWhite: state = State.White;
+			on toStackBlack: state = State.Black;
+			on toEnd, initialise: {}
+		}
+	}
 }
 
-component internalBelt {
-	provides iInternalBelt iInternalBelt;
+interface iSensor {
+	in void initialise();
+	out void detected();	
+	
+	behaviour {
+		enum State { Unknown, Low, High };
+		State state = State.Unknown;
+	
+		[state.Unknown] {
+			on initialise: state = State.Low;
+			on initialise: state = State.High;
+		}
+		
+		[state.Low] {
+			on initialise: {}
+			on optional: {
+				state = State.High;
+				detected;
+			}
+		}
+		
+		[state.High] {
+			on initialise: {}
+			on optional: {
+				state = State.Low;
+			}
+		}
+	}
+}
+
+interface iMotorControl {
+	in void initialise();	// startup
+	in void goForward();	// request to move belt forwards
+	in void goBackward();	// request to move belt backwards
+	in void stop();			// request belt to stop movement
+	
+	behaviour {
+		enum State { NotReady, Ready };
+		enum Direction { Forwards, Backwards, Neutral };
+		
+		State state = State.NotReady;
+		Direction dir = Direction.Neutral;
+		
+		[state.NotReady] {
+			on initialise: {
+				dir = Direction.Neutral;
+				state = State.Ready;
+			}
+			
+			on goForward, goBackward, stop: {}
+		}
+		[state.Ready] {
+			on goForward: {dir = Direction.Forwards;}
+			on goBackward: {dir = Direction.Backwards;}
+			on stop: {dir = Direction.Neutral;}
+			on initialise: {}
+		}
+	}
+}
+
+// Wrappers for hand written components
+component MotorControl {provides iMotorControl motorControl;}
+component PresSensorBlackStack {provides iSensor sensorBlack;}
+component PresSensorWhiteStack {provides iSensor sensorWhite;}
+component SensorEnd {provides iSensor sensorEnd;}
+
+component InternalBeltControl {
+	provides iInternalBeltControl beltControl;
+	requires iMotorControl motorControl;
+	requires iSensor presSensorBlackStack;
+	requires iSensor presSensorWhiteStack;
+	requires iSensor sensorEnd;
+	
+	behaviour {
+		// assumed order of stacks defined in state, might change later.
+		enum Goal { Black, White, End, None };
+		enum State { NotReady, Ready };
+		
+		Goal goal = Goal.None;
+		State state = State.NotReady;
+		
+		[state.NotReady] {
+			on beltControl.initialise(): {motorControl.initialise(); state = State.Ready;}
+			on beltControl.toStackBlack(), beltControl.toStackWhite(), beltControl.toEnd(),
+				presSensorBlackStack.detected(), presSensorWhiteStack.detected(), sensorEnd.detected(): {}
+		}
+		[state.Ready] {
+			// In case current goal is None, always go forward when getting a new goal
+			[goal.None] {
+				on beltControl.toStackBlack(): {motorControl.goForward(); goal = Goal.Black;}
+				on beltControl.toStackWhite(): {motorControl.goForward(); goal = Goal.White;}
+				on beltControl.toEnd(): {motorControl.goForward(); goal = Goal.End;}
+				on presSensorBlackStack.detected(), presSensorWhiteStack.detected(), sensorEnd.detected(), beltControl.initialise(): {}
+			}
+			[goal.Black] {
+				on presSensorBlackStack.detected(): {
+					motorControl.stop(); 
+					beltControl.atBlack();
+					goal = Goal.None;
+				}
+				on beltControl.toStackWhite(): {motorControl.goForward(); goal = Goal.White;}  
+				on beltControl.toEnd(): {motorControl.goForward(); goal = Goal.End;} 
+				on beltControl.toStackBlack(), beltControl.initialise(): {}
+			}
+			[goal.White] {
+				on presSensorWhiteStack.detected(): {
+					motorControl.stop();
+					beltControl.atWhite();
+					goal = Goal.None;
+				}
+				on beltControl.toStackBlack(): {motorControl.goBackward(); goal = Goal.Black;}  
+				on beltControl.toEnd(): {motorControl.goForward(); goal = Goal.End;} 
+				on beltControl.toStackWhite(), beltControl.initialise(): {}
+			}
+			[goal.End] {
+				on sensorEnd.detected(): {
+					motorControl.stop();
+					beltControl.atEnd();
+					goal = Goal.None;
+				}
+				on beltControl.toStackBlack(): {motorControl.goBackward(); goal = Goal.Black;}
+				on beltControl.toStackWhite(): {motorControl.goBackward(); goal = Goal.White;}  
+				on beltControl.toEnd(), beltControl.initialise(): {}
+			}
+		}
+	}
 }
