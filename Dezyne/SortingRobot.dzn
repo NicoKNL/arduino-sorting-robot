@@ -1,5 +1,6 @@
 import internal_belt.dzn;
 import ingest.dzn;
+import console.dzn;
 
 component InternalBelt {
 	provides iInternalBeltControl iBeltControl;
@@ -24,4 +25,3 @@ component SortingRobot {
 		InternalBelt belt;
 	}
 }
-

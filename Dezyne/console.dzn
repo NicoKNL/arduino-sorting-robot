@@ -1,0 +1,38 @@
+interface IStateReport {
+	in void report();
+	behaviour {
+		
+	}
+}
+interface ILed {
+	enum State {On, Off};
+	in void turnOn();
+	in void turnOff();
+	
+	behaviour {
+		State state = State.Off;
+		on turnOn: {state = State.On;}
+		on turnOff: {state = State.Off;}
+	}
+}
+
+component Led
+{
+	provides ILed iLed;	
+}
+
+component Reporter {
+	provides IStateReport iStateReport;
+	requires ILed iled1;
+	requires ILed iled2;
+}
+
+component Console {
+	system {
+		Reporter r;
+		Led led1;
+		Led led2;
+		r.iled1 <=> led1.iLed;
+		r.iled2 <=> led2.iLed;
+	}
+}
