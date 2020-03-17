@@ -1,9 +1,0 @@
-import internal_belt.dzn;
-import console.dzn;
-import Grabber.dzn;
-
-component SortingRobot {
-	system {
-		Grabber grabber;
-	}
-}
