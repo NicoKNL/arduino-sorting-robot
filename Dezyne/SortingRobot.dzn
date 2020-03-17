@@ -1,6 +1,5 @@
 import internal_belt.dzn;
-import ingest.dzn;
-import console.dzn;
+import Console.dzn;
 
 component InternalBelt {
 	provides iInternalBeltControl iBeltControl;
