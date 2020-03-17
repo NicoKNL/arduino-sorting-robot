@@ -1,0 +1,27 @@
+interface IGrabber {
+	in void grabDisk();
+	out void finished();
+	out void error();
+	
+	behaviour {
+		enum State {initial, grabbing, resetting};
+		State state = State.initial;
+		
+		[state.initial] {
+			on grabDisk:	state = State.grabbing;
+		}
+		
+		[state.grabbing] {
+			on grabDisk:	illegal;
+			on optional: 	{ state = State.resetting; error; }
+			on inevitable:	state = State.resetting;
+		} 
+		
+		[state.resetting] {
+			on grabDisk:	illegal;
+			on optional:	state = State.initial;
+			on inevitable:	state = State.initial;
+		}
+	}
+}
+
