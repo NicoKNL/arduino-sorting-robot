@@ -1,6 +1,6 @@
 import ISensor.dzn;
 
-component sensor {
+component Sensor {
 	provides ISensor sensor;
 	
 }
