@@ -1,8 +1,6 @@
 import internal_belt.dzn;
 import Console.dzn;
 import Grabber.dzn;
-import Sensor.dzn;
-import Motor.dzn;
 
 component InternalBelt {
 	provides iInternalBeltControl iBeltControl;
