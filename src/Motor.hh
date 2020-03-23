@@ -1,6 +1,5 @@
 #include <dzn/runtime.hh>
 #include <dzn/locator.hh>
-#include "Motor.hh"
 
 
 #ifndef MOTOR_HH
