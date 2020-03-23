@@ -1,6 +1,6 @@
 #include <dzn/runtime.hh>
 #include <dzn/locator.hh>
-#include "internal_belt.hh"
+#include "Grabber.hh"
 #include "Motor.hh"
 
 void Motor::next() {

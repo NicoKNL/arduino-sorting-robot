@@ -1,11 +1,11 @@
 #include <dzn/runtime.hh>
 #include <dzn/locator.hh>
-#include "internal_belt.hh"
+#include "Grabber.hh"
 
 
 #ifndef SENSOR_HH
 #define SENSOR_HH
-class Sensor : public skel::SensorEnd {
+class Sensor : public skel::Sensor {
 	void initialise();
 	void detected();
 
