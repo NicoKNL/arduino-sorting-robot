@@ -1,5 +1,8 @@
 import internal_belt.dzn;
 import Console.dzn;
+import Grabber.dzn;
+import Sensor.dzn;
+import Motor.dzn;
 
 component InternalBelt {
 	provides iInternalBeltControl iBeltControl;
@@ -20,7 +23,100 @@ component InternalBelt {
 }
 
 component SortingRobot {
-	system {
+	provides IController i;
+	provides ICom com;
+		system {
 		InternalBelt belt;
+		Reporter reporter;
+		Controller controller;
+		GrabberSystem grabber;
+		
+		i <=> controller.i;
+		grabber.iGrabber <=> controller.grabber;
+		belt.iBeltControl <=> controller.belt;
+		reporter.iSateReport <=> controller.reporter;
+		controller.com <=> com;
+	}
+}
+
+component GrabberSystem	 {
+	provides IGrabber iGrabber;
+	system {
+		Grabber grabber;
+		Sensor gsensor;
+		Motor gmotor;
+		
+		grabber.grabber <=> iGrabber;		
+		grabber.presence <=> gsensor.sensor;
+		grabber.motor <=> gmotor.motor;
+	}
+}
+
+interface ICom {
+	in void grab();
+	behaviour {
+		on grab: {}	
+	}
+}
+
+interface IController {
+	in void init();
+	in void shutDown();
+	behaviour {
+		on init: {}
+		on shutDown: {}
+	}
+}
+
+component Controller {
+	requires IGrabber grabber;
+	requires IReporter reporter;
+	requires iInternalBeltControl belt;
+	provides ICom com;
+	provides IController i;
+	behaviour {
+		enum Power{On, Off};
+		enum Intake{Yes, No};
+		
+		Power power = Power.Off;
+		Intake state = Intake.No;
+		
+		[power.Off]
+			on i.init(): {
+				belt.initialise();
+				power = Power.On;
+				state = Intake.No;
+			}
+			on i.shutDown(): illegal;
+		
+		[power.On]
+			on i.init(): illegal;
+			on i.shutDown(): {
+				// Should be implemented, somehow.
+			}
+			
+		
+		[state.No]
+			on grabber.finished(): illegal;
+			on grabber.error(): {
+				power = Power.Off;
+			}
+			on com.grab(): {
+				state = Intake.Yes;
+				grabber.grabDisk();
+			}
+		
+		[state.Yes]
+			on grabber.finished(): {
+				state = Intake.No;
+			}
+			on grabber.error(): {
+				state = Intake.No;
+				power = Power.Off; // for now
+			}
+			on com.grab(): {
+				state = Intake.No;
+			}
+			
 	}
 }
