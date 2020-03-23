@@ -4,8 +4,8 @@
 #include "PresSensorBlackStack.hh"
 
 void PresSensorBlackStack::initialise() {
-	std::cout << "BlackSensor: Initialising." << std::endl;
+	std::cout << "Belt.BlackSensor: Initialising." << std::endl;
 }
 void PresSensorBlackStack::detected() {
-	std::cout << "BlackSensor: Disk detected." << std::endl;
+	std::cout << "Belt.BlackSensor: Disk detected." << std::endl;
 }

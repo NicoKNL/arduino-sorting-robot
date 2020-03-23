@@ -4,8 +4,8 @@
 #include "PresSensorWhiteStack.hh"
 
 void PresSensorWhiteStack::initialise() {
-	std::cout << "WhiteSensor: Initialising." << std::endl;
+	std::cout << "Belt.WhiteSensor: Initialising." << std::endl;
 }
 void PresSensorWhiteStack::detected() {
-	std::cout << "WhiteSensor: Disk detected." << std::endl;
+	std::cout << "Belt.WhiteSensor: Disk detected." << std::endl;
 }

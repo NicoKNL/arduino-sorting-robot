@@ -4,14 +4,14 @@
 #include "MotorControl.hh"
 
 void MotorControl::initialise() {
-	std::cout << "Motor: Initialising." << std::endl;
+	std::cout << "Belt.MotorControl: Initialising." << std::endl;
 }
 void MotorControl::goForward() {
-	std::cout << "Motor: Moving belt forwards." << std::endl;
+	std::cout << "Belt.MotorControl: Moving belt forwards." << std::endl;
 }
 void MotorControl::goBackward() {
-	std::cout << "Motor: Moving belt backwards." << std::endl;
+	std::cout << "Belt.MotorControl: Moving belt backwards." << std::endl;
 }
 void MotorControl::stop() {
-	std::cout << "Motor: Stopping the belt." << std::endl;
+	std::cout << "Belt.MotorControl: Stopping the belt." << std::endl;
 }

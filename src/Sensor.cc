@@ -4,8 +4,8 @@
 #include "Sensor.hh"
 
 void Sensor::initialise() {
-	std::cout << "Sensor: Initialising." << std::endl;
+	std::cout << "Grabber.Sensor: Initialising." << std::endl;
 }
 void Sensor::detected() {
-	std::cout << "Sensor: Disk detected." << std::endl;
+	std::cout << "Grabber.Sensor: Disk detected." << std::endl;
 }

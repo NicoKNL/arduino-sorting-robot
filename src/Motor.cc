@@ -4,14 +4,14 @@
 #include "Motor.hh"
 
 void Motor::next() {
-	std::cout << "Motor: Grabbing next disk." << std::endl;
+	std::cout << "Grabber.Motor: Grabbing next disk." << std::endl;
 }
 void Motor::reset() {
-	std::cout << "Motor: Resetting to initial position." << std::endl;
+	std::cout << "Grabber.Motor: Resetting to initial position." << std::endl;
 }
 void Motor::finished() {
-	std::cout << "Motor: Finished grabbing disk." << std::endl;
+	std::cout << "Grabber.Motor: Finished grabbing disk." << std::endl;
 }
 void Motor::error() {
-	std::cout << "Motor: Grabbing disk failed." << std::endl;
+	std::cout << "Grabber.Motor: Grabbing disk failed." << std::endl;
 }

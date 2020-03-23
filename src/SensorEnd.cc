@@ -4,8 +4,8 @@
 #include "SensorEnd.hh"
 
 void SensorEnd::initialise() {
-	std::cout << "EndSensor: Initialising." << std::endl;
+	std::cout << "Belt.EndSensor: Initialising." << std::endl;
 }
 void SensorEnd::detected() {
-	std::cout << "EndSensor: Disk detected." << std::endl;
+	std::cout << "Belt.EndSensor: Disk detected." << std::endl;
 }
