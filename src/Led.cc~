@@ -9,4 +9,5 @@ void Led::iLed_turnOff() {
 	digitalWrite(PIN, LOW);
 }
 void Led::iLed_turnOn(){
+	digitalWrite(PIN, HIGH);
 }
