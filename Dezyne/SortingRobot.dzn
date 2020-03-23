@@ -53,9 +53,9 @@ component GrabberSystem	 {
 }
 
 interface ICom {
-	out void grab();
+	in void grab();
 	behaviour {
-		
+		on grab: {}	
 	}
 }
 
@@ -72,7 +72,7 @@ component Controller {
 	requires IGrabber grabber;
 	requires IReporter reporter;
 	requires iInternalBeltControl belt;
-	requires ICom com;
+	provides ICom com;
 	provides IController i;
 	behaviour {
 		enum Power{On, Off};
@@ -88,7 +88,6 @@ component Controller {
 				state = Intake.No;
 			}
 			on i.shutDown(): illegal;
-			on com.grab(): illegal;
 		
 		[power.On]
 			on i.init(): illegal;
@@ -99,9 +98,12 @@ component Controller {
 		
 		[state.No]
 			on grabber.finished(): illegal;
-			on grabber.error(): illegal;
+			on grabber.error(): {
+				power = Power.Off;
+			}
 			on com.grab(): {
 				state = Intake.Yes;
+				grabber.grabDisk();
 			}
 		
 		[state.Yes]
