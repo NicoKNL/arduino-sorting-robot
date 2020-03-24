@@ -1,3 +1,15 @@
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <dzn/meta.hh>
 
 namespace dzn {
@@ -60,6 +72,108 @@ namespace skel {
 }
 
 #endif // SENSOR_HH
+
+/***********************************  FOREIGN  **********************************/
+/***********************************  FOREIGN  **********************************/
+#ifndef SKEL_PRESSENSORBLACKSTACK_HH
+#define SKEL_PRESSENSORBLACKSTACK_HH
+
+#include <dzn/locator.hh>
+#include <dzn/runtime.hh>
+
+#include "ISensor.hh"
+
+
+
+namespace skel {
+  struct PresSensorBlackStack
+  {
+    dzn::meta dzn_meta;
+    dzn::runtime& dzn_rt;
+    dzn::locator const& dzn_locator;
+    ::ISensor sensorBlack;
+
+
+    PresSensorBlackStack(const dzn::locator& dzn_locator)
+    : dzn_meta{"","PresSensorBlackStack",0,0,{},{},{[this]{sensorBlack.check_bindings();}}}
+    , dzn_rt(dzn_locator.get<dzn::runtime>())
+    , dzn_locator(dzn_locator)
+
+    , sensorBlack({{"sensorBlack",this,&dzn_meta},{"",0,0}})
+
+
+    {
+      sensorBlack.in.initialise = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sensorBlack) = false; return sensorBlack_initialise();}, this->sensorBlack.meta, "initialise");};
+
+
+    }
+    virtual ~ PresSensorBlackStack() {}
+    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
+    void check_bindings() const;
+    void dump_tree(std::ostream& os) const;
+    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
+    void set_state(std::map<std::string,std::string>_alist){}
+    friend std::ostream& operator << (std::ostream& os, const PresSensorBlackStack& m)  {
+      return m.stream_members(os);
+    }
+    private:
+    virtual void sensorBlack_initialise () = 0;
+
+  };
+}
+
+#endif // PRESSENSORBLACKSTACK_HH
+
+/***********************************  FOREIGN  **********************************/
+/***********************************  FOREIGN  **********************************/
+#ifndef SKEL_PRESSENSORWHITESTACK_HH
+#define SKEL_PRESSENSORWHITESTACK_HH
+
+#include <dzn/locator.hh>
+#include <dzn/runtime.hh>
+
+#include "ISensor.hh"
+
+
+
+namespace skel {
+  struct PresSensorWhiteStack
+  {
+    dzn::meta dzn_meta;
+    dzn::runtime& dzn_rt;
+    dzn::locator const& dzn_locator;
+    ::ISensor sensorWhite;
+
+
+    PresSensorWhiteStack(const dzn::locator& dzn_locator)
+    : dzn_meta{"","PresSensorWhiteStack",0,0,{},{},{[this]{sensorWhite.check_bindings();}}}
+    , dzn_rt(dzn_locator.get<dzn::runtime>())
+    , dzn_locator(dzn_locator)
+
+    , sensorWhite({{"sensorWhite",this,&dzn_meta},{"",0,0}})
+
+
+    {
+      sensorWhite.in.initialise = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sensorWhite) = false; return sensorWhite_initialise();}, this->sensorWhite.meta, "initialise");};
+
+
+    }
+    virtual ~ PresSensorWhiteStack() {}
+    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
+    void check_bindings() const;
+    void dump_tree(std::ostream& os) const;
+    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
+    void set_state(std::map<std::string,std::string>_alist){}
+    friend std::ostream& operator << (std::ostream& os, const PresSensorWhiteStack& m)  {
+      return m.stream_members(os);
+    }
+    private:
+    virtual void sensorWhite_initialise () = 0;
+
+  };
+}
+
+#endif // PRESSENSORWHITESTACK_HH
 
 /***********************************  FOREIGN  **********************************/
 /***********************************  FOREIGN  **********************************/

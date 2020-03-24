@@ -1,13 +1,9 @@
-#include <dzn/runtime.hh>
-#include <dzn/locator.hh>
-#include "Grabber.hh"
-
-
 #ifndef SENSOR_HH
 #define SENSOR_HH
+#include "ISensor.hh"
 class Sensor : public skel::Sensor {
-	void initialise();
-	void detected();
+	void sensor_initialise();
+//	void detected();
 
 public:
 	Sensor(const dzn::locator& loc);

@@ -1,12 +1,8 @@
-#include <dzn/runtime.hh>
-#include <dzn/locator.hh>
-#include "internal_belt.hh"
-
-
 #ifndef PRESSENSORWHITESTACK_HH
 #define PRESSENSORWHITESTACK_HH
+#include "internal_belt.hh"
 class PresSensorWhiteStack : public skel::PresSensorWhiteStack {
-	void initialise();
+	void sensorWhite_initialise();
 	void detected();
 
 public:

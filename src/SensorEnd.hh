@@ -1,13 +1,9 @@
-#include <dzn/runtime.hh>
-#include <dzn/locator.hh>
-#include "internal_belt.hh"
-
-
 #ifndef SENSOREND_HH
 #define SENSOREND_HH
+#include "internal_belt.hh"
 class SensorEnd : public skel::SensorEnd {
-	void initialise();
-	void detected();
+	void sensorEnd_initialise();
+//	void detected();
 
 public:
 	SensorEnd(const dzn::locator& loc);

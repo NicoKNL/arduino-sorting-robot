@@ -32,7 +32,7 @@ component SortingRobot {
 		i <=> controller.i;
 		grabber.iGrabber <=> controller.grabber;
 		belt.iBeltControl <=> controller.belt;
-		reporter.iSateReport <=> controller.reporter;
+		reporter.iStateReport <=> controller.reporter;
 		controller.com <=> com;
 	}
 }

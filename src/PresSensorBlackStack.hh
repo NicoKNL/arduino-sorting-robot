@@ -1,13 +1,9 @@
-#include <dzn/runtime.hh>
-#include <dzn/locator.hh>
-#include "internal_belt.hh"
-
-
 #ifndef PRESSENSORBLACKSTACK_HH
 #define PRESSENSORBLACKSTACK_HH
+#include "internal_belt.hh"
 class PresSensorBlackStack : public skel::PresSensorBlackStack {
-	void initialise();
-	void detected();
+	void sensorBlack_initialise();
+//	void detected();
 
 public:
 	PresSensorBlackStack(const dzn::locator& loc);

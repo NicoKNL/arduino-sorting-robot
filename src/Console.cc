@@ -17,11 +17,11 @@
 
 
 
-SateReporter::SateReporter(const dzn::locator& dzn_locator)
-: dzn_meta{"","SateReporter",0,0,{& iLedW.meta,& iLedR.meta,& iLedD.meta},{},{[this]{iStateReport.check_bindings();},[this]{iLedW.check_bindings();},[this]{iLedR.check_bindings();},[this]{iLedD.check_bindings();}}}
+StateReporter::StateReporter(const dzn::locator& dzn_locator)
+: dzn_meta{"","StateReporter",0,0,{& iLedW.meta,& iLedR.meta,& iLedD.meta},{},{[this]{iStateReport.check_bindings();},[this]{iLedW.check_bindings();},[this]{iLedR.check_bindings();},[this]{iLedD.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
-, state(::SateReporter::State::Off)
+, state(::StateReporter::State::Off)
 
 , iStateReport({{"iStateReport",this,&dzn_meta},{"",0,0}})
 
@@ -45,73 +45,73 @@ SateReporter::SateReporter(const dzn::locator& dzn_locator)
 
 }
 
-void SateReporter::iStateReport_report()
+void StateReporter::iStateReport_report()
 {
-  if (state == ::SateReporter::State::Off) 
+  if (state == ::StateReporter::State::Off) 
   {
     this->iLedW.in.turnOff();
     this->iLedR.in.turnOff();
     this->iLedD.in.turnOff();
   }
-  else if (state == ::SateReporter::State::Waiting) 
+  else if (state == ::StateReporter::State::Waiting) 
   {
     this->iLedW.in.turnOn();
     this->iLedR.in.turnOff();
     this->iLedD.in.turnOff();
   }
-  else if (state == ::SateReporter::State::Received) 
+  else if (state == ::StateReporter::State::Received) 
   {
     this->iLedW.in.turnOff();
     this->iLedR.in.turnOn();
     this->iLedD.in.turnOff();
   }
-  else if (state == ::SateReporter::State::Dispensing) 
+  else if (state == ::StateReporter::State::Dispensing) 
   {
     this->iLedW.in.turnOff();
     this->iLedR.in.turnOff();
     this->iLedD.in.turnOn();
   }
-  else if ((!(state == ::SateReporter::State::Dispensing) && (!(state == ::SateReporter::State::Received) && (!(state == ::SateReporter::State::Waiting) && !(state == ::SateReporter::State::Off))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if ((!(state == ::StateReporter::State::Dispensing) && (!(state == ::StateReporter::State::Received) && (!(state == ::StateReporter::State::Waiting) && !(state == ::StateReporter::State::Off))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
 
 }
-void SateReporter::iStateReport_turnOff()
+void StateReporter::iStateReport_turnOff()
 {
 
   {
-    state = ::SateReporter::State::Off;
+    state = ::StateReporter::State::Off;
   }
 
   return;
 
 }
-void SateReporter::iStateReport_setWaiting()
+void StateReporter::iStateReport_setWaiting()
 {
 
   {
-    state = ::SateReporter::State::Waiting;
+    state = ::StateReporter::State::Waiting;
   }
 
   return;
 
 }
-void SateReporter::iStateReport_setReceived()
+void StateReporter::iStateReport_setReceived()
 {
 
   {
-    state = ::SateReporter::State::Waiting;
+    state = ::StateReporter::State::Waiting;
   }
 
   return;
 
 }
-void SateReporter::iStateReport_setDispensing()
+void StateReporter::iStateReport_setDispensing()
 {
 
   {
-    state = ::SateReporter::State::Waiting;
+    state = ::StateReporter::State::Waiting;
   }
 
   return;
@@ -119,11 +119,11 @@ void SateReporter::iStateReport_setDispensing()
 }
 
 
-void SateReporter::check_bindings() const
+void StateReporter::check_bindings() const
 {
   dzn::check_bindings(&dzn_meta);
 }
-void SateReporter::dump_tree(std::ostream& os) const
+void StateReporter::dump_tree(std::ostream& os) const
 {
   dzn::dump_tree(os, &dzn_meta);
 }
@@ -131,7 +131,7 @@ void SateReporter::dump_tree(std::ostream& os) const
 //SYSTEM
 
 Reporter::Reporter(const dzn::locator& dzn_locator)
-: dzn_meta{"","Reporter",0,0,{},{& r.dzn_meta,& led1.dzn_meta,& led2.dzn_meta,& led3.dzn_meta},{[this]{iSateReport.check_bindings();}}}
+: dzn_meta{"","Reporter",0,0,{},{& r.dzn_meta,& led1.dzn_meta,& led2.dzn_meta,& led3.dzn_meta},{[this]{iStateReport.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
 
@@ -141,7 +141,7 @@ Reporter::Reporter(const dzn::locator& dzn_locator)
 , led2(dzn_locator)
 , led3(dzn_locator)
 
-, iSateReport(r.iStateReport)
+, iStateReport(r.iStateReport)
 
 {
 
@@ -160,7 +160,7 @@ Reporter::Reporter(const dzn::locator& dzn_locator)
   connect(led2.iLed, r.iLedR);
   connect(led3.iLed, r.iLedD);
 
-  dzn::rank(iSateReport.meta.provides.meta, 0);
+  dzn::rank(iStateReport.meta.provides.meta, 0);
 
 }
 

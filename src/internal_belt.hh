@@ -121,274 +121,55 @@ inline ::iInternalBeltControl::State::type to_iInternalBeltControl_State(std::st
 #endif // IINTERNALBELTCONTROL_HH
 
 /********************************** INTERFACE *********************************/
-/********************************** INTERFACE *********************************/
-#ifndef ISENSOR_HH
-#define ISENSOR_HH
-
-
-
-struct iSensor
-{
-#ifndef ENUM_iSensor_State
-#define ENUM_iSensor_State 1
-
-
-  struct State
-  {
-    enum type
-    {
-      Unknown,Low,High
-    };
-  };
-
-
-#endif // ENUM_iSensor_State
-
-  struct
-  {
-    std::function< void()> initialise;
-  } in;
-
-  struct
-  {
-    std::function< void()> detected;
-  } out;
-
-  dzn::port::meta meta;
-  inline iSensor(const dzn::port::meta& m) : meta(m) {}
-
-  void check_bindings() const
-  {
-    if (! in.initialise) throw dzn::binding_error(meta, "in.initialise");
-
-    if (! out.detected) throw dzn::binding_error(meta, "out.detected");
-
-  }
-};
-
-inline void connect (iSensor& provided, iSensor& required)
-{
-  provided.out = required.out;
-  required.in = provided.in;
-  provided.meta.requires = required.meta.requires;
-  required.meta.provides = provided.meta.provides;
-}
-
-
-#ifndef ENUM_TO_STRING_iSensor_State
-#define ENUM_TO_STRING_iSensor_State 1
-inline std::string to_string(::iSensor::State::type v)
-{
-  switch(v)
-  {
-    case ::iSensor::State::Unknown: return "State_Unknown";
-    case ::iSensor::State::Low: return "State_Low";
-    case ::iSensor::State::High: return "State_High";
-
-  }
-  return "";
-}
-#endif // ENUM_TO_STRING_iSensor_State
-
-#ifndef STRING_TO_ENUM_iSensor_State
-#define STRING_TO_ENUM_iSensor_State 1
-inline ::iSensor::State::type to_iSensor_State(std::string s)
-{
-  static std::map<std::string, ::iSensor::State::type> m = {
-    {"State_Unknown", ::iSensor::State::Unknown},
-    {"State_Low", ::iSensor::State::Low},
-    {"State_High", ::iSensor::State::High},
-  };
-  return m.at(s);
-}
-#endif // STRING_TO_ENUM_iSensor_State
-
-
-#endif // ISENSOR_HH
-
-/********************************** INTERFACE *********************************/
-/********************************** INTERFACE *********************************/
-#ifndef IMOTORCONTROL_HH
-#define IMOTORCONTROL_HH
-
-
-
-struct iMotorControl
-{
-#ifndef ENUM_iMotorControl_State
-#define ENUM_iMotorControl_State 1
-
-
-  struct State
-  {
-    enum type
-    {
-      NotReady,Ready
-    };
-  };
-
-
-#endif // ENUM_iMotorControl_State
-#ifndef ENUM_iMotorControl_Direction
-#define ENUM_iMotorControl_Direction 1
-
-
-  struct Direction
-  {
-    enum type
-    {
-      Forwards,Backwards,Neutral
-    };
-  };
-
-
-#endif // ENUM_iMotorControl_Direction
-
-  struct
-  {
-    std::function< void()> initialise;
-    std::function< void()> goForward;
-    std::function< void()> goBackward;
-    std::function< void()> stop;
-  } in;
-
-  struct
-  {
-  } out;
-
-  dzn::port::meta meta;
-  inline iMotorControl(const dzn::port::meta& m) : meta(m) {}
-
-  void check_bindings() const
-  {
-    if (! in.initialise) throw dzn::binding_error(meta, "in.initialise");
-    if (! in.goForward) throw dzn::binding_error(meta, "in.goForward");
-    if (! in.goBackward) throw dzn::binding_error(meta, "in.goBackward");
-    if (! in.stop) throw dzn::binding_error(meta, "in.stop");
-
-
-  }
-};
-
-inline void connect (iMotorControl& provided, iMotorControl& required)
-{
-  provided.out = required.out;
-  required.in = provided.in;
-  provided.meta.requires = required.meta.requires;
-  required.meta.provides = provided.meta.provides;
-}
-
-
-#ifndef ENUM_TO_STRING_iMotorControl_State
-#define ENUM_TO_STRING_iMotorControl_State 1
-inline std::string to_string(::iMotorControl::State::type v)
-{
-  switch(v)
-  {
-    case ::iMotorControl::State::NotReady: return "State_NotReady";
-    case ::iMotorControl::State::Ready: return "State_Ready";
-
-  }
-  return "";
-}
-#endif // ENUM_TO_STRING_iMotorControl_State
-#ifndef ENUM_TO_STRING_iMotorControl_Direction
-#define ENUM_TO_STRING_iMotorControl_Direction 1
-inline std::string to_string(::iMotorControl::Direction::type v)
-{
-  switch(v)
-  {
-    case ::iMotorControl::Direction::Forwards: return "Direction_Forwards";
-    case ::iMotorControl::Direction::Backwards: return "Direction_Backwards";
-    case ::iMotorControl::Direction::Neutral: return "Direction_Neutral";
-
-  }
-  return "";
-}
-#endif // ENUM_TO_STRING_iMotorControl_Direction
-
-#ifndef STRING_TO_ENUM_iMotorControl_State
-#define STRING_TO_ENUM_iMotorControl_State 1
-inline ::iMotorControl::State::type to_iMotorControl_State(std::string s)
-{
-  static std::map<std::string, ::iMotorControl::State::type> m = {
-    {"State_NotReady", ::iMotorControl::State::NotReady},
-    {"State_Ready", ::iMotorControl::State::Ready},
-  };
-  return m.at(s);
-}
-#endif // STRING_TO_ENUM_iMotorControl_State
-#ifndef STRING_TO_ENUM_iMotorControl_Direction
-#define STRING_TO_ENUM_iMotorControl_Direction 1
-inline ::iMotorControl::Direction::type to_iMotorControl_Direction(std::string s)
-{
-  static std::map<std::string, ::iMotorControl::Direction::type> m = {
-    {"Direction_Forwards", ::iMotorControl::Direction::Forwards},
-    {"Direction_Backwards", ::iMotorControl::Direction::Backwards},
-    {"Direction_Neutral", ::iMotorControl::Direction::Neutral},
-  };
-  return m.at(s);
-}
-#endif // STRING_TO_ENUM_iMotorControl_Direction
-
-
-#endif // IMOTORCONTROL_HH
-
-/********************************** INTERFACE *********************************/
 /***********************************  FOREIGN  **********************************/
-#ifndef SKEL_MOTORCONTROL_HH
-#define SKEL_MOTORCONTROL_HH
+#ifndef SKEL_SENSOR_HH
+#define SKEL_SENSOR_HH
 
 #include <dzn/locator.hh>
 #include <dzn/runtime.hh>
 
+#include "ISensor.hh"
 
 
 
 namespace skel {
-  struct MotorControl
+  struct Sensor
   {
     dzn::meta dzn_meta;
     dzn::runtime& dzn_rt;
     dzn::locator const& dzn_locator;
-    ::iMotorControl motorControl;
+    ::ISensor sensor;
 
 
-    MotorControl(const dzn::locator& dzn_locator)
-    : dzn_meta{"","MotorControl",0,0,{},{},{[this]{motorControl.check_bindings();}}}
+    Sensor(const dzn::locator& dzn_locator)
+    : dzn_meta{"","Sensor",0,0,{},{},{[this]{sensor.check_bindings();}}}
     , dzn_rt(dzn_locator.get<dzn::runtime>())
     , dzn_locator(dzn_locator)
 
-    , motorControl({{"motorControl",this,&dzn_meta},{"",0,0}})
+    , sensor({{"sensor",this,&dzn_meta},{"",0,0}})
 
 
     {
-      motorControl.in.initialise = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_initialise();}, this->motorControl.meta, "initialise");};
-      motorControl.in.goForward = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_goForward();}, this->motorControl.meta, "goForward");};
-      motorControl.in.goBackward = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_goBackward();}, this->motorControl.meta, "goBackward");};
-      motorControl.in.stop = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_stop();}, this->motorControl.meta, "stop");};
+      sensor.in.initialise = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sensor) = false; return sensor_initialise();}, this->sensor.meta, "initialise");};
 
 
     }
-    virtual ~ MotorControl() {}
+    virtual ~ Sensor() {}
     virtual std::ostream& stream_members(std::ostream& os) const { return os; }
     void check_bindings() const;
     void dump_tree(std::ostream& os) const;
     void set_state(std::map<std::string,std::map<std::string,std::string> >){}
     void set_state(std::map<std::string,std::string>_alist){}
-    friend std::ostream& operator << (std::ostream& os, const MotorControl& m)  {
+    friend std::ostream& operator << (std::ostream& os, const Sensor& m)  {
       return m.stream_members(os);
     }
     private:
-    virtual void motorControl_initialise () = 0;
-    virtual void motorControl_goForward () = 0;
-    virtual void motorControl_goBackward () = 0;
-    virtual void motorControl_stop () = 0;
+    virtual void sensor_initialise () = 0;
 
   };
 }
 
-#endif // MOTORCONTROL_HH
+#endif // SENSOR_HH
 
 /***********************************  FOREIGN  **********************************/
 /***********************************  FOREIGN  **********************************/
@@ -398,6 +179,7 @@ namespace skel {
 #include <dzn/locator.hh>
 #include <dzn/runtime.hh>
 
+#include "ISensor.hh"
 
 
 
@@ -407,7 +189,7 @@ namespace skel {
     dzn::meta dzn_meta;
     dzn::runtime& dzn_rt;
     dzn::locator const& dzn_locator;
-    ::iSensor sensorBlack;
+    ::ISensor sensorBlack;
 
 
     PresSensorBlackStack(const dzn::locator& dzn_locator)
@@ -448,6 +230,7 @@ namespace skel {
 #include <dzn/locator.hh>
 #include <dzn/runtime.hh>
 
+#include "ISensor.hh"
 
 
 
@@ -457,7 +240,7 @@ namespace skel {
     dzn::meta dzn_meta;
     dzn::runtime& dzn_rt;
     dzn::locator const& dzn_locator;
-    ::iSensor sensorWhite;
+    ::ISensor sensorWhite;
 
 
     PresSensorWhiteStack(const dzn::locator& dzn_locator)
@@ -492,12 +275,70 @@ namespace skel {
 
 /***********************************  FOREIGN  **********************************/
 /***********************************  FOREIGN  **********************************/
+#ifndef SKEL_MOTORCONTROL_HH
+#define SKEL_MOTORCONTROL_HH
+
+#include <dzn/locator.hh>
+#include <dzn/runtime.hh>
+
+#include "IMotorControl.hh"
+
+
+
+namespace skel {
+  struct MotorControl
+  {
+    dzn::meta dzn_meta;
+    dzn::runtime& dzn_rt;
+    dzn::locator const& dzn_locator;
+    ::IMotorControl motorControl;
+
+
+    MotorControl(const dzn::locator& dzn_locator)
+    : dzn_meta{"","MotorControl",0,0,{},{},{[this]{motorControl.check_bindings();}}}
+    , dzn_rt(dzn_locator.get<dzn::runtime>())
+    , dzn_locator(dzn_locator)
+
+    , motorControl({{"motorControl",this,&dzn_meta},{"",0,0}})
+
+
+    {
+      motorControl.in.initialise = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_initialise();}, this->motorControl.meta, "initialise");};
+      motorControl.in.goForward = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_goForward();}, this->motorControl.meta, "goForward");};
+      motorControl.in.goBackward = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_goBackward();}, this->motorControl.meta, "goBackward");};
+      motorControl.in.stop = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_stop();}, this->motorControl.meta, "stop");};
+
+
+    }
+    virtual ~ MotorControl() {}
+    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
+    void check_bindings() const;
+    void dump_tree(std::ostream& os) const;
+    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
+    void set_state(std::map<std::string,std::string>_alist){}
+    friend std::ostream& operator << (std::ostream& os, const MotorControl& m)  {
+      return m.stream_members(os);
+    }
+    private:
+    virtual void motorControl_initialise () = 0;
+    virtual void motorControl_goForward () = 0;
+    virtual void motorControl_goBackward () = 0;
+    virtual void motorControl_stop () = 0;
+
+  };
+}
+
+#endif // MOTORCONTROL_HH
+
+/***********************************  FOREIGN  **********************************/
+/***********************************  FOREIGN  **********************************/
 #ifndef SKEL_SENSOREND_HH
 #define SKEL_SENSOREND_HH
 
 #include <dzn/locator.hh>
 #include <dzn/runtime.hh>
 
+#include "ISensor.hh"
 
 
 
@@ -507,7 +348,7 @@ namespace skel {
     dzn::meta dzn_meta;
     dzn::runtime& dzn_rt;
     dzn::locator const& dzn_locator;
-    ::iSensor sensorEnd;
+    ::ISensor sensorEnd;
 
 
     SensorEnd(const dzn::locator& dzn_locator)
@@ -545,6 +386,10 @@ namespace skel {
 #ifndef INTERNALBELTCONTROL_HH
 #define INTERNALBELTCONTROL_HH
 
+#include "IMotorControl.hh"
+#include "ISensor.hh"
+#include "ISensor.hh"
+#include "ISensor.hh"
 
 
 
@@ -590,10 +435,10 @@ struct InternalBeltControl
 
   ::iInternalBeltControl beltControl;
 
-  ::iMotorControl motorControl;
-  ::iSensor presSensorBlackStack;
-  ::iSensor presSensorWhiteStack;
-  ::iSensor sensorEnd;
+  ::IMotorControl motorControl;
+  ::ISensor presSensorBlackStack;
+  ::ISensor presSensorWhiteStack;
+  ::ISensor sensorEnd;
 
 
   InternalBeltControl(const dzn::locator&);

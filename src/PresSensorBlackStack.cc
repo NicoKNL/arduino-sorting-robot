@@ -1,11 +1,12 @@
-#include <dzn/runtime.hh>
-#include <dzn/locator.hh>
-#include "internal_belt.hh"
 #include "PresSensorBlackStack.hh"
 
-void PresSensorBlackStack::initialise() {
+PresSensorBlackStack::PresSensorBlackStack(const dzn::locator& loc) : skel::PresSensorBlackStack(loc) {
+
+}
+
+void PresSensorBlackStack::sensorBlack_initialise() {
 	std::cout << "Belt.BlackSensor: Initialising." << std::endl;
 }
-void PresSensorBlackStack::detected() {
-	std::cout << "Belt.BlackSensor: Disk detected." << std::endl;
-}
+//void PresSensorBlackStack::detected() {
+//	std::cout << "Belt.BlackSensor: Disk detected." << std::endl;
+//}

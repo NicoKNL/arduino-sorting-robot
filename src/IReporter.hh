@@ -35,7 +35,10 @@ struct IReporter
   struct
   {
     std::function< void()> report;
-    std::function< void()> setState;
+    std::function< void()> turnOff;
+    std::function< void()> setWaiting;
+    std::function< void()> setReceived;
+    std::function< void()> setDispensing;
   } in;
 
   struct
@@ -48,7 +51,10 @@ struct IReporter
   void check_bindings() const
   {
     if (! in.report) throw dzn::binding_error(meta, "in.report");
-    if (! in.setState) throw dzn::binding_error(meta, "in.setState");
+    if (! in.turnOff) throw dzn::binding_error(meta, "in.turnOff");
+    if (! in.setWaiting) throw dzn::binding_error(meta, "in.setWaiting");
+    if (! in.setReceived) throw dzn::binding_error(meta, "in.setReceived");
+    if (! in.setDispensing) throw dzn::binding_error(meta, "in.setDispensing");
 
 
   }
@@ -76,7 +82,7 @@ inline void connect (IReporter& provided, IReporter& required)
 #include <dzn/locator.hh>
 #include <dzn/runtime.hh>
 
-#include "Led.hh"
+#include "ILed.hh"
 
 
 
@@ -122,64 +128,6 @@ namespace skel {
 #endif // LED_HH
 
 /***********************************  FOREIGN  **********************************/
-/********************************** COMPONENT *********************************/
-#ifndef SATEREPORTER_HH
-#define SATEREPORTER_HH
-
-#include "Led.hh"
-#include "Led.hh"
-#include "Led.hh"
-
-
-
-struct SateReporter
-{
-  dzn::meta dzn_meta;
-  dzn::runtime& dzn_rt;
-  dzn::locator const& dzn_locator;
-#ifndef ENUM_SateReporter_State
-#define ENUM_SateReporter_State 1
-
-
-  struct State
-  {
-    enum type
-    {
-      Off,Waiting,Received,Dispensing
-    };
-  };
-
-
-#endif // ENUM_SateReporter_State
-
-  ::SateReporter::State::type state;
-
-
-  std::function<void ()> out_iStateReport;
-
-  ::IReporter iStateReport;
-
-  ::ILed iLedW;
-  ::ILed iLedR;
-  ::ILed iLedD;
-
-
-  SateReporter(const dzn::locator&);
-  void check_bindings() const;
-  void dump_tree(std::ostream& os) const;
-  friend std::ostream& operator << (std::ostream& os, const SateReporter& m)  {
-    (void)m;
-    return os << "[" << m.state <<"]" ;
-  }
-  private:
-  void iStateReport_report();
-  void iStateReport_setState();
-
-};
-
-#endif // SATEREPORTER_HH
-
-/********************************** COMPONENT *********************************/
 /***********************************  SYSTEM  ***********************************/
 #ifndef REPORTER_HH
 #define REPORTER_HH
@@ -187,6 +135,7 @@ struct SateReporter
 
 #include <dzn/locator.hh>
 
+#include "Console.hh"
 #include "Led.hh"
 #include "Led.hh"
 #include "Led.hh"
@@ -200,12 +149,12 @@ struct Reporter
   dzn::locator const& dzn_locator;
 
 
-  SateReporter r;
-  Led led1;
-  Led led2;
-  Led led3;
+  ::StateReporter r;
+  ::Led led1;
+  ::Led led2;
+  ::Led led3;
 
-  IReporter& iSateReport;
+  ::IReporter& iStateReport;
 
 
   Reporter(const dzn::locator&);

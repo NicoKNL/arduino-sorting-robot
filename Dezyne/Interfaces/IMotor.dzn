@@ -1,29 +1,37 @@
-interface IMotor {
+interface IMotor
+{
 	in void next();
 	in void reset();
 	out void finished();
 	out void error();
-	
-	behaviour {
+
+	behaviour
+	{
 		enum State {initial, moving, resetting};
 		State state = State.initial;
-		
-		[state.initial] {
-			on next:	state = State.moving;
-			on reset:	state = State.resetting;
+
+		[state.initial]
+		{
+			on next: state = State.moving;
+			on reset: state = State.resetting;
 		}
-		
-		[state.moving] {
-			on next:	illegal;
-			on reset: 	state = State.resetting;
-			on inevitable: 	{state = State.initial; finished;}
-			on optional: 	{state = State.resetting; error;}
-		} 
-		
-		[state.resetting] {
-			on next:	illegal;
-			on reset:	{}
-			on optional:	state = State.initial;
+		[state.moving]
+		{
+			on next: illegal;
+			on reset: state = State.resetting;
+			on inevitable: {state = State.initial; finished;}
+			on optional: {state = State.resetting; error;}
+		}
+		[state.resetting]
+		{
+			on next: illegal;
+			on reset: {}
+			on optional: state = State.initial;
 		}
 	}
+}
+
+component Motor
+{
+	provides IMotor motor;
 }

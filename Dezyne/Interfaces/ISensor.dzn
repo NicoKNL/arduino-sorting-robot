@@ -1,29 +1,42 @@
-interface ISensor {
+interface ISensor
+{
 	in void initialise();
-	out void detected();	
-	
-	behaviour {
-		enum State { Unknown, Low, High };
+	out void detected();
+
+	behaviour
+	{
+		enum State {Unknown, Low, High};
 		State state = State.Unknown;
-	
-		[state.Unknown] {
+
+		[state.Unknown]
+		{
 			on initialise: state = State.Low;
 			on initialise: state = State.High;
 		}
-		
-		[state.Low] {
+		[state.Low]
+		{
 			on initialise: {}
-			on optional: {
-				state = State.High;
-				detected;
-			}
+			on optional: {state = State.High; detected;}
 		}
-		
-		[state.High] {
+		[state.High]
+		{
 			on initialise: {}
-			on optional: {
-				state = State.Low;
-			}
+			on optional: {state = State.Low;}
 		}
 	}
+}
+
+component Sensor
+{
+	provides ISensor sensor;
+}
+
+component PresSensorBlackStack
+{
+	provides ISensor sensorBlack;
+}
+
+component PresSensorWhiteStack
+{
+	provides ISensor sensorWhite;
 }

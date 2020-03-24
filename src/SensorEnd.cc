@@ -1,11 +1,12 @@
-#include <dzn/runtime.hh>
-#include <dzn/locator.hh>
-#include "internal_belt.hh"
 #include "SensorEnd.hh"
 
-void SensorEnd::initialise() {
+SensorEnd::SensorEnd(const dzn::locator& loc) : skel::SensorEnd(loc) {
+
+}
+
+void SensorEnd::sensorEnd_initialise() {
 	std::cout << "Belt.EndSensor: Initialising." << std::endl;
 }
-void SensorEnd::detected() {
-	std::cout << "Belt.EndSensor: Disk detected." << std::endl;
-}
+//void SensorEnd::detected() {
+//	std::cout << "Belt.EndSensor: Disk detected." << std::endl;
+//}

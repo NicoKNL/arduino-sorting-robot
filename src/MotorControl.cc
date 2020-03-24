@@ -1,17 +1,17 @@
-#include <dzn/runtime.hh>
-#include <dzn/locator.hh>
-#include "internal_belt.hh"
 #include "MotorControl.hh"
 
-void MotorControl::initialise() {
+MotorControl::MotorControl(const dzn::locator& loc) : skel::MotorControl(loc) {
+}
+
+void MotorControl::motorControl_initialise() {
 	std::cout << "Belt.MotorControl: Initialising." << std::endl;
 }
-void MotorControl::goForward() {
+void MotorControl::motorControl_goForward() {
 	std::cout << "Belt.MotorControl: Moving belt forwards." << std::endl;
 }
-void MotorControl::goBackward() {
+void MotorControl::motorControl_goBackward() {
 	std::cout << "Belt.MotorControl: Moving belt backwards." << std::endl;
 }
-void MotorControl::stop() {
+void MotorControl::motorControl_stop() {
 	std::cout << "Belt.MotorControl: Stopping the belt." << std::endl;
 }

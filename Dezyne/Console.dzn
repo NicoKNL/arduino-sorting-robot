@@ -1,14 +1,16 @@
+import ILed.dzn;
+
 component Reporter {
-	provides IReporter iSateReport;
+	provides IReporter iStateReport;
 	system {
-		SateReporter r;
+		StateReporter r;
 		Led led1;
 		Led led2;
 		Led led3;
 		r.iLedW <=> led1.iLed;
 		r.iLedR <=> led2.iLed;
 		r.iLedD <=> led3.iLed;
-		r.iStateReport <=> iSateReport;
+		r.iStateReport <=> iStateReport;
 	}
 }
 
@@ -28,7 +30,7 @@ interface IReporter {
 	}
 }
 
-component SateReporter {
+component StateReporter {
 	provides IReporter iStateReport;
 	requires ILed iLedW;
 	requires ILed iLedR;
@@ -80,22 +82,4 @@ component SateReporter {
 			}
 	}
 	
-}
-
-
-interface ILed {
-	enum State {On, Off};
-	in void turnOn();
-	in void turnOff();
-	
-	behaviour {
-		State state = State.Off;
-		on turnOn: {state = State.On;}
-		on turnOff: {state = State.Off;}
-	}
-}
-
-component Led
-{
-	provides ILed iLed;
 }

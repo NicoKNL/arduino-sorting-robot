@@ -2,11 +2,6 @@ import IGrabber.dzn;
 import ISensor.dzn;
 import IMotor.dzn;
 
-
-// Hand written components
-component Sensor { provides ISensor sensor; }
-component Motor { provides IMotor motor; }
-
 component Grabber {
 	requires ISensor presence;
 	requires IMotor motor;

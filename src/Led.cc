@@ -1,8 +1,9 @@
 #include "Led.hh"
-#include "Reporter.hh"
 //#include <wiringPi.h>
-#include <dzn/locator.hh>
-#include <dzn/runtime.hh>
+
+Led::Led(const dzn::locator& loc) : skel::Led(loc) {
+
+}
 
 int PIN = 5;
 void Led::iLed_turnOff() {

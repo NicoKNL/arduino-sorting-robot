@@ -113,6 +113,58 @@ inline ::IMotor::State::type to_IMotor_State(std::string s)
 #endif // IMOTOR_HH
 
 /********************************** INTERFACE *********************************/
+/***********************************  FOREIGN  **********************************/
+#ifndef SKEL_MOTOR_HH
+#define SKEL_MOTOR_HH
+
+#include <dzn/locator.hh>
+#include <dzn/runtime.hh>
+
+
+
+
+namespace skel {
+  struct Motor
+  {
+    dzn::meta dzn_meta;
+    dzn::runtime& dzn_rt;
+    dzn::locator const& dzn_locator;
+    ::IMotor motor;
+
+
+    Motor(const dzn::locator& dzn_locator)
+    : dzn_meta{"","Motor",0,0,{},{},{[this]{motor.check_bindings();}}}
+    , dzn_rt(dzn_locator.get<dzn::runtime>())
+    , dzn_locator(dzn_locator)
+
+    , motor({{"motor",this,&dzn_meta},{"",0,0}})
+
+
+    {
+      motor.in.next = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_next();}, this->motor.meta, "next");};
+      motor.in.reset = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_reset();}, this->motor.meta, "reset");};
+
+
+    }
+    virtual ~ Motor() {}
+    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
+    void check_bindings() const;
+    void dump_tree(std::ostream& os) const;
+    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
+    void set_state(std::map<std::string,std::string>_alist){}
+    friend std::ostream& operator << (std::ostream& os, const Motor& m)  {
+      return m.stream_members(os);
+    }
+    private:
+    virtual void motor_next () = 0;
+    virtual void motor_reset () = 0;
+
+  };
+}
+
+#endif // MOTOR_HH
+
+/***********************************  FOREIGN  **********************************/
 
 
 //version: 2.9.1

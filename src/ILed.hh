@@ -24,21 +24,32 @@ namespace dzn {
 
 
 /********************************** INTERFACE *********************************/
-#ifndef IREPORTER_HH
-#define IREPORTER_HH
+#ifndef ILED_HH
+#define ILED_HH
 
 
 
-struct IReporter
+struct ILed
 {
+#ifndef ENUM_ILed_State
+#define ENUM_ILed_State 1
+
+
+  struct State
+  {
+    enum type
+    {
+      On,Off
+    };
+  };
+
+
+#endif // ENUM_ILed_State
 
   struct
   {
-    std::function< void()> report;
+    std::function< void()> turnOn;
     std::function< void()> turnOff;
-    std::function< void()> setWaiting;
-    std::function< void()> setReceived;
-    std::function< void()> setDispensing;
   } in;
 
   struct
@@ -46,21 +57,18 @@ struct IReporter
   } out;
 
   dzn::port::meta meta;
-  inline IReporter(const dzn::port::meta& m) : meta(m) {}
+  inline ILed(const dzn::port::meta& m) : meta(m) {}
 
   void check_bindings() const
   {
-    if (! in.report) throw dzn::binding_error(meta, "in.report");
+    if (! in.turnOn) throw dzn::binding_error(meta, "in.turnOn");
     if (! in.turnOff) throw dzn::binding_error(meta, "in.turnOff");
-    if (! in.setWaiting) throw dzn::binding_error(meta, "in.setWaiting");
-    if (! in.setReceived) throw dzn::binding_error(meta, "in.setReceived");
-    if (! in.setDispensing) throw dzn::binding_error(meta, "in.setDispensing");
 
 
   }
 };
 
-inline void connect (IReporter& provided, IReporter& required)
+inline void connect (ILed& provided, ILed& required)
 {
   provided.out = required.out;
   required.in = provided.in;
@@ -69,10 +77,34 @@ inline void connect (IReporter& provided, IReporter& required)
 }
 
 
+#ifndef ENUM_TO_STRING_ILed_State
+#define ENUM_TO_STRING_ILed_State 1
+inline std::string to_string(::ILed::State::type v)
+{
+  switch(v)
+  {
+    case ::ILed::State::On: return "State_On";
+    case ::ILed::State::Off: return "State_Off";
+
+  }
+  return "";
+}
+#endif // ENUM_TO_STRING_ILed_State
+
+#ifndef STRING_TO_ENUM_ILed_State
+#define STRING_TO_ENUM_ILed_State 1
+inline ::ILed::State::type to_ILed_State(std::string s)
+{
+  static std::map<std::string, ::ILed::State::type> m = {
+    {"State_On", ::ILed::State::On},
+    {"State_Off", ::ILed::State::Off},
+  };
+  return m.at(s);
+}
+#endif // STRING_TO_ENUM_ILed_State
 
 
-
-#endif // IREPORTER_HH
+#endif // ILED_HH
 
 /********************************** INTERFACE *********************************/
 /***********************************  FOREIGN  **********************************/
@@ -82,7 +114,6 @@ inline void connect (IReporter& provided, IReporter& required)
 #include <dzn/locator.hh>
 #include <dzn/runtime.hh>
 
-#include "ILed.hh"
 
 
 
@@ -128,103 +159,6 @@ namespace skel {
 #endif // LED_HH
 
 /***********************************  FOREIGN  **********************************/
-/********************************** COMPONENT *********************************/
-#ifndef STATEREPORTER_HH
-#define STATEREPORTER_HH
-
-#include "ILed.hh"
-#include "ILed.hh"
-#include "ILed.hh"
-
-
-
-struct StateReporter
-{
-  dzn::meta dzn_meta;
-  dzn::runtime& dzn_rt;
-  dzn::locator const& dzn_locator;
-#ifndef ENUM_StateReporter_State
-#define ENUM_StateReporter_State 1
-
-
-  struct State
-  {
-    enum type
-    {
-      Off,Waiting,Received,Dispensing
-    };
-  };
-
-
-#endif // ENUM_StateReporter_State
-
-  ::StateReporter::State::type state;
-
-
-  std::function<void ()> out_iStateReport;
-
-  ::IReporter iStateReport;
-
-  ::ILed iLedW;
-  ::ILed iLedR;
-  ::ILed iLedD;
-
-
-  StateReporter(const dzn::locator&);
-  void check_bindings() const;
-  void dump_tree(std::ostream& os) const;
-  friend std::ostream& operator << (std::ostream& os, const StateReporter& m)  {
-    (void)m;
-    return os << "[" << m.state <<"]" ;
-  }
-  private:
-  void iStateReport_report();
-  void iStateReport_turnOff();
-  void iStateReport_setWaiting();
-  void iStateReport_setReceived();
-  void iStateReport_setDispensing();
-
-};
-
-#endif // STATEREPORTER_HH
-
-/********************************** COMPONENT *********************************/
-/***********************************  SYSTEM  ***********************************/
-#ifndef REPORTER_HH
-#define REPORTER_HH
-
-
-#include <dzn/locator.hh>
-
-#include "Led.hh"
-#include "Led.hh"
-#include "Led.hh"
-
-
-
-struct Reporter
-{
-  dzn::meta dzn_meta;
-  dzn::runtime& dzn_rt;
-  dzn::locator const& dzn_locator;
-
-
-  ::StateReporter r;
-  ::Led led1;
-  ::Led led2;
-  ::Led led3;
-
-  ::IReporter& iStateReport;
-
-
-  Reporter(const dzn::locator&);
-  void check_bindings() const;
-  void dump_tree(std::ostream& os=std::clog) const;
-};
-
-#endif // REPORTER_HH
-
-/***********************************  SYSTEM  ***********************************/
 
 
 //version: 2.9.1

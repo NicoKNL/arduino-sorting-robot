@@ -4,14 +4,14 @@
 #include "SortingRobot.hh"
 
 int main(int argc, char* argv[]) {
-	dzn::locator loc;
-	dzn::runtime rt;
-	loc.set(rt);
+	dzn::locator locator;
+	dzn::runtime runtime;
+	locator.set(runtime);
 
-	Controller() controller(loc);
+	Controller controller(locator);
 	controller.check_bindings();
 
-	while (true ) {
-		controller.i.init();
-	}
+	//while (true ) {
+	//	controller.in.init();
+	//}
 }
