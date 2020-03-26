@@ -32,7 +32,8 @@ int main(int argc, char* argv[]) {
 	std::cout<< "Pre init\n";
 
 	// while (true) {
-		sorting_robot.i.in.init();
+	sorting_robot.controller.belt.in.toStackBlack();
+	sorting_robot.i.in.init();
 		// controller.in.init();
 	std::cout<< "Post init\n";
 
