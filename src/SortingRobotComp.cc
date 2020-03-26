@@ -10,7 +10,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#include "SortingRobot.hh"
+#include "SortingRobotComp.hh"
 
 #include <dzn/locator.hh>
 #include <dzn/runtime.hh>
@@ -153,7 +153,7 @@ void Controller::dump_tree(std::ostream& os) const
 //SYSTEM
 
 InternalBelt::InternalBelt(const dzn::locator& dzn_locator)
-: dzn_meta{"","InternalBelt",0,0,{},{& beltControl.dzn_meta,& m.dzn_meta,& sW.dzn_meta,& sB.dzn_meta,& sE.dzn_meta},{[this]{iBeltControl.check_bindings();}}}
+: dzn_meta{"","InternalBelt",0,0,{},{& beltControl.dzn_meta,& m.dzn_meta,& sW.dzn_meta,& sB.dzn_meta},{[this]{iBeltControl.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
 
@@ -162,7 +162,6 @@ InternalBelt::InternalBelt(const dzn::locator& dzn_locator)
 , m(dzn_locator)
 , sW(dzn_locator)
 , sB(dzn_locator)
-, sE(dzn_locator)
 
 , iBeltControl(beltControl.beltControl)
 
@@ -177,14 +176,11 @@ InternalBelt::InternalBelt(const dzn::locator& dzn_locator)
   sW.dzn_meta.name = "sW";
   sB.dzn_meta.parent = &dzn_meta;
   sB.dzn_meta.name = "sB";
-  sE.dzn_meta.parent = &dzn_meta;
-  sE.dzn_meta.name = "sE";
 
 
   connect(m.motorControl, beltControl.motorControl);
   connect(sB.sensorBlack, beltControl.presSensorBlackStack);
   connect(sW.sensorWhite, beltControl.presSensorWhiteStack);
-  connect(sE.sensorEnd, beltControl.sensorEnd);
 
   dzn::rank(iBeltControl.meta.provides.meta, 0);
 

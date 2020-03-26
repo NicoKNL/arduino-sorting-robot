@@ -1,6 +1,6 @@
-import internal_belt.dzn;
+import IInternalBeltControl.dzn;
 import Console.dzn;
-import Grabber.dzn;
+import GrabberComp.dzn;
 
 component InternalBelt {
 	provides iInternalBeltControl iBeltControl;
@@ -10,13 +10,13 @@ component InternalBelt {
 		MotorControl m;
 		PresSensorWhiteStack sW;
 		PresSensorBlackStack sB;
-		SensorEnd sE;
+//		SensorEnd sE;  // Nico+Davey deleted this
 		
 		iBeltControl <=> beltControl.beltControl;
 		beltControl.motorControl <=> m.motorControl;
 		beltControl.presSensorBlackStack <=> sB.sensorBlack;
 		beltControl.presSensorWhiteStack <=> sW.sensorWhite;
-		beltControl.sensorEnd <=> sE.sensorEnd;
+//		beltControl.sensorEnd <=> sE.sensorEnd;  // Nico+Davey deleted this
 	}
 }
 

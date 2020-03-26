@@ -114,6 +114,63 @@ inline void connect (IController& provided, IController& required)
 
 /********************************** INTERFACE *********************************/
 /***********************************  FOREIGN  **********************************/
+#ifndef SKEL_MOTORCONTROL_HH
+#define SKEL_MOTORCONTROL_HH
+
+#include <dzn/locator.hh>
+#include <dzn/runtime.hh>
+
+#include "IMotorControl.hh"
+
+
+
+namespace skel {
+  struct MotorControl
+  {
+    dzn::meta dzn_meta;
+    dzn::runtime& dzn_rt;
+    dzn::locator const& dzn_locator;
+    ::IMotorControl motorControl;
+
+
+    MotorControl(const dzn::locator& dzn_locator)
+    : dzn_meta{"","MotorControl",0,0,{},{},{[this]{motorControl.check_bindings();}}}
+    , dzn_rt(dzn_locator.get<dzn::runtime>())
+    , dzn_locator(dzn_locator)
+
+    , motorControl({{"motorControl",this,&dzn_meta},{"",0,0}})
+
+
+    {
+      motorControl.in.initialise = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_initialise();}, this->motorControl.meta, "initialise");};
+      motorControl.in.goForward = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_goForward();}, this->motorControl.meta, "goForward");};
+      motorControl.in.goBackward = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_goBackward();}, this->motorControl.meta, "goBackward");};
+      motorControl.in.stop = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_stop();}, this->motorControl.meta, "stop");};
+
+
+    }
+    virtual ~ MotorControl() {}
+    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
+    void check_bindings() const;
+    void dump_tree(std::ostream& os) const;
+    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
+    void set_state(std::map<std::string,std::string>_alist){}
+    friend std::ostream& operator << (std::ostream& os, const MotorControl& m)  {
+      return m.stream_members(os);
+    }
+    private:
+    virtual void motorControl_initialise () = 0;
+    virtual void motorControl_goForward () = 0;
+    virtual void motorControl_goBackward () = 0;
+    virtual void motorControl_stop () = 0;
+
+  };
+}
+
+#endif // MOTORCONTROL_HH
+
+/***********************************  FOREIGN  **********************************/
+/***********************************  FOREIGN  **********************************/
 #ifndef SKEL_SENSOR_HH
 #define SKEL_SENSOR_HH
 
@@ -267,114 +324,6 @@ namespace skel {
 
 /***********************************  FOREIGN  **********************************/
 /***********************************  FOREIGN  **********************************/
-#ifndef SKEL_MOTORCONTROL_HH
-#define SKEL_MOTORCONTROL_HH
-
-#include <dzn/locator.hh>
-#include <dzn/runtime.hh>
-
-#include "IMotorControl.hh"
-
-
-
-namespace skel {
-  struct MotorControl
-  {
-    dzn::meta dzn_meta;
-    dzn::runtime& dzn_rt;
-    dzn::locator const& dzn_locator;
-    ::IMotorControl motorControl;
-
-
-    MotorControl(const dzn::locator& dzn_locator)
-    : dzn_meta{"","MotorControl",0,0,{},{},{[this]{motorControl.check_bindings();}}}
-    , dzn_rt(dzn_locator.get<dzn::runtime>())
-    , dzn_locator(dzn_locator)
-
-    , motorControl({{"motorControl",this,&dzn_meta},{"",0,0}})
-
-
-    {
-      motorControl.in.initialise = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_initialise();}, this->motorControl.meta, "initialise");};
-      motorControl.in.goForward = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_goForward();}, this->motorControl.meta, "goForward");};
-      motorControl.in.goBackward = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_goBackward();}, this->motorControl.meta, "goBackward");};
-      motorControl.in.stop = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motorControl) = false; return motorControl_stop();}, this->motorControl.meta, "stop");};
-
-
-    }
-    virtual ~ MotorControl() {}
-    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
-    void check_bindings() const;
-    void dump_tree(std::ostream& os) const;
-    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
-    void set_state(std::map<std::string,std::string>_alist){}
-    friend std::ostream& operator << (std::ostream& os, const MotorControl& m)  {
-      return m.stream_members(os);
-    }
-    private:
-    virtual void motorControl_initialise () = 0;
-    virtual void motorControl_goForward () = 0;
-    virtual void motorControl_goBackward () = 0;
-    virtual void motorControl_stop () = 0;
-
-  };
-}
-
-#endif // MOTORCONTROL_HH
-
-/***********************************  FOREIGN  **********************************/
-/***********************************  FOREIGN  **********************************/
-#ifndef SKEL_SENSOREND_HH
-#define SKEL_SENSOREND_HH
-
-#include <dzn/locator.hh>
-#include <dzn/runtime.hh>
-
-#include "ISensor.hh"
-
-
-
-namespace skel {
-  struct SensorEnd
-  {
-    dzn::meta dzn_meta;
-    dzn::runtime& dzn_rt;
-    dzn::locator const& dzn_locator;
-    ::ISensor sensorEnd;
-
-
-    SensorEnd(const dzn::locator& dzn_locator)
-    : dzn_meta{"","SensorEnd",0,0,{},{},{[this]{sensorEnd.check_bindings();}}}
-    , dzn_rt(dzn_locator.get<dzn::runtime>())
-    , dzn_locator(dzn_locator)
-
-    , sensorEnd({{"sensorEnd",this,&dzn_meta},{"",0,0}})
-
-
-    {
-      sensorEnd.in.initialise = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sensorEnd) = false; return sensorEnd_initialise();}, this->sensorEnd.meta, "initialise");};
-
-
-    }
-    virtual ~ SensorEnd() {}
-    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
-    void check_bindings() const;
-    void dump_tree(std::ostream& os) const;
-    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
-    void set_state(std::map<std::string,std::string>_alist){}
-    friend std::ostream& operator << (std::ostream& os, const SensorEnd& m)  {
-      return m.stream_members(os);
-    }
-    private:
-    virtual void sensorEnd_initialise () = 0;
-
-  };
-}
-
-#endif // SENSOREND_HH
-
-/***********************************  FOREIGN  **********************************/
-/***********************************  FOREIGN  **********************************/
 #ifndef SKEL_LED_HH
 #define SKEL_LED_HH
 
@@ -486,7 +435,7 @@ namespace skel {
 
 #include "IGrabber.hh"
 #include "Console.hh"
-#include "internal_belt.hh"
+#include "IInternalBeltControl.hh"
 
 
 
@@ -568,11 +517,10 @@ struct Controller
 
 #include <dzn/locator.hh>
 
-#include "internal_belt.hh"
+#include "IInternalBeltControl.hh"
 #include "MotorControl.hh"
 #include "PresSensorWhiteStack.hh"
 #include "PresSensorBlackStack.hh"
-#include "SensorEnd.hh"
 
 
 
@@ -587,7 +535,6 @@ struct InternalBelt
   ::MotorControl m;
   ::PresSensorWhiteStack sW;
   ::PresSensorBlackStack sB;
-  ::SensorEnd sE;
 
   ::iInternalBeltControl& iBeltControl;
 
@@ -607,7 +554,7 @@ struct InternalBelt
 
 #include <dzn/locator.hh>
 
-#include "Grabber.hh"
+#include "GrabberComp.hh"
 #include "Sensor.hh"
 #include "Motor.hh"
 

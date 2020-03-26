@@ -1,19 +1,5 @@
 import ILed.dzn;
 
-component Reporter {
-	provides IReporter iStateReport;
-	system {
-		StateReporter r;
-		Led led1;
-		Led led2;
-		Led led3;
-		r.iLedW <=> led1.iLed;
-		r.iLedR <=> led2.iLed;
-		r.iLedD <=> led3.iLed;
-		r.iStateReport <=> iStateReport;
-	}
-}
-
 interface IReporter {
 	in void report();
 	in void turnOff();
@@ -27,6 +13,20 @@ interface IReporter {
 		on setWaiting: {}
 		on setReceived: {}
 		on setDispensing: {}
+	}
+}
+
+component Reporter {
+	provides IReporter iStateReport;
+	system {
+		StateReporter r;
+		Led led1;
+		Led led2;
+		Led led3;
+		r.iLedW <=> led1.iLed;
+		r.iLedR <=> led2.iLed;
+		r.iLedD <=> led3.iLed;
+		r.iStateReport <=> iStateReport;
 	}
 }
 

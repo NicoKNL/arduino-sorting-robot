@@ -1,7 +1,7 @@
 #include <dzn/runtime.hh>
 #include <dzn/locator.hh>
 
-#include "SortingRobot.hh"
+#include "SortingRobotComp.hh"
 
 int main(int argc, char* argv[]) {
 	dzn::locator locator;

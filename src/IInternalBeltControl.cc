@@ -10,7 +10,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#include "internal_belt.hh"
+#include "IInternalBeltControl.hh"
 
 #include <dzn/locator.hh>
 #include <dzn/runtime.hh>
@@ -18,7 +18,7 @@
 
 
 InternalBeltControl::InternalBeltControl(const dzn::locator& dzn_locator)
-: dzn_meta{"","InternalBeltControl",0,0,{& motorControl.meta,& presSensorBlackStack.meta,& presSensorWhiteStack.meta,& sensorEnd.meta},{},{[this]{beltControl.check_bindings();},[this]{motorControl.check_bindings();},[this]{presSensorBlackStack.check_bindings();},[this]{presSensorWhiteStack.check_bindings();},[this]{sensorEnd.check_bindings();}}}
+: dzn_meta{"","InternalBeltControl",0,0,{& motorControl.meta,& presSensorBlackStack.meta,& presSensorWhiteStack.meta},{},{[this]{beltControl.check_bindings();},[this]{motorControl.check_bindings();},[this]{presSensorBlackStack.check_bindings();},[this]{presSensorWhiteStack.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
 , goal(::InternalBeltControl::Goal::None), state(::InternalBeltControl::State::NotReady)
@@ -28,7 +28,6 @@ InternalBeltControl::InternalBeltControl(const dzn::locator& dzn_locator)
 , motorControl({{"",0,0},{"motorControl",this,&dzn_meta}})
 , presSensorBlackStack({{"",0,0},{"presSensorBlackStack",this,&dzn_meta}})
 , presSensorWhiteStack({{"",0,0},{"presSensorWhiteStack",this,&dzn_meta}})
-, sensorEnd({{"",0,0},{"sensorEnd",this,&dzn_meta}})
 
 
 {
@@ -40,7 +39,6 @@ InternalBeltControl::InternalBeltControl(const dzn::locator& dzn_locator)
   beltControl.in.toEnd = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->beltControl) = false; return beltControl_toEnd();}, this->beltControl.meta, "toEnd");};
   presSensorBlackStack.out.detected = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->presSensorBlackStack) = false; return presSensorBlackStack_detected();}, this->presSensorBlackStack.meta, "detected");};
   presSensorWhiteStack.out.detected = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->presSensorWhiteStack) = false; return presSensorWhiteStack_detected();}, this->presSensorWhiteStack.meta, "detected");};
-  sensorEnd.out.detected = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sensorEnd) = false; return sensorEnd_detected();}, this->sensorEnd.meta, "detected");};
 
 
 
@@ -58,8 +56,7 @@ void InternalBeltControl::beltControl_initialise()
   else if ((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::None)) ;
   else if ((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::Black)) ;
   else if ((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::White)) ;
-  else if ((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::End)) ;
-  else if ((!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::End)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::White)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::Black)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::None)) && !(state == ::InternalBeltControl::State::NotReady)))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if ((!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::White)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::Black)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::None)) && !(state == ::InternalBeltControl::State::NotReady))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -79,12 +76,7 @@ void InternalBeltControl::beltControl_toStackBlack()
     this->motorControl.in.goBackward();
     goal = ::InternalBeltControl::Goal::Black;
   }
-  else if ((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::End)) 
-  {
-    this->motorControl.in.goBackward();
-    goal = ::InternalBeltControl::Goal::Black;
-  }
-  else if ((!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::End)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::White)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::Black)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::None)) && !(state == ::InternalBeltControl::State::NotReady)))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if ((!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::White)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::Black)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::None)) && !(state == ::InternalBeltControl::State::NotReady))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -104,12 +96,7 @@ void InternalBeltControl::beltControl_toStackWhite()
     goal = ::InternalBeltControl::Goal::White;
   }
   else if ((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::White)) ;
-  else if ((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::End)) 
-  {
-    this->motorControl.in.goBackward();
-    goal = ::InternalBeltControl::Goal::White;
-  }
-  else if ((!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::End)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::White)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::Black)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::None)) && !(state == ::InternalBeltControl::State::NotReady)))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if ((!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::White)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::Black)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::None)) && !(state == ::InternalBeltControl::State::NotReady))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -133,8 +120,7 @@ void InternalBeltControl::beltControl_toEnd()
     this->motorControl.in.goForward();
     goal = ::InternalBeltControl::Goal::End;
   }
-  else if ((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::End)) ;
-  else if ((!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::End)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::White)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::Black)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::None)) && !(state == ::InternalBeltControl::State::NotReady)))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if ((!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::White)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::Black)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::None)) && !(state == ::InternalBeltControl::State::NotReady))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -167,22 +153,6 @@ void InternalBeltControl::presSensorWhiteStack_detected()
     goal = ::InternalBeltControl::Goal::None;
   }
   else if ((!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::White)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::None)) && !(state == ::InternalBeltControl::State::NotReady)))) dzn_locator.get<dzn::illegal_handler>().illegal();
-  else dzn_locator.get<dzn::illegal_handler>().illegal();
-
-  return;
-
-}
-void InternalBeltControl::sensorEnd_detected()
-{
-  if (state == ::InternalBeltControl::State::NotReady) ;
-  else if ((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::None)) ;
-  else if ((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::End)) 
-  {
-    this->motorControl.in.stop();
-    this->beltControl.out.atEnd();
-    goal = ::InternalBeltControl::Goal::None;
-  }
-  else if ((!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::End)) && (!((state == ::InternalBeltControl::State::Ready && goal == ::InternalBeltControl::Goal::None)) && !(state == ::InternalBeltControl::State::NotReady)))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;

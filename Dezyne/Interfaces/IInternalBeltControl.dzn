@@ -1,5 +1,7 @@
-import ISensor.dzn;
 import IMotorControl.dzn;
+import ISensor.dzn;
+
+// NOTE: All sensorEnd related changes have been made by Nico + Davey
 
 interface iInternalBeltControl {
 	in void initialise();		// initialise state after power on
@@ -32,25 +34,20 @@ interface iInternalBeltControl {
 			on toEnd: state = State.End;
 			on toStackWhite, initialise: {}
 		}
-		[state.End] {
-			on toStackWhite: state = State.White;
-			on toStackBlack: state = State.Black;
-			on toEnd, initialise: {}
-		}
+//		[state.End] {
+//			on toStackWhite: state = State.White;
+//			on toStackBlack: state = State.Black;
+//			on toEnd, initialise: {}
+//		}
 	}
 }
-
-
-
-// Wrappers for hand written components
-component SensorEnd {provides ISensor sensorEnd;}
 
 component InternalBeltControl {
 	provides iInternalBeltControl beltControl;
 	requires IMotorControl motorControl;
 	requires ISensor presSensorBlackStack;
 	requires ISensor presSensorWhiteStack;
-	requires ISensor sensorEnd;
+//	requires ISensor sensorEnd;
 	
 	behaviour {
 		// assumed order of stacks defined in state, might change later.
@@ -63,7 +60,7 @@ component InternalBeltControl {
 		[state.NotReady] {
 			on beltControl.initialise(): {motorControl.initialise(); state = State.Ready;}
 			on beltControl.toStackBlack(), beltControl.toStackWhite(), beltControl.toEnd(),
-				presSensorBlackStack.detected(), presSensorWhiteStack.detected(), sensorEnd.detected(): {}
+				presSensorBlackStack.detected(), presSensorWhiteStack.detected(): {}
 		}
 		[state.Ready] {
 			// In case current goal is None, always go forward when getting a new goal
@@ -71,7 +68,7 @@ component InternalBeltControl {
 				on beltControl.toStackBlack(): {motorControl.goForward(); goal = Goal.Black;}
 				on beltControl.toStackWhite(): {motorControl.goForward(); goal = Goal.White;}
 				on beltControl.toEnd(): {motorControl.goForward(); goal = Goal.End;}
-				on presSensorBlackStack.detected(), presSensorWhiteStack.detected(), sensorEnd.detected(), beltControl.initialise(): {}
+				on presSensorBlackStack.detected(), presSensorWhiteStack.detected(), beltControl.initialise(): {}
 			}
 			[goal.Black] {
 				on presSensorBlackStack.detected(): {
@@ -93,16 +90,16 @@ component InternalBeltControl {
 				on beltControl.toEnd(): {motorControl.goForward(); goal = Goal.End;} 
 				on beltControl.toStackWhite(), beltControl.initialise(): {}
 			}
-			[goal.End] {
-				on sensorEnd.detected(): {
-					motorControl.stop();
-					beltControl.atEnd();
-					goal = Goal.None;
-				}
-				on beltControl.toStackBlack(): {motorControl.goBackward(); goal = Goal.Black;}
-				on beltControl.toStackWhite(): {motorControl.goBackward(); goal = Goal.White;}  
-				on beltControl.toEnd(), beltControl.initialise(): {}
-			}
+//			[goal.End] {
+//				on sensorEnd.detected(): {
+//					motorControl.stop();
+//					beltControl.atEnd();
+//					goal = Goal.None;
+//				}
+//				on beltControl.toStackBlack(): {motorControl.goBackward(); goal = Goal.Black;}
+//				on beltControl.toStackWhite(): {motorControl.goBackward(); goal = Goal.White;}  
+//				on beltControl.toEnd(), beltControl.initialise(): {}
+//			}
 		}
 	}
 }

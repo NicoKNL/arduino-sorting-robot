@@ -1,6 +1,6 @@
 #ifndef MOTOR_HH
 #define MOTOR_HH
-#include "Grabber.hh"
+#include "GrabberComp.hh"
 class Motor : public skel::Motor {
 	void motor_next();
 	void motor_reset();

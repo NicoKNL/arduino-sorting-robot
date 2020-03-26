@@ -1,6 +1,6 @@
 #ifndef PRESSENSORWHITESTACK_HH
 #define PRESSENSORWHITESTACK_HH
-#include "internal_belt.hh"
+#include "IInternalBeltControl.hh"
 class PresSensorWhiteStack : public skel::PresSensorWhiteStack {
 	void sensorWhite_initialise();
 	void detected();
