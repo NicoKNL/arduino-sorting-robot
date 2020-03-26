@@ -30,13 +30,3 @@ component Sensor
 {
 	provides ISensor sensor;
 }
-
-component PresSensorBlackStack
-{
-	provides ISensor sensorBlack;
-}
-
-component PresSensorWhiteStack
-{
-	provides ISensor sensorWhite;
-}
