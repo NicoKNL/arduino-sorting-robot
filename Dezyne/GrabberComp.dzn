@@ -2,7 +2,7 @@ import IGrabber.dzn;
 import ISensor.dzn;
 import IMotor.dzn;
 
-component Grabber {
+component Grabber { // GrabberC to avoid name conflict
 	requires ISensor presence;
 	requires IMotor motor;
 	provides IGrabber grabber;

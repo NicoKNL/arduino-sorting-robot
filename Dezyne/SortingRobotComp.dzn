@@ -27,28 +27,28 @@ component SortingRobot {
 		InternalBelt belt;
 		Reporter reporter;
 		Controller controller;
-		GrabberSystem grabber;
+//		GrabberSystem grabber;
 		
 		i <=> controller.i;
-		grabber.iGrabber <=> controller.grabber;
+//		grabber.iGrabber <=> controller.grabber;
 		belt.iBeltControl <=> controller.belt;
 		reporter.iStateReport <=> controller.reporter;
 		controller.com <=> com;
 	}
 }
 
-component GrabberSystem	 {
-	provides IGrabber iGrabber;
-	system {
-		Grabber grabber;
-		Sensor gsensor;
-		Motor gmotor;
-		
-		grabber.grabber <=> iGrabber;		
-		grabber.presence <=> gsensor.sensor;
-		grabber.motor <=> gmotor.motor;
-	}
-}
+//component GrabberSystem	 {
+//	provides IGrabber iGrabber;
+//	system {
+//		Grabber grabber;
+//		Sensor gsensor;
+//		Motor gmotor;
+//		
+//		grabber.grabber <=> iGrabber;		
+//		grabber.presence <=> gsensor.sensor;
+//		grabber.motor <=> gmotor.motor;
+//	}
+//}
 
 interface ICom {
 	in void grab();
@@ -67,7 +67,7 @@ interface IController {
 }
 
 component Controller {
-	requires IGrabber grabber;
+//	requires IGrabber grabber;
 	requires IReporter reporter;
 	requires iInternalBeltControl belt;
 	provides ICom com;
@@ -95,23 +95,23 @@ component Controller {
 			
 		
 		[state.No]
-			on grabber.finished(): illegal;
-			on grabber.error(): {
-				power = Power.Off;
-			}
+//			on grabber.finished(): illegal;
+//			on grabber.error(): {
+//				power = Power.Off;
+//			}
 			on com.grab(): {
 				state = Intake.Yes;
-				grabber.grabDisk();
+//				grabber.grabDisk();
 			}
 		
 		[state.Yes]
-			on grabber.finished(): {
-				state = Intake.No;
-			}
-			on grabber.error(): {
-				state = Intake.No;
-				power = Power.Off; // for now
-			}
+//			on grabber.finished(): {
+//				state = Intake.No;
+//			}
+//			on grabber.error(): {
+//				state = Intake.No;
+//				power = Power.Off; // for now
+//			}
 			on com.grab(): {
 				state = Intake.No;
 			}

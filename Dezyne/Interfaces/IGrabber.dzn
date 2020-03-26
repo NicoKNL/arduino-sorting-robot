@@ -25,3 +25,7 @@ interface IGrabber {
 	}
 }
 
+//component Grabber
+//{
+//	provides IGrabber grabber;
+//}

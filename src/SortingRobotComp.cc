@@ -18,7 +18,7 @@
 
 
 Controller::Controller(const dzn::locator& dzn_locator)
-: dzn_meta{"","Controller",0,0,{& grabber.meta,& reporter.meta,& belt.meta},{},{[this]{grabber.check_bindings();},[this]{reporter.check_bindings();},[this]{belt.check_bindings();},[this]{com.check_bindings();},[this]{i.check_bindings();}}}
+: dzn_meta{"","Controller",0,0,{& reporter.meta,& belt.meta},{},{[this]{reporter.check_bindings();},[this]{belt.check_bindings();},[this]{com.check_bindings();},[this]{i.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
 , power(::Controller::Power::Off), state(::Controller::Intake::No)
@@ -26,7 +26,6 @@ Controller::Controller(const dzn::locator& dzn_locator)
 , com({{"com",this,&dzn_meta},{"",0,0}})
 , i({{"i",this,&dzn_meta},{"",0,0}})
 
-, grabber({{"",0,0},{"grabber",this,&dzn_meta}})
 , reporter({{"",0,0},{"reporter",this,&dzn_meta}})
 , belt({{"",0,0},{"belt",this,&dzn_meta}})
 
@@ -37,8 +36,6 @@ Controller::Controller(const dzn::locator& dzn_locator)
   com.in.grab = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->com) = false; return com_grab();}, this->com.meta, "grab");};
   i.in.init = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->i) = false; return i_init();}, this->i.meta, "init");};
   i.in.shutDown = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->i) = false; return i_shutDown();}, this->i.meta, "shutDown");};
-  grabber.out.finished = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->grabber) = false; return grabber_finished();}, this->grabber.meta, "finished");};
-  grabber.out.error = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->grabber) = false; return grabber_error();}, this->grabber.meta, "error");};
   belt.out.atBlack = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->belt) = false; return belt_atBlack();}, this->belt.meta, "atBlack");};
   belt.out.atWhite = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->belt) = false; return belt_atWhite();}, this->belt.meta, "atWhite");};
   belt.out.atEnd = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->belt) = false; return belt_atEnd();}, this->belt.meta, "atEnd");};
@@ -51,15 +48,16 @@ Controller::Controller(const dzn::locator& dzn_locator)
 
 void Controller::com_grab()
 {
-
+  if (state == ::Controller::Intake::No) 
   {
     state = ::Controller::Intake::Yes;
-    this->grabber.in.grabDisk();
   }
-
+  else if (state == ::Controller::Intake::Yes) 
   {
     state = ::Controller::Intake::No;
   }
+  else if ((!(state == ::Controller::Intake::Yes) && !(state == ::Controller::Intake::No))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
 
@@ -85,34 +83,6 @@ void Controller::i_shutDown()
 
   {
     ;
-  }
-
-  return;
-
-}
-void Controller::grabber_finished()
-{
-  if (state == ::Controller::Intake::No) dzn_locator.get<dzn::illegal_handler>().illegal();
-  else if (state == ::Controller::Intake::Yes) 
-  {
-    state = ::Controller::Intake::No;
-  }
-  else if ((!(state == ::Controller::Intake::Yes) && !(state == ::Controller::Intake::No))) dzn_locator.get<dzn::illegal_handler>().illegal();
-  else dzn_locator.get<dzn::illegal_handler>().illegal();
-
-  return;
-
-}
-void Controller::grabber_error()
-{
-
-  {
-    power = ::Controller::Power::Off;
-  }
-
-  {
-    state = ::Controller::Intake::No;
-    power = ::Controller::Power::Off;
   }
 
   return;
@@ -198,50 +168,8 @@ void InternalBelt::dump_tree(std::ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 //SYSTEM
 
-GrabberSystem::GrabberSystem(const dzn::locator& dzn_locator)
-: dzn_meta{"","GrabberSystem",0,0,{},{& grabber.dzn_meta,& gsensor.dzn_meta,& gmotor.dzn_meta},{[this]{iGrabber.check_bindings();}}}
-, dzn_rt(dzn_locator.get<dzn::runtime>())
-, dzn_locator(dzn_locator)
-
-
-, grabber(dzn_locator)
-, gsensor(dzn_locator)
-, gmotor(dzn_locator)
-
-, iGrabber(grabber.grabber)
-
-{
-
-
-  grabber.dzn_meta.parent = &dzn_meta;
-  grabber.dzn_meta.name = "grabber";
-  gsensor.dzn_meta.parent = &dzn_meta;
-  gsensor.dzn_meta.name = "gsensor";
-  gmotor.dzn_meta.parent = &dzn_meta;
-  gmotor.dzn_meta.name = "gmotor";
-
-
-  connect(gsensor.sensor, grabber.presence);
-  connect(gmotor.motor, grabber.motor);
-
-  dzn::rank(iGrabber.meta.provides.meta, 0);
-
-}
-
-void GrabberSystem::check_bindings() const
-{
-  dzn::check_bindings(&dzn_meta);
-}
-void GrabberSystem::dump_tree(std::ostream& os) const
-{
-  dzn::dump_tree(os, &dzn_meta);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//SYSTEM
-
 SortingRobot::SortingRobot(const dzn::locator& dzn_locator)
-: dzn_meta{"","SortingRobot",0,0,{},{& belt.dzn_meta,& reporter.dzn_meta,& controller.dzn_meta,& grabber.dzn_meta},{[this]{i.check_bindings();},[this]{com.check_bindings();}}}
+: dzn_meta{"","SortingRobot",0,0,{},{& belt.dzn_meta,& reporter.dzn_meta,& controller.dzn_meta},{[this]{i.check_bindings();},[this]{com.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
 
@@ -249,7 +177,6 @@ SortingRobot::SortingRobot(const dzn::locator& dzn_locator)
 , belt(dzn_locator)
 , reporter(dzn_locator)
 , controller(dzn_locator)
-, grabber(dzn_locator)
 
 , i(controller.i), com(controller.com)
 
@@ -262,11 +189,8 @@ SortingRobot::SortingRobot(const dzn::locator& dzn_locator)
   reporter.dzn_meta.name = "reporter";
   controller.dzn_meta.parent = &dzn_meta;
   controller.dzn_meta.name = "controller";
-  grabber.dzn_meta.parent = &dzn_meta;
-  grabber.dzn_meta.name = "grabber";
 
 
-  connect(grabber.iGrabber, controller.grabber);
   connect(belt.iBeltControl, controller.belt);
   connect(reporter.iStateReport, controller.reporter);
 

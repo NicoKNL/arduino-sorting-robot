@@ -433,7 +433,6 @@ namespace skel {
 #ifndef CONTROLLER_HH
 #define CONTROLLER_HH
 
-#include "IGrabber.hh"
 #include "Console.hh"
 #include "IInternalBeltControl.hh"
 
@@ -483,7 +482,6 @@ struct Controller
   ::ICom com;
   ::IController i;
 
-  ::IGrabber grabber;
   ::IReporter reporter;
   ::iInternalBeltControl belt;
 
@@ -499,8 +497,6 @@ struct Controller
   void com_grab();
   void i_init();
   void i_shutDown();
-  void grabber_finished();
-  void grabber_error();
   void belt_atBlack();
   void belt_atWhite();
   void belt_atEnd();
@@ -548,41 +544,6 @@ struct InternalBelt
 
 /***********************************  SYSTEM  ***********************************/
 /***********************************  SYSTEM  ***********************************/
-#ifndef GRABBERSYSTEM_HH
-#define GRABBERSYSTEM_HH
-
-
-#include <dzn/locator.hh>
-
-#include "GrabberComp.hh"
-#include "Sensor.hh"
-#include "Motor.hh"
-
-
-
-struct GrabberSystem
-{
-  dzn::meta dzn_meta;
-  dzn::runtime& dzn_rt;
-  dzn::locator const& dzn_locator;
-
-
-  ::Grabber grabber;
-  ::Sensor gsensor;
-  ::Motor gmotor;
-
-  ::IGrabber& iGrabber;
-
-
-  GrabberSystem(const dzn::locator&);
-  void check_bindings() const;
-  void dump_tree(std::ostream& os=std::clog) const;
-};
-
-#endif // GRABBERSYSTEM_HH
-
-/***********************************  SYSTEM  ***********************************/
-/***********************************  SYSTEM  ***********************************/
 #ifndef SORTINGROBOT_HH
 #define SORTINGROBOT_HH
 
@@ -603,7 +564,6 @@ struct SortingRobot
   ::InternalBelt belt;
   ::Reporter reporter;
   ::Controller controller;
-  ::GrabberSystem grabber;
 
   ::IController& i;
   ::ICom& com;
