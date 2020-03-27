@@ -3,6 +3,7 @@
 #include "ILed.hh"
 class Led : public skel::Led {
 	int mPin = -1;
+	void led_initialise (int pin);
 	void led_turnOn();
 	void led_turnOff();
 

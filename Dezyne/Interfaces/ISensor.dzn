@@ -1,7 +1,7 @@
-extern Pin $int$;
-
 interface ISensor
 {
+	extern Pin $int$;
+	
 	in void initialise(Pin pin);
 	out void high();
 	out void low();

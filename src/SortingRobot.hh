@@ -138,6 +138,7 @@ namespace skel {
 
 
     {
+      led.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->led) = false; return led_initialise(pin);}, this->led.meta, "initialise");};
       led.in.turnOn = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->led) = false; return led_turnOn();}, this->led.meta, "turnOn");};
       led.in.turnOff = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->led) = false; return led_turnOff();}, this->led.meta, "turnOff");};
 
@@ -153,6 +154,7 @@ namespace skel {
       return m.stream_members(os);
     }
     private:
+    virtual void led_initialise (int pin) = 0;
     virtual void led_turnOn () = 0;
     virtual void led_turnOff () = 0;
 
