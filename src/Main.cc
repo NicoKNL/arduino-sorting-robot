@@ -6,6 +6,7 @@
 #include "wiringPi.h"
 
 #define LED_PIN 0
+#define SENSOR_PIN 1
 
 int main(int argc, char* argv[]) {
 	dzn::locator locator;
@@ -16,14 +17,24 @@ int main(int argc, char* argv[]) {
 
 	robbie_de_robot.check_bindings();
 
-	// Initial setup wiringPi
+	/**
+	 * Initial setup wiringPi
+	 */
 	wiringPiSetup();
+
+	// INPUT PINS
 	pinMode(LED_PIN, OUTPUT);
+
+	// OUTPUT PINS
+	pinMode(SENSOR_PIN, INPUT);
 
 	// Initialize pins
 	robbie_de_robot.led.led.in.initialise(LED_PIN);
+	robbie_de_robot.sensor.sensor.in.initialise(SENSOR_PIN);
 
-	//Start the system! Just like Sten! <3
+	/** 
+	 * Start the system! Just like Sten! <3
+	 */
 	robbie_de_robot.master.in.start();
 
 	while (true) {
