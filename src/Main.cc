@@ -1,41 +1,26 @@
 #include <dzn/runtime.hh>
 #include <dzn/locator.hh>
 
-#include "SortingRobotComp.hh"
+#include "SortingRobot.hh"
 #include <iostream>
+#include "wiringPi.h"
 
 int main(int argc, char* argv[]) {
 	dzn::locator locator;
 	dzn::runtime runtime;
 	locator.set(runtime);
 
+	SortingRobotSystem robbie_de_robot(locator);
 
-	// Controller controller(locator);
-	SortingRobot sorting_robot(locator);
+	robbie_de_robot.check_bindings();
 
-	// Missing bindings
-	sorting_robot.controller.reporter.in.report = []{ std::cout << "report\n"; };
-	sorting_robot.controller.reporter.in.turnOff = []{ std::cout << "turnOff\n"; };
-	sorting_robot.controller.reporter.in.setWaiting = []{ std::cout << "setWaiting\n"; };
-	sorting_robot.controller.reporter.in.setReceived = []{ std::cout << "setReceived\n"; };
-	sorting_robot.controller.reporter.in.setDispensing = []{ std::cout << "setDispensing\n"; };
+	//Start the system! Just like Sten! <3
+	robbie_de_robot.master.in.start();
 
-	sorting_robot.controller.belt.in.initialise = []{ std::cout << "belt initialise\n"; };
-	sorting_robot.controller.belt.in.toStackBlack = []{ std::cout << "to stack black\n"; };
-	sorting_robot.controller.belt.in.toStackWhite = []{ std::cout << "to stack white\n"; };
-	sorting_robot.controller.belt.in.toEnd = []{ std::cout << "to end\n"; };
-
-
-
-	sorting_robot.check_bindings();
-
-	std::cout<< "Pre init\n";
-
-	// while (true) {
-	sorting_robot.controller.belt.in.toStackBlack();
-	sorting_robot.i.in.init();
-		// controller.in.init();
-	std::cout<< "Post init\n";
-
-	// }
+	while (true) {
+		std::cout << "step\n";
+		robbie_de_robot.sensor.detect(); // Input sensor detection
+		delay(500); // 500 ms
+	}
+	return 0;
 }

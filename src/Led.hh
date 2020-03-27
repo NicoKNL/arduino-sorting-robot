@@ -2,8 +2,9 @@
 #define LED_HH
 #include "ILed.hh"
 class Led : public skel::Led {
-	void iLed_turnOff();
-	void iLed_turnOn();
+	int mPin = -1;
+	void led_turnOn();
+	void led_turnOff();
 
 	public:
 		Led(const dzn::locator& loc);
