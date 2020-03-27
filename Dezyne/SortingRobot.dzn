@@ -1,0 +1,69 @@
+import ILed.dzn;
+import ISensor.dzn;
+
+component SortingRobotSystem {
+	provides IMaster master;
+	
+	system {
+		Master m;
+		Led led;
+		Sensor sensor;
+		
+		m.master <=> master;
+		led.led <=> m.led;
+		sensor.sensor <=> m.sensor;
+	}
+}
+
+interface IMaster {
+	in void start();
+	in void stop();
+	in void emergency();
+	
+	behaviour {
+		enum State { On, Off };
+		State state = State.Off;
+		
+		[state.Off] {
+			on start: state = State.On;
+			on stop, emergency: {}
+		}
+		
+		[state.On] {
+			on stop, emergency: state = State.Off;
+			on start: {}
+		}
+	}
+}
+
+component Master {
+	provides IMaster master;
+	requires ISensor sensor;
+	requires ILed led;
+	
+	behaviour {
+		enum State { On, Off };
+		State state = State.Off;
+		
+		[state.Off] {
+			on master.start(): {
+				state = State.On;
+				led.turnOff();
+			}
+			
+			on master.stop(), master.emergency(): {}
+		}
+		
+		[state.On] {
+			on master.stop(), master.emergency(): {
+				led.turnOff();
+				state = State.Off;
+			}
+			
+			on sensor.high(): led.turnOn();
+			on sensor.low(): led.turnOff();
+			
+			on master.start(): {}
+		}
+	}
+}

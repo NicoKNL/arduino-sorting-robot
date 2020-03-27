@@ -123,20 +123,20 @@ namespace skel {
     dzn::meta dzn_meta;
     dzn::runtime& dzn_rt;
     dzn::locator const& dzn_locator;
-    ::ILed iLed;
+    ::ILed led;
 
 
     Led(const dzn::locator& dzn_locator)
-    : dzn_meta{"","Led",0,0,{},{},{[this]{iLed.check_bindings();}}}
+    : dzn_meta{"","Led",0,0,{},{},{[this]{led.check_bindings();}}}
     , dzn_rt(dzn_locator.get<dzn::runtime>())
     , dzn_locator(dzn_locator)
 
-    , iLed({{"iLed",this,&dzn_meta},{"",0,0}})
+    , led({{"led",this,&dzn_meta},{"",0,0}})
 
 
     {
-      iLed.in.turnOn = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->iLed) = false; return iLed_turnOn();}, this->iLed.meta, "turnOn");};
-      iLed.in.turnOff = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->iLed) = false; return iLed_turnOff();}, this->iLed.meta, "turnOff");};
+      led.in.turnOn = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->led) = false; return led_turnOn();}, this->led.meta, "turnOn");};
+      led.in.turnOff = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->led) = false; return led_turnOff();}, this->led.meta, "turnOff");};
 
 
     }
@@ -150,8 +150,8 @@ namespace skel {
       return m.stream_members(os);
     }
     private:
-    virtual void iLed_turnOn () = 0;
-    virtual void iLed_turnOff () = 0;
+    virtual void led_turnOn () = 0;
+    virtual void led_turnOff () = 0;
 
   };
 }

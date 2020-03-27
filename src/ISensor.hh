@@ -48,12 +48,13 @@ struct ISensor
 
   struct
   {
-    std::function< void()> initialise;
+    std::function< void(int)> initialise;
   } in;
 
   struct
   {
-    std::function< void()> detected;
+    std::function< void()> high;
+    std::function< void()> low;
   } out;
 
   dzn::port::meta meta;
@@ -63,7 +64,8 @@ struct ISensor
   {
     if (! in.initialise) throw dzn::binding_error(meta, "in.initialise");
 
-    if (! out.detected) throw dzn::binding_error(meta, "out.detected");
+    if (! out.high) throw dzn::binding_error(meta, "out.high");
+    if (! out.low) throw dzn::binding_error(meta, "out.low");
 
   }
 };
@@ -137,7 +139,7 @@ namespace skel {
 
 
     {
-      sensor.in.initialise = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sensor) = false; return sensor_initialise();}, this->sensor.meta, "initialise");};
+      sensor.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sensor) = false; return sensor_initialise(pin);}, this->sensor.meta, "initialise");};
 
 
     }
@@ -151,7 +153,7 @@ namespace skel {
       return m.stream_members(os);
     }
     private:
-    virtual void sensor_initialise () = 0;
+    virtual void sensor_initialise (int pin) = 0;
 
   };
 }
