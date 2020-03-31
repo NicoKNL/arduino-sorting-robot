@@ -1,69 +1,124 @@
-import ILed.dzn;
+import IIngest.dzn;
 import ISensor.dzn;
+import ISortingSystem.dzn;
 
-component SortingRobotSystem {
+component SortingRobotSystem
+{
 	provides IMaster master;
-	
-	system {
+
+	system
+	{
 		Master m;
-		Led led;
-		Sensor sensor;
+		Ingester i;
+		Sensor sensors;
+		SortingSystem sortingSystem;
 		
 		m.master <=> master;
-		led.led <=> m.led;
-		sensor.sensor <=> m.sensor;
+		i.ingest <=> m.ingest;
+		sensors.factoryFloorSensor <=> m.factoryFloorSensor;
+		sortingSystem.sortingSystem <=> m.sortingSystem;
+		
 	}
 }
 
-interface IMaster {
+interface IMaster
+{
 	in void start();
 	in void stop();
 	in void emergency();
-	
-	behaviour {
-		enum State { On, Off };
-		State state = State.Off;
-		
-		[state.Off] {
-			on start: state = State.On;
-			on stop, emergency: {}
-		}
-		
-		[state.On] {
-			on stop, emergency: state = State.Off;
-			on start: {}
-		}
+	in void forceWait();
+	in void continue();
+
+	behaviour
+	{
+		on start: {}
+		on stop: {}
+		on emergency: {}
+		on forceWait: {}
+		on continue: {}
 	}
 }
 
-component Master {
+component Master
+{
 	provides IMaster master;
-	requires ISensor sensor;
-	requires ILed led;
-	
-	behaviour {
-		enum State { On, Off };
+	requires IIngest ingest;
+	requires ISensor factoryFloorSensor;
+	requires ISortingSystem sortingSystem;
+
+	behaviour
+	{
+		enum State {Off, Idle, Waiting, Error, IngestingDisk, Sorting};
+		//bool waitNext = false;
 		State state = State.Off;
-		
-		[state.Off] {
-			on master.start(): {
-				state = State.On;
-				led.turnOff();
-			}
-			
-			on master.stop(), master.emergency(): {}
+
+		[state.Off]
+		{
+			on master.start(): {state = State.Idle;}
+			on master.stop(): {}
+			on master.emergency(): {}
+			on master.forceWait(): {}
+			on master.continue(): {}
 		}
-		
-		[state.On] {
-			on master.stop(), master.emergency(): {
-				led.turnOff();
-				state = State.Off;
-			}
-			
-			on sensor.high(): led.turnOn();
-			on sensor.low(): led.turnOff();
-			
+		[state.Idle]
+		{
 			on master.start(): {}
+			on master.stop(): {state = State.Off;}
+			on master.emergency(): {state = State.Error;}
+			on master.forceWait(): {state = State.Waiting;} 
+			on master.continue(): {}
+			
+			on factoryFloorSensor.high(): {
+				state = State.IngestingDisk;
+				ingest.startIngest();
+			}
+		}
+		[state.Waiting] {
+			on master.start(): {}
+			on master.stop(): {state = State.Off;}
+			on master.emergency(): {state = State.Error;}
+			on master.forceWait(): {} 
+			on master.continue(): {state = State.Idle;}
+		}
+		[state.Error] {
+			on master.start(): {}
+			on master.stop(): {state = State.Off;}
+			on master.emergency(): {state = State.Error;}
+			on master.forceWait(): {}
+			on master.continue(): {} 
+		}
+		[state.IngestingDisk] {
+			on master.start(): {}
+			on master.stop(): {state = State.Off;}
+			on master.emergency(): {state = State.Error;} 
+			on master.forceWait(): {
+				//waitNext = true;
+			}
+			on master.continue(): {}
+			
+			on ingest.finished(): {
+				state = State.Sorting;
+				sortingSystem.startSorting();
+			}
+		}
+		[state.Sorting] {
+			on master.start(): {}
+			on master.stop(): {state = State.Off;}
+			on master.emergency(): {state = State.Error;} 
+			on master.forceWait(): {
+			//waitNext = true;
+			}
+			on master.continue(): {}
+			
+			on sortingSystem.finished(): {
+				//if (waitNext) {
+				//	waitNext = false;
+				//	state = State.Waiting;
+				//} else {
+				//	state = State.Idle;
+				//}
+				state = State.Idle;
+			}
 		}
 	}
 }

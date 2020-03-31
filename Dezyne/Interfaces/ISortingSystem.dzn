@@ -1,0 +1,19 @@
+interface ISortingSystem {
+	
+	in void startSorting();
+	out void finished();
+	
+	behaviour {
+		enum State { Idle, AwaitColourScan, SortWhite, SortBlack};
+		State state = State.Idle;
+		
+		on startSorting: {
+			state = State.AwaitColourScan;
+		}
+	}
+	
+}
+
+component SortingSystem {
+	provides ISortingSystem sortingSystem;
+}

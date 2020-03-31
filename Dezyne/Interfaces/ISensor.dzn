@@ -31,5 +31,5 @@ interface ISensor
 
 component Sensor
 {
-	provides ISensor sensor;
+	provides ISensor factoryFloorSensor;
 }

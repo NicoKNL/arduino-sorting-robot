@@ -1,0 +1,19 @@
+interface IIngest {
+	
+	in void startIngest();
+	out void finished();
+	
+	behaviour {
+		enum State { Idle, Monitoring, Ingesting };
+		State state = State.Idle;
+		
+		on startIngest: {
+			state = State.Monitoring;
+		}
+	}
+
+}
+
+component Ingester {
+	provides IIngest ingest;
+}
