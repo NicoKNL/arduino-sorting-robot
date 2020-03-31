@@ -8,24 +8,7 @@ interface ISensor
 
 	behaviour
 	{
-		enum State {Unknown, Low, High};
-		State state = State.Unknown;
-
-		[state.Unknown]
-		{
-			on initialise: state = State.Low;
-			on initialise: state = State.High;
-		}
-		[state.Low]
-		{
 			on initialise: {}
-			on optional: {state = State.High; high;}
-		}
-		[state.High]
-		{
-			on initialise: {}
-			on optional: {state = State.Low; low;}
-		}
 	}
 }
 

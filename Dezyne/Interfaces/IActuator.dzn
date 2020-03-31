@@ -10,8 +10,15 @@ interface IActuator {
 		enum State { Withdrawn, Extended };
 		State state = State.Withdrawn;
 		
-		on extend: {state = State.Extended;}
-		on withdraw: {state = State.Withdrawn;} 
+		[state.Withdrawn] {
+			on extend: {state = State.Extended;}
+			on withdraw: illegal;
+		}
+		
+		[state.Extended] {
+			on extend: illegal;
+			on withdraw: {state = State.Withdrawn;} 
+		}
 	}
 }
 

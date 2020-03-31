@@ -8,7 +8,20 @@ interface IIngest {
 	out void finished();
 	
 	behaviour {
-		on startIngest: {}
+		enum State { Idle, Monitoring, Ingesting };
+		State state = State.Idle;
+		
+		[state.Idle] {
+			on startIngest: {}
+		}
+		
+		[state.Monitoring] {
+			on startIngest: illegal;
+		}
+		
+		[state.Ingesting] {
+			on startIngest: illegal;
+		}
 	}
 
 }

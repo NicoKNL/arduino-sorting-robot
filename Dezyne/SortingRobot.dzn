@@ -52,11 +52,56 @@ interface IMaster
 
 	behaviour
 	{
-		on start: {}
-		on stop: {}
-		on emergency: {}
-		on forceWait: {}
-		on cancelWait: {}
+		enum State {Off, Idle, Waiting, Error, IngestingDisk, Sorting};
+		State state = State.Off;
+		
+		[state.Off] {
+			on start: {state = State.Idle;}
+			on stop: illegal;
+			on emergency: illegal;
+			on forceWait: illegal;
+			on cancelWait: illegal;	
+		}
+		
+		[state.Idle] {
+			on start: illegal;
+			on stop: {state = State.Off;}
+			on emergency: {state = State.Error;}
+			on forceWait: {state = State.Waiting;}
+			on cancelWait: illegal;			
+		}
+		
+		[state.Waiting] {
+			on start: illegal;
+			on stop: {state = State.Off;}
+			on emergency: {state = State.Error;}
+			on forceWait: {state = State.Waiting;}
+			on cancelWait: {state = State.Idle;}			
+		}
+		
+		[state.Error] {
+			on start: illegal;
+			on stop: {state = State.Off;}
+			on emergency: {state = State.Error;}
+			on forceWait: {state = State.Error;}
+			on cancelWait: {state = State.Error;}			
+		}
+		
+		[state.IngestingDisk] {
+			on start: illegal;
+			on stop: illegal;
+			on emergency: {state = State.Error;}
+			on forceWait: {}
+			on cancelWait: {}			
+		}
+		
+		[state.Sorting] {
+			on start: illegal;
+			on stop: illegal;
+			on emergency: {state = State.Error;}
+			on forceWait: {}
+			on cancelWait: {}			
+		}
 	}
 }
 
@@ -73,64 +118,50 @@ component Master
 		State state = State.Off;
 		bool waitNext = false;
 		
-
-		[state.Off]
-		{
+		[state.Off] {
 			on master.start(): {state = State.Idle;}
-			on master.stop(): {}
-			on master.emergency(): {}
-			on master.forceWait(): {}
-			on master.cancelWait(): {}
 		}
-		[state.Idle]
-		{
-			on master.start(): {}
+		
+		[state.Idle] {
 			on master.stop(): {state = State.Off;}
 			on master.emergency(): {state = State.Error;}
-			on master.forceWait(): {state = State.Waiting;} 
-			on master.cancelWait(): {}
+			on master.forceWait(): {state = State.Waiting;}
 			
 			on factoryFloorSensor.high(): {
 				state = State.IngestingDisk;
 				ingest.startIngest();
-			}
+			}	
 		}
+		
 		[state.Waiting] {
-			on master.start(): {}
 			on master.stop(): {state = State.Off;}
 			on master.emergency(): {state = State.Error;}
-			on master.forceWait(): {} 
-			on master.cancelWait(): {state = State.Idle;}
+			on master.forceWait(): {state = State.Waiting;}
+			on master.cancelWait(): {state = State.Idle;}			
 		}
+		
 		[state.Error] {
-			on master.start(): {}
 			on master.stop(): {state = State.Off;}
 			on master.emergency(): {state = State.Error;}
-			on master.forceWait(): {}
-			on master.cancelWait(): {} 
+			on master.forceWait(): {state = State.Error;}
+			on master.cancelWait(): {state = State.Error;}			
 		}
+		
 		[state.IngestingDisk] {
-			on master.start(): {}
-			on master.stop(): {state = State.Off;}
-			on master.emergency(): {state = State.Error;} 
-			on master.forceWait(): {
-				waitNext = true;
-			}
-			on master.cancelWait(): {}
+			on master.emergency(): {state = State.Error;}
+			on master.forceWait(): {waitNext = true;}
+			on master.cancelWait(): {waitNext = false;}
 			
 			on ingest.finished(): {
 				state = State.Sorting;
 				sortingSystem.startSorting();
-			}
+			}			
 		}
+		
 		[state.Sorting] {
-			on master.start(): {}
-			on master.stop(): {state = State.Off;}
-			on master.emergency(): {state = State.Error;} 
-			on master.forceWait(): {
-			waitNext = true;
-			}
-			on master.cancelWait(): {}
+			on master.emergency(): {state = State.Error;}
+			on master.forceWait(): {waitNext = true;}
+			on master.cancelWait(): {waitNext = false;}
 			
 			on sortingSystem.finished(): {
 				if (waitNext) {
@@ -139,7 +170,7 @@ component Master
 				} else {
 					state = State.Idle;
 				}
-			}
+			}			
 		}
 	}
 }

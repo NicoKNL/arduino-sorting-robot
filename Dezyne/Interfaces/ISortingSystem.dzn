@@ -10,7 +10,28 @@ interface ISortingSystem {
 	out void finished();
 	
 	behaviour {
-		on startSorting: {}
+		enum State { Idle, AwaitColourScan, SortWhite, SortBlack};
+		State state = State.Idle;
+		
+		[state.Idle] {
+			on startSorting: {}
+		}
+		
+		[state.AwaitColourScan] {
+			on startSorting: illegal;
+		}
+		
+		[state.SortWhite] {
+			on startSorting: illegal;
+		}
+		
+		[state.SortBlack] {
+			on startSorting: illegal;
+		}
+		
+		[state.Idle] {
+			on startSorting: illegal;
+		}
 	}
 }
 
@@ -34,6 +55,7 @@ component SortingSystem {
 				state = State.AwaitColourScan;
 			}
 		}
+		
 		[state.AwaitColourScan] {
 			on colourSensor.detectedWhite(): {
 				whiteActuator.extend();
@@ -50,6 +72,7 @@ component SortingSystem {
 				state = State.Idle;
 			}
 		}
+		
 		[state.SortWhite] {
 			on beltSensorWhite.high(): {
 				timer.start(delay); // wait {delay} milliseconds
@@ -60,6 +83,7 @@ component SortingSystem {
 				sortingSystem.finished();
 			}
 		}
+		
 		[state.SortBlack] {
 			on beltSensorBlack.high(): {
 				timer.start(delay); // wait {delay} milliseconds
