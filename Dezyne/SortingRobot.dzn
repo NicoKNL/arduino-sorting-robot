@@ -51,6 +51,7 @@ interface IMaster
 	in void emergency();
 	in void forceWait();
 	in void cancelWait();
+	in State getState();
 	
 	behaviour
 	{
@@ -120,6 +121,7 @@ component Master
 		IMaster.State state = IMaster.State.Off;
 		bool waitNext = false;
 		
+		on master.getState(): reply(state);
 		on factoryFloorSensor.high(): {}
 		
 		[state.Off] {

@@ -4,7 +4,8 @@
 #include "SortingRobot.hh"
 #include <iostream>
 #include "wiringPi.h"
-
+#include <vector>
+#include <string>
 /*******************************************************************************
  * PIN LAYOUT
  ******************************************************************************/
@@ -29,7 +30,9 @@
 #define COLOR_SENSOR_1_IN_PIN 5
 
 
-
+void logState(SortingRobotSystem robo, std::vector<std::string> translation) {
+	std::cout << "\n\n    [STATE] " << translation[robo.master.in.getState()] << "\n\n";
+}
 
 /*******************************************************************************
  * ENTRY POINT CODE
@@ -38,6 +41,11 @@ int main(int argc, char* argv[]) {
 	dzn::locator locator;
 	dzn::runtime runtime;
 	locator.set(runtime);
+
+	std::vector<std::string> t = // translation
+		{
+			"Off", "Idle", " Waiting", "Error", "IngestingDisk", "Sorting"
+		};
 
 	/*******************************************************************************
 	 * Initial setup wiringPi
@@ -83,18 +91,29 @@ int main(int argc, char* argv[]) {
 
 	while (true) {
 		std::cout << "step\n";
-		std::cout << "[STATE] " << robbie_de_robot.master.state;
+		logState(robbie_de_robot, t);
 		// Check timers
 		robbie_de_robot.ingestTimer.check_timer();
+		logState(robbie_de_robot, t);
 		robbie_de_robot.sortingTimer.check_timer();
+		logState(robbie_de_robot, t);
+
 
 		// Input sensor detection
 		robbie_de_robot.factorFloorSensor.detect();
-		robbie_de_robot.wheelStopSensor.detect();
-		robbie_de_robot.cs.detect();
-		robbie_de_robot.beltSensorWhite.detect();
-		robbie_de_robot.beltSensorBlack.detect();
+		logState(robbie_de_robot, t);
 
+		robbie_de_robot.wheelStopSensor.detect();
+		logState(robbie_de_robot, t);
+
+		robbie_de_robot.cs.detect();
+		logState(robbie_de_robot, t);
+
+		robbie_de_robot.beltSensorWhite.detect();
+		logState(robbie_de_robot, t);
+
+		robbie_de_robot.beltSensorBlack.detect();
+		logState(robbie_de_robot, t);
 
 		std::cout << "post step\n";
 

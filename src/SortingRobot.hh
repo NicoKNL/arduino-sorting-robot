@@ -403,22 +403,8 @@ struct Master
   dzn::meta dzn_meta;
   dzn::runtime& dzn_rt;
   dzn::locator const& dzn_locator;
-#ifndef ENUM_Master_State
-#define ENUM_Master_State 1
 
-
-  struct State
-  {
-    enum type
-    {
-      Off,Idle,Waiting,Error,IngestingDisk,Sorting
-    };
-  };
-
-
-#endif // ENUM_Master_State
-
-  ::Master::State::type state;
+  ::IMaster::State::type state;
   bool waitNext;
 
   ::IMaster::State::type reply_IMaster_State;
