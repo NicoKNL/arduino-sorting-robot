@@ -24,59 +24,51 @@ namespace dzn {
 
 
 /********************************** INTERFACE *********************************/
-#ifndef IMASTER_HH
-#define IMASTER_HH
+#ifndef ISORTINGSYSTEM_HH
+#define ISORTINGSYSTEM_HH
 
 
 
-struct IMaster
+struct ISortingSystem
 {
-#ifndef ENUM_IMaster_State
-#define ENUM_IMaster_State 1
+#ifndef ENUM_ISortingSystem_State
+#define ENUM_ISortingSystem_State 1
 
 
   struct State
   {
     enum type
     {
-      Off,Idle,Waiting,Error,IngestingDisk,Sorting
+      Idle,AwaitColourScan,SortWhite,SortBlack,SortOther
     };
   };
 
 
-#endif // ENUM_IMaster_State
+#endif // ENUM_ISortingSystem_State
 
   struct
   {
-    std::function< void()> start;
-    std::function< void()> stop;
-    std::function< void()> emergency;
-    std::function< void()> forceWait;
-    std::function< void()> cancelWait;
-    std::function< ::IMaster::State::type()> getState;
+    std::function< void()> startSorting;
   } in;
 
   struct
   {
+    std::function< void()> finished;
   } out;
 
   dzn::port::meta meta;
-  inline IMaster(const dzn::port::meta& m) : meta(m) {}
+  inline ISortingSystem(const dzn::port::meta& m) : meta(m) {}
 
   void check_bindings() const
   {
-    if (! in.start) throw dzn::binding_error(meta, "in.start");
-    if (! in.stop) throw dzn::binding_error(meta, "in.stop");
-    if (! in.emergency) throw dzn::binding_error(meta, "in.emergency");
-    if (! in.forceWait) throw dzn::binding_error(meta, "in.forceWait");
-    if (! in.cancelWait) throw dzn::binding_error(meta, "in.cancelWait");
-    if (! in.getState) throw dzn::binding_error(meta, "in.getState");
+    if (! in.startSorting) throw dzn::binding_error(meta, "in.startSorting");
 
+    if (! out.finished) throw dzn::binding_error(meta, "out.finished");
 
   }
 };
 
-inline void connect (IMaster& provided, IMaster& required)
+inline void connect (ISortingSystem& provided, ISortingSystem& required)
 {
   provided.out = required.out;
   required.in = provided.in;
@@ -85,42 +77,40 @@ inline void connect (IMaster& provided, IMaster& required)
 }
 
 
-#ifndef ENUM_TO_STRING_IMaster_State
-#define ENUM_TO_STRING_IMaster_State 1
-inline std::string to_string(::IMaster::State::type v)
+#ifndef ENUM_TO_STRING_ISortingSystem_State
+#define ENUM_TO_STRING_ISortingSystem_State 1
+inline std::string to_string(::ISortingSystem::State::type v)
 {
   switch(v)
   {
-    case ::IMaster::State::Off: return "State_Off";
-    case ::IMaster::State::Idle: return "State_Idle";
-    case ::IMaster::State::Waiting: return "State_Waiting";
-    case ::IMaster::State::Error: return "State_Error";
-    case ::IMaster::State::IngestingDisk: return "State_IngestingDisk";
-    case ::IMaster::State::Sorting: return "State_Sorting";
+    case ::ISortingSystem::State::Idle: return "State_Idle";
+    case ::ISortingSystem::State::AwaitColourScan: return "State_AwaitColourScan";
+    case ::ISortingSystem::State::SortWhite: return "State_SortWhite";
+    case ::ISortingSystem::State::SortBlack: return "State_SortBlack";
+    case ::ISortingSystem::State::SortOther: return "State_SortOther";
 
   }
   return "";
 }
-#endif // ENUM_TO_STRING_IMaster_State
+#endif // ENUM_TO_STRING_ISortingSystem_State
 
-#ifndef STRING_TO_ENUM_IMaster_State
-#define STRING_TO_ENUM_IMaster_State 1
-inline ::IMaster::State::type to_IMaster_State(std::string s)
+#ifndef STRING_TO_ENUM_ISortingSystem_State
+#define STRING_TO_ENUM_ISortingSystem_State 1
+inline ::ISortingSystem::State::type to_ISortingSystem_State(std::string s)
 {
-  static std::map<std::string, ::IMaster::State::type> m = {
-    {"State_Off", ::IMaster::State::Off},
-    {"State_Idle", ::IMaster::State::Idle},
-    {"State_Waiting", ::IMaster::State::Waiting},
-    {"State_Error", ::IMaster::State::Error},
-    {"State_IngestingDisk", ::IMaster::State::IngestingDisk},
-    {"State_Sorting", ::IMaster::State::Sorting},
+  static std::map<std::string, ::ISortingSystem::State::type> m = {
+    {"State_Idle", ::ISortingSystem::State::Idle},
+    {"State_AwaitColourScan", ::ISortingSystem::State::AwaitColourScan},
+    {"State_SortWhite", ::ISortingSystem::State::SortWhite},
+    {"State_SortBlack", ::ISortingSystem::State::SortBlack},
+    {"State_SortOther", ::ISortingSystem::State::SortOther},
   };
   return m.at(s);
 }
-#endif // STRING_TO_ENUM_IMaster_State
+#endif // STRING_TO_ENUM_ISortingSystem_State
 
 
-#endif // IMASTER_HH
+#endif // ISORTINGSYSTEM_HH
 
 /********************************** INTERFACE *********************************/
 /***********************************  FOREIGN  **********************************/
@@ -177,58 +167,54 @@ namespace skel {
 
 /***********************************  FOREIGN  **********************************/
 /***********************************  FOREIGN  **********************************/
-#ifndef SKEL_MOTOR_HH
-#define SKEL_MOTOR_HH
+#ifndef SKEL_COLOURSENSOR_HH
+#define SKEL_COLOURSENSOR_HH
 
 #include <dzn/locator.hh>
 #include <dzn/runtime.hh>
 
-#include "IMotor.hh"
+#include "IColourSensor.hh"
 
 
 
 namespace skel {
-  struct Motor
+  struct ColourSensor
   {
     dzn::meta dzn_meta;
     dzn::runtime& dzn_rt;
     dzn::locator const& dzn_locator;
-    ::IMotor motor;
+    ::IColourSensor colourSensor;
 
 
-    Motor(const dzn::locator& dzn_locator)
-    : dzn_meta{"","Motor",0,0,{},{},{[this]{motor.check_bindings();}}}
+    ColourSensor(const dzn::locator& dzn_locator)
+    : dzn_meta{"","ColourSensor",0,0,{},{},{[this]{colourSensor.check_bindings();}}}
     , dzn_rt(dzn_locator.get<dzn::runtime>())
     , dzn_locator(dzn_locator)
 
-    , motor({{"motor",this,&dzn_meta},{"",0,0}})
+    , colourSensor({{"colourSensor",this,&dzn_meta},{"",0,0}})
 
 
     {
-      motor.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_initialise(pin);}, this->motor.meta, "initialise");};
-      motor.in.turnOn = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_turnOn();}, this->motor.meta, "turnOn");};
-      motor.in.turnOff = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_turnOff();}, this->motor.meta, "turnOff");};
+      colourSensor.in.initialise = [&](int pinA,int pinB){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->colourSensor) = false; return colourSensor_initialise(pinA,pinB);}, this->colourSensor.meta, "initialise");};
 
 
     }
-    virtual ~ Motor() {}
+    virtual ~ ColourSensor() {}
     virtual std::ostream& stream_members(std::ostream& os) const { return os; }
     void check_bindings() const;
     void dump_tree(std::ostream& os) const;
     void set_state(std::map<std::string,std::map<std::string,std::string> >){}
     void set_state(std::map<std::string,std::string>_alist){}
-    friend std::ostream& operator << (std::ostream& os, const Motor& m)  {
+    friend std::ostream& operator << (std::ostream& os, const ColourSensor& m)  {
       return m.stream_members(os);
     }
     private:
-    virtual void motor_initialise (int pin) = 0;
-    virtual void motor_turnOn () = 0;
-    virtual void motor_turnOff () = 0;
+    virtual void colourSensor_initialise (int pinA,int pinB) = 0;
 
   };
 }
 
-#endif // MOTOR_HH
+#endif // COLOURSENSOR_HH
 
 /***********************************  FOREIGN  **********************************/
 /***********************************  FOREIGN  **********************************/
@@ -280,57 +266,6 @@ namespace skel {
 }
 
 #endif // SENSOR_HH
-
-/***********************************  FOREIGN  **********************************/
-/***********************************  FOREIGN  **********************************/
-#ifndef SKEL_COLOURSENSOR_HH
-#define SKEL_COLOURSENSOR_HH
-
-#include <dzn/locator.hh>
-#include <dzn/runtime.hh>
-
-#include "IColourSensor.hh"
-
-
-
-namespace skel {
-  struct ColourSensor
-  {
-    dzn::meta dzn_meta;
-    dzn::runtime& dzn_rt;
-    dzn::locator const& dzn_locator;
-    ::IColourSensor colourSensor;
-
-
-    ColourSensor(const dzn::locator& dzn_locator)
-    : dzn_meta{"","ColourSensor",0,0,{},{},{[this]{colourSensor.check_bindings();}}}
-    , dzn_rt(dzn_locator.get<dzn::runtime>())
-    , dzn_locator(dzn_locator)
-
-    , colourSensor({{"colourSensor",this,&dzn_meta},{"",0,0}})
-
-
-    {
-      colourSensor.in.initialise = [&](int pinA,int pinB){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->colourSensor) = false; return colourSensor_initialise(pinA,pinB);}, this->colourSensor.meta, "initialise");};
-
-
-    }
-    virtual ~ ColourSensor() {}
-    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
-    void check_bindings() const;
-    void dump_tree(std::ostream& os) const;
-    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
-    void set_state(std::map<std::string,std::string>_alist){}
-    friend std::ostream& operator << (std::ostream& os, const ColourSensor& m)  {
-      return m.stream_members(os);
-    }
-    private:
-    virtual void colourSensor_initialise (int pinA,int pinB) = 0;
-
-  };
-}
-
-#endif // COLOURSENSOR_HH
 
 /***********************************  FOREIGN  **********************************/
 /***********************************  FOREIGN  **********************************/
@@ -388,115 +323,119 @@ namespace skel {
 #endif // ACTUATOR_HH
 
 /***********************************  FOREIGN  **********************************/
-/********************************** COMPONENT *********************************/
-#ifndef MASTER_HH
-#define MASTER_HH
-
-#include "IIngest.hh"
-#include "ISensor.hh"
-#include "ISortingSystem.hh"
-
-
-
-struct Master
-{
-  dzn::meta dzn_meta;
-  dzn::runtime& dzn_rt;
-  dzn::locator const& dzn_locator;
-
-  ::IMaster::State::type state;
-  bool waitNext;
-
-  ::IMaster::State::type reply_IMaster_State;
-
-  std::function<void ()> out_master;
-
-  ::IMaster master;
-
-  ::IIngest ingest;
-  ::ISensor factoryFloorSensor;
-  ::ISortingSystem sortingSystem;
-
-
-  Master(const dzn::locator&);
-  void check_bindings() const;
-  void dump_tree(std::ostream& os) const;
-  friend std::ostream& operator << (std::ostream& os, const Master& m)  {
-    (void)m;
-    return os << "[" << m.state <<", " << m.waitNext <<"]" ;
-  }
-  private:
-  void master_start();
-  void master_stop();
-  void master_emergency();
-  void master_forceWait();
-  void master_cancelWait();
-  ::IMaster::State::type master_getState();
-  void ingest_finished();
-  void factoryFloorSensor_high();
-  void sortingSystem_finished();
-
-};
-
-#endif // MASTER_HH
-
-/********************************** COMPONENT *********************************/
-/***********************************  SYSTEM  ***********************************/
-#ifndef SORTINGROBOTSYSTEM_HH
-#define SORTINGROBOTSYSTEM_HH
-
+/***********************************  FOREIGN  **********************************/
+#ifndef SKEL_MOTOR_HH
+#define SKEL_MOTOR_HH
 
 #include <dzn/locator.hh>
+#include <dzn/runtime.hh>
 
-#include "Sensor.hh"
-#include "IIngest.hh"
-#include "Motor.hh"
-#include "Sensor.hh"
-#include "Timer.hh"
-#include "Sensor.hh"
-#include "Sensor.hh"
-#include "ISortingSystem.hh"
-#include "ColourSensor.hh"
-#include "Actuator.hh"
-#include "Actuator.hh"
-#include "Motor.hh"
-#include "Timer.hh"
+#include "IMotor.hh"
 
 
 
-struct SortingRobotSystem
+namespace skel {
+  struct Motor
+  {
+    dzn::meta dzn_meta;
+    dzn::runtime& dzn_rt;
+    dzn::locator const& dzn_locator;
+    ::IMotor motor;
+
+
+    Motor(const dzn::locator& dzn_locator)
+    : dzn_meta{"","Motor",0,0,{},{},{[this]{motor.check_bindings();}}}
+    , dzn_rt(dzn_locator.get<dzn::runtime>())
+    , dzn_locator(dzn_locator)
+
+    , motor({{"motor",this,&dzn_meta},{"",0,0}})
+
+
+    {
+      motor.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_initialise(pin);}, this->motor.meta, "initialise");};
+      motor.in.turnOn = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_turnOn();}, this->motor.meta, "turnOn");};
+      motor.in.turnOff = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_turnOff();}, this->motor.meta, "turnOff");};
+
+
+    }
+    virtual ~ Motor() {}
+    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
+    void check_bindings() const;
+    void dump_tree(std::ostream& os) const;
+    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
+    void set_state(std::map<std::string,std::string>_alist){}
+    friend std::ostream& operator << (std::ostream& os, const Motor& m)  {
+      return m.stream_members(os);
+    }
+    private:
+    virtual void motor_initialise (int pin) = 0;
+    virtual void motor_turnOn () = 0;
+    virtual void motor_turnOff () = 0;
+
+  };
+}
+
+#endif // MOTOR_HH
+
+/***********************************  FOREIGN  **********************************/
+/********************************** COMPONENT *********************************/
+#ifndef SORTINGSYSTEM_HH
+#define SORTINGSYSTEM_HH
+
+#include "IColourSensor.hh"
+#include "ISensor.hh"
+#include "ISensor.hh"
+#include "IActuator.hh"
+#include "IActuator.hh"
+#include "IMotor.hh"
+#include "ITimer.hh"
+
+
+
+struct SortingSystem
 {
   dzn::meta dzn_meta;
   dzn::runtime& dzn_rt;
   dzn::locator const& dzn_locator;
 
-
-  ::Master m;
-  ::Sensor factorFloorSensor;
-  ::Ingester i;
-  ::Motor wheelMotor;
-  ::Sensor wheelStopSensor;
-  ::Timer ingestTimer;
-  ::Sensor beltSensorWhite;
-  ::Sensor beltSensorBlack;
-  ::SortingSystem sortingSystem;
-  ::ColourSensor cs;
-  ::Actuator whiteActuator;
-  ::Actuator blackActuator;
-  ::Motor beltMotor;
-  ::Timer sortingTimer;
-
-  ::IMaster& master;
+  ::ISortingSystem::State::type state;
+  long delay;
 
 
-  SortingRobotSystem(const dzn::locator&);
+  std::function<void ()> out_sortingSystem;
+
+  ::ISortingSystem sortingSystem;
+
+  ::IColourSensor colourSensor;
+  ::ISensor beltSensorWhite;
+  ::ISensor beltSensorBlack;
+  ::IActuator whiteActuator;
+  ::IActuator blackActuator;
+  ::IMotor beltMotor;
+  ::ITimer timer;
+
+
+  SortingSystem(const dzn::locator&);
   void check_bindings() const;
-  void dump_tree(std::ostream& os=std::clog) const;
+  void dump_tree(std::ostream& os) const;
+  friend std::ostream& operator << (std::ostream& os, const SortingSystem& m)  {
+    (void)m;
+    return os << "[" << m.state <<", " << m.delay <<"]" ;
+  }
+  private:
+  void sortingSystem_startSorting();
+  void colourSensor_detectedWhite();
+  void colourSensor_detectedBlack();
+  void colourSensor_detectedUnknown();
+  void beltSensorWhite_high();
+  void beltSensorBlack_high();
+  void timer_timeout();
+
 };
 
-#endif // SORTINGROBOTSYSTEM_HH
+#endif // SORTINGSYSTEM_HH
 
-/***********************************  SYSTEM  ***********************************/
+/********************************** COMPONENT *********************************/
 
 
 //version: 2.9.1

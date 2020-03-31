@@ -1,122 +1,182 @@
-import internal_belt.dzn;
-import Console.dzn;
-import Grabber.dzn;
-import Sensor.dzn;
-import Motor.dzn;
+import IIngest.dzn;
+import ISensor.dzn;
+import ISortingSystem.dzn;
 
-component InternalBelt {
-	provides iInternalBeltControl iBeltControl;
+component SortingRobotSystem
+{
+	provides IMaster master;
+
+	system
+	{
+		Master m;
+		m.master <=> master;
+		
+		Sensor factorFloorSensor;
+		factorFloorSensor.sensor <=> m.factoryFloorSensor;
+		
+		Ingester i;
+		Motor wheelMotor;
+		Sensor wheelStopSensor;
+		Timer ingestTimer;
+		i.ingest <=> m.ingest;
+		i.wheelMotor <=> wheelMotor.motor;
+		i.wheelStopSensor <=> wheelStopSensor.sensor;
+		i.timer <=> ingestTimer.timer;
+		
+		Sensor beltSensorWhite;
+		Sensor beltSensorBlack;
+		SortingSystem sortingSystem;
+		ColourSensor cs;
+		Actuator whiteActuator;
+		Actuator blackActuator;
+		Motor beltMotor;
+		Timer sortingTimer;
+		sortingSystem.sortingSystem <=> m.sortingSystem;
+		sortingSystem.colourSensor <=> cs.colourSensor;
+		sortingSystem.beltSensorWhite <=> beltSensorWhite.sensor;
+		sortingSystem.beltSensorBlack <=> beltSensorBlack.sensor;
+		sortingSystem.whiteActuator <=> whiteActuator.actuator;
+		sortingSystem.blackActuator <=> blackActuator.actuator;
+		sortingSystem.beltMotor <=> beltMotor.motor;
+		sortingSystem.timer <=> sortingTimer.timer;
+	}
+}
+
+interface IMaster
+{
+	enum State {Off, Idle, Waiting, Error, IngestingDisk, Sorting};
 	
-	system {
-		InternalBeltControl beltControl;
-		MotorControl m;
-		PresSensorWhiteStack sW;
-		PresSensorBlackStack sB;
-		SensorEnd sE;
+	in void start();
+	in void stop();
+	in void emergency();
+	in void forceWait();
+	in void cancelWait();
+	in State getState();
+	
+	behaviour
+	{
+		State state = State.Off;
 		
-		iBeltControl <=> beltControl.beltControl;
-		beltControl.motorControl <=> m.motorControl;
-		beltControl.presSensorBlackStack <=> sB.sensorBlack;
-		beltControl.presSensorWhiteStack <=> sW.sensorWhite;
-		beltControl.sensorEnd <=> sE.sensorEnd;
+		on getState: { reply(state); }
+		
+		[state.Off] {
+			on start: {state = State.Idle;}
+			on stop: illegal;
+			on emergency: illegal;
+			on forceWait: illegal;
+			on cancelWait: illegal;	
+		}
+		
+		[state.Idle] {
+			on start: illegal;
+			on stop: {state = State.Off;}
+			on emergency: {state = State.Error;}
+			on forceWait: {state = State.Waiting;}
+			on cancelWait: illegal;			
+		}
+		
+		[state.Waiting] {
+			on start: illegal;
+			on stop: {state = State.Off;}
+			on emergency: {state = State.Error;}
+			on forceWait: {state = State.Waiting;}
+			on cancelWait: {state = State.Idle;}			
+		}
+		
+		[state.Error] {
+			on start: illegal;
+			on stop: {state = State.Off;}
+			on emergency: {state = State.Error;}
+			on forceWait: {state = State.Error;}
+			on cancelWait: {state = State.Error;}			
+		}
+		
+		[state.IngestingDisk] {
+			on start: illegal;
+			on stop: illegal;
+			on emergency: {state = State.Error;}
+			on forceWait: {}
+			on cancelWait: {}			
+		}
+		
+		[state.Sorting] {
+			on start: illegal;
+			on stop: illegal;
+			on emergency: {state = State.Error;}
+			on forceWait: {}
+			on cancelWait: {}			
+		}
 	}
 }
 
-component SortingRobot {
-	provides IController i;
-	provides ICom com;
-		system {
-		InternalBelt belt;
-		Reporter reporter;
-		Controller controller;
-		GrabberSystem grabber;
-		
-		i <=> controller.i;
-		grabber.iGrabber <=> controller.grabber;
-		belt.iBeltControl <=> controller.belt;
-		reporter.iSateReport <=> controller.reporter;
-		controller.com <=> com;
-	}
-}
+component Master
+{
+	provides IMaster master;
+	requires IIngest ingest;
+	requires ISensor factoryFloorSensor;
+	requires ISortingSystem sortingSystem;
 
-component GrabberSystem	 {
-	provides IGrabber iGrabber;
-	system {
-		Grabber grabber;
-		Sensor gsensor;
-		Motor gmotor;
+	behaviour
+	{
+		IMaster.State state = IMaster.State.Off;
+		bool waitNext = false;
 		
-		grabber.grabber <=> iGrabber;		
-		grabber.presence <=> gsensor.sensor;
-		grabber.motor <=> gmotor.motor;
-	}
-}
-
-interface ICom {
-	in void grab();
-	behaviour {
-		on grab: {}	
-	}
-}
-
-interface IController {
-	in void init();
-	in void shutDown();
-	behaviour {
-		on init: {}
-		on shutDown: {}
-	}
-}
-
-component Controller {
-	requires IGrabber grabber;
-	requires IReporter reporter;
-	requires iInternalBeltControl belt;
-	provides ICom com;
-	provides IController i;
-	behaviour {
-		enum Power{On, Off};
-		enum Intake{Yes, No};
+		on master.getState(): reply(state);
+		on factoryFloorSensor.high(): {}
 		
-		Power power = Power.Off;
-		Intake state = Intake.No;
+		[state.Off] {
+			on master.start(): {state = IMaster.State.Idle;}
+		}
 		
-		[power.Off]
-			on i.init(): {
-				belt.initialise();
-				power = Power.On;
-				state = Intake.No;
-			}
-			on i.shutDown(): illegal;
-		
-		[power.On]
-			on i.init(): illegal;
-			on i.shutDown(): {
-				// Should be implemented, somehow.
-			}
+		[state.Idle] {
+			on master.stop(): {state = IMaster.State.Off;}
+			on master.emergency(): {state = IMaster.State.Error;}
+			on master.forceWait(): {state = IMaster.State.Waiting;}
 			
+			on factoryFloorSensor.high(): {
+				state = IMaster.State.IngestingDisk;
+				ingest.startIngest();
+			}
+		}
 		
-		[state.No]
-			on grabber.finished(): illegal;
-			on grabber.error(): {
-				power = Power.Off;
-			}
-			on com.grab(): {
-				state = Intake.Yes;
-				grabber.grabDisk();
-			}
+		[state.Waiting] {
+			on master.stop(): {state = IMaster.State.Off;}
+			on master.emergency(): {state = IMaster.State.Error;}
+			on master.forceWait(): {state = IMaster.State.Waiting;}
+			on master.cancelWait(): {state = IMaster.State.Idle;}			
+		}
 		
-		[state.Yes]
-			on grabber.finished(): {
-				state = Intake.No;
-			}
-			on grabber.error(): {
-				state = Intake.No;
-				power = Power.Off; // for now
-			}
-			on com.grab(): {
-				state = Intake.No;
-			}
+		[state.Error] {
+			on master.stop(): {state = IMaster.State.Off;}
+			on master.emergency(): {state = IMaster.State.Error;}
+			on master.forceWait(): {state = IMaster.State.Error;}
+			on master.cancelWait(): {state = IMaster.State.Error;}			
+		}
+		
+		[state.IngestingDisk] {
+			on master.emergency(): {state = IMaster.State.Error;}
+			on master.forceWait(): {waitNext = true;}
+			on master.cancelWait(): {waitNext = false;}
 			
+			on ingest.finished(): {
+				state = IMaster.State.Sorting;
+				sortingSystem.startSorting();
+			}			
+		}
+		
+		[state.Sorting] {
+			on master.emergency(): {state = IMaster.State.Error;}
+			on master.forceWait(): {waitNext = true;}
+			on master.cancelWait(): {waitNext = false;}
+			
+			on sortingSystem.finished(): {
+				if (waitNext) {
+					waitNext = false;
+					state = IMaster.State.Waiting;
+				} else {
+					state = IMaster.State.Idle;
+				}
+			}			
+		}
 	}
 }

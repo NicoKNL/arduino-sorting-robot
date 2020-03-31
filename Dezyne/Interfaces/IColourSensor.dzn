@@ -1,0 +1,19 @@
+interface IColourSensor
+{
+	extern Pin $int$;
+	
+	in void initialise(Pin pinA, Pin pinB);
+	out void detectedWhite();
+	out void detectedBlack();
+	out void detectedUnknown();
+
+	behaviour
+	{	
+		on initialise: {}
+	}
+}
+
+component ColourSensor
+{
+	provides IColourSensor colourSensor;
+}

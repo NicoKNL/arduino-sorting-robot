@@ -1,13 +1,11 @@
-#include <dzn/runtime.hh>
-#include <dzn/locator.hh>
-#include "Reporter.hh"
-
-
 #ifndef LED_HH
 #define LED_HH
+#include "ILed.hh"
 class Led : public skel::Led {
-	void iLed_turnOff();
-	void iLed_turnOn();
+	int mPin = -1;
+	void led_initialise (int pin);
+	void led_turnOn();
+	void led_turnOff();
 
 	public:
 		Led(const dzn::locator& loc);

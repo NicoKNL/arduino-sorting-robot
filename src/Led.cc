@@ -1,15 +1,23 @@
 #include "Led.hh"
-#include "Reporter.hh"
 #include <wiringPi.h>
-#include <dzn/locator.hh>
-#include <dzn/runtime.hh>
+#include <iostream>
 
-int PIN = 5;
-void Led::iLed_turnOff() {
-	digitalWrite(PIN, LOW);
+Led::Led(const dzn::locator& loc) : skel::Led(loc) {
+
 }
-void Led::iLed_turnOn(){
-	digitalWrite(PIN, HIGH);
+
+void Led::led_initialise (int pin) {
+  std::cout << "[Led] Initialising on pin: " << mPin << ".\n";
+  mPin = pin;
+}
+
+void Led::led_turnOn() {
+  std::cout << "[Led] gaat aan op: " << mPin << '\n';
+	digitalWrite(mPin, HIGH);
+}
+void Led::led_turnOff(){
+  std::cout << "[Led] gaat uit op: " << mPin << '\n';
+	digitalWrite(mPin, LOW);
 }
 
 

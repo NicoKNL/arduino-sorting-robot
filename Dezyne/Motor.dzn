@@ -1,6 +1,0 @@
-import IMotor.dzn;
-
-component Motor {
-	provides IMotor motor;
-	
-}

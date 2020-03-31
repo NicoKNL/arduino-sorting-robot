@@ -24,52 +24,6 @@ namespace dzn {
 
 
 /********************************** INTERFACE *********************************/
-#ifndef IREPORTER_HH
-#define IREPORTER_HH
-
-
-
-struct IReporter
-{
-
-  struct
-  {
-    std::function< void()> report;
-    std::function< void()> setState;
-  } in;
-
-  struct
-  {
-  } out;
-
-  dzn::port::meta meta;
-  inline IReporter(const dzn::port::meta& m) : meta(m) {}
-
-  void check_bindings() const
-  {
-    if (! in.report) throw dzn::binding_error(meta, "in.report");
-    if (! in.setState) throw dzn::binding_error(meta, "in.setState");
-
-
-  }
-};
-
-inline void connect (IReporter& provided, IReporter& required)
-{
-  provided.out = required.out;
-  required.in = provided.in;
-  provided.meta.requires = required.meta.requires;
-  required.meta.provides = provided.meta.provides;
-}
-
-
-
-
-
-#endif // IREPORTER_HH
-
-/********************************** INTERFACE *********************************/
-/********************************** INTERFACE *********************************/
 #ifndef ILED_HH
 #define ILED_HH
 
@@ -94,6 +48,7 @@ struct ILed
 
   struct
   {
+    std::function< void(int)> initialise;
     std::function< void()> turnOn;
     std::function< void()> turnOff;
   } in;
@@ -107,6 +62,7 @@ struct ILed
 
   void check_bindings() const
   {
+    if (! in.initialise) throw dzn::binding_error(meta, "in.initialise");
     if (! in.turnOn) throw dzn::binding_error(meta, "in.turnOn");
     if (! in.turnOff) throw dzn::binding_error(meta, "in.turnOff");
 
@@ -153,61 +109,6 @@ inline ::ILed::State::type to_ILed_State(std::string s)
 #endif // ILED_HH
 
 /********************************** INTERFACE *********************************/
-/********************************** COMPONENT *********************************/
-#ifndef SATEREPORTER_HH
-#define SATEREPORTER_HH
-
-
-
-
-struct SateReporter
-{
-  dzn::meta dzn_meta;
-  dzn::runtime& dzn_rt;
-  dzn::locator const& dzn_locator;
-#ifndef ENUM_SateReporter_State
-#define ENUM_SateReporter_State 1
-
-
-  struct State
-  {
-    enum type
-    {
-      Off,Waiting,Received,Dispensing
-    };
-  };
-
-
-#endif // ENUM_SateReporter_State
-
-  ::SateReporter::State::type state;
-
-
-  std::function<void ()> out_iStateReport;
-
-  ::IReporter iStateReport;
-
-  ::ILed iLedW;
-  ::ILed iLedR;
-  ::ILed iLedD;
-
-
-  SateReporter(const dzn::locator&);
-  void check_bindings() const;
-  void dump_tree(std::ostream& os) const;
-  friend std::ostream& operator << (std::ostream& os, const SateReporter& m)  {
-    (void)m;
-    return os << "[" << m.state <<"]" ;
-  }
-  private:
-  void iStateReport_report();
-  void iStateReport_setState();
-
-};
-
-#endif // SATEREPORTER_HH
-
-/********************************** COMPONENT *********************************/
 /***********************************  FOREIGN  **********************************/
 #ifndef SKEL_LED_HH
 #define SKEL_LED_HH
@@ -224,20 +125,21 @@ namespace skel {
     dzn::meta dzn_meta;
     dzn::runtime& dzn_rt;
     dzn::locator const& dzn_locator;
-    ::ILed iLed;
+    ::ILed led;
 
 
     Led(const dzn::locator& dzn_locator)
-    : dzn_meta{"","Led",0,0,{},{},{[this]{iLed.check_bindings();}}}
+    : dzn_meta{"","Led",0,0,{},{},{[this]{led.check_bindings();}}}
     , dzn_rt(dzn_locator.get<dzn::runtime>())
     , dzn_locator(dzn_locator)
 
-    , iLed({{"iLed",this,&dzn_meta},{"",0,0}})
+    , led({{"led",this,&dzn_meta},{"",0,0}})
 
 
     {
-      iLed.in.turnOn = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->iLed) = false; return iLed_turnOn();}, this->iLed.meta, "turnOn");};
-      iLed.in.turnOff = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->iLed) = false; return iLed_turnOff();}, this->iLed.meta, "turnOff");};
+      led.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->led) = false; return led_initialise(pin);}, this->led.meta, "initialise");};
+      led.in.turnOn = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->led) = false; return led_turnOn();}, this->led.meta, "turnOn");};
+      led.in.turnOff = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->led) = false; return led_turnOff();}, this->led.meta, "turnOff");};
 
 
     }
@@ -251,8 +153,9 @@ namespace skel {
       return m.stream_members(os);
     }
     private:
-    virtual void iLed_turnOn () = 0;
-    virtual void iLed_turnOff () = 0;
+    virtual void led_initialise (int pin) = 0;
+    virtual void led_turnOn () = 0;
+    virtual void led_turnOff () = 0;
 
   };
 }
@@ -260,42 +163,6 @@ namespace skel {
 #endif // LED_HH
 
 /***********************************  FOREIGN  **********************************/
-/***********************************  SYSTEM  ***********************************/
-#ifndef REPORTER_HH
-#define REPORTER_HH
-
-
-#include <dzn/locator.hh>
-
-#include "Led.hh"
-#include "Led.hh"
-#include "Led.hh"
-
-
-
-struct Reporter
-{
-  dzn::meta dzn_meta;
-  dzn::runtime& dzn_rt;
-  dzn::locator const& dzn_locator;
-
-
-  ::SateReporter r;
-  ::Led led1;
-  ::Led led2;
-  ::Led led3;
-
-  ::IReporter& iSateReport;
-
-
-  Reporter(const dzn::locator&);
-  void check_bindings() const;
-  void dump_tree(std::ostream& os=std::clog) const;
-};
-
-#endif // REPORTER_HH
-
-/***********************************  SYSTEM  ***********************************/
 
 
 //version: 2.9.1

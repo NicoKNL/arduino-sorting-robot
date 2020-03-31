@@ -1,0 +1,111 @@
+import ITimer.dzn;
+import IColourSensor.dzn;
+import ISensor.dzn;
+import IActuator.dzn;
+import IMotor.dzn;
+
+interface ISortingSystem {
+	
+	enum State { Idle, AwaitColourScan, SortWhite, SortBlack, SortOther };
+	
+	in void startSorting();
+	out void finished();
+	
+	behaviour {
+		State state = State.Idle;
+		
+		[state.Idle] {
+			on startSorting: {}
+		}
+		
+		[state.AwaitColourScan] {
+			on startSorting: illegal;
+		}
+		
+		[state.SortWhite] {
+			on startSorting: illegal;
+		}
+		
+		[state.SortBlack] {
+			on startSorting: illegal;
+		}
+		
+		[state.SortOther] {
+			on startSorting: illegal;
+		}
+	}
+}
+
+component SortingSystem {
+	provides ISortingSystem sortingSystem;
+	requires IColourSensor colourSensor;
+	requires ISensor beltSensorWhite;
+	requires ISensor beltSensorBlack;
+	requires IActuator whiteActuator;
+	requires IActuator blackActuator;
+	requires IMotor beltMotor;
+	requires ITimer timer;
+	
+	behaviour {
+		ISortingSystem.State state = ISortingSystem.State.Idle;
+		Long delay = $5000$; // in milliseconds, currently 5 seconds
+		
+		on colourSensor.detectedWhite(): {}
+		on colourSensor.detectedBlack(): {}
+		on colourSensor.detectedUnknown(): {}
+		on beltSensorWhite.high(): {}
+		on beltSensorBlack.high(): {}
+		
+		[state.Idle] {
+			on sortingSystem.startSorting(): {
+				state = ISortingSystem.State.AwaitColourScan;
+			}
+		}
+		
+		[state.AwaitColourScan] {
+			on colourSensor.detectedWhite(): {
+				whiteActuator.extend();
+				state = ISortingSystem.State.SortWhite;
+			}
+			on colourSensor.detectedBlack(): {
+				blackActuator.extend();
+				state = ISortingSystem.State.SortBlack;
+			}
+			on colourSensor.detectedUnknown(): {
+				state = ISortingSystem.State.SortOther;
+			}
+		}
+		
+		[state.SortWhite] {
+			on beltSensorWhite.high(): {
+				timer.start(delay); // wait {delay} milliseconds
+			}
+			on timer.timeout(): {
+				state = ISortingSystem.State.Idle;
+				whiteActuator.withdraw();
+				sortingSystem.finished();
+			}
+		}
+		
+		[state.SortBlack] {
+			on beltSensorBlack.high(): {
+				timer.start(delay); // wait {delay} milliseconds
+			}
+			on timer.timeout(): {
+				state = ISortingSystem.State.Idle;
+				blackActuator.withdraw();
+				sortingSystem.finished();
+			}
+		}
+		
+		[state.SortOther] {
+			on beltSensorBlack.high(): {
+				timer.start(delay);
+			}
+			on timer.timeout(): {
+				state = ISortingSystem.State.Idle;
+				sortingSystem.finished();
+			}
+		}
+	}
+}

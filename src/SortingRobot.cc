@@ -17,273 +17,298 @@
 
 
 
-Controller::Controller(const dzn::locator& dzn_locator)
-: dzn_meta{"","Controller",0,0,{& grabber.meta,& reporter.meta,& belt.meta},{},{[this]{grabber.check_bindings();},[this]{reporter.check_bindings();},[this]{belt.check_bindings();},[this]{com.check_bindings();},[this]{i.check_bindings();}}}
+Master::Master(const dzn::locator& dzn_locator)
+: dzn_meta{"","Master",0,0,{& ingest.meta,& factoryFloorSensor.meta,& sortingSystem.meta},{},{[this]{master.check_bindings();},[this]{ingest.check_bindings();},[this]{factoryFloorSensor.check_bindings();},[this]{sortingSystem.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
-, power(::Controller::Power::Off), state(::Controller::Intake::No)
+, state(::IMaster::State::Off), waitNext(false)
 
-, com({{"com",this,&dzn_meta},{"",0,0}})
-, i({{"i",this,&dzn_meta},{"",0,0}})
+, master({{"master",this,&dzn_meta},{"",0,0}})
 
-, grabber({{"",0,0},{"grabber",this,&dzn_meta}})
-, reporter({{"",0,0},{"reporter",this,&dzn_meta}})
-, belt({{"",0,0},{"belt",this,&dzn_meta}})
+, ingest({{"",0,0},{"ingest",this,&dzn_meta}})
+, factoryFloorSensor({{"",0,0},{"factoryFloorSensor",this,&dzn_meta}})
+, sortingSystem({{"",0,0},{"sortingSystem",this,&dzn_meta}})
 
 
 {
   dzn_rt.performs_flush(this) = true;
 
-  com.in.grab = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->com) = false; return com_grab();}, this->com.meta, "grab");};
-  i.in.init = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->i) = false; return i_init();}, this->i.meta, "init");};
-  i.in.shutDown = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->i) = false; return i_shutDown();}, this->i.meta, "shutDown");};
-  grabber.out.finished = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->grabber) = false; return grabber_finished();}, this->grabber.meta, "finished");};
-  grabber.out.error = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->grabber) = false; return grabber_error();}, this->grabber.meta, "error");};
-  belt.out.atBlack = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->belt) = false; return belt_atBlack();}, this->belt.meta, "atBlack");};
-  belt.out.atWhite = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->belt) = false; return belt_atWhite();}, this->belt.meta, "atWhite");};
-  belt.out.atEnd = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->belt) = false; return belt_atEnd();}, this->belt.meta, "atEnd");};
+  master.in.start = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_start();}, this->master.meta, "start");};
+  master.in.stop = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_stop();}, this->master.meta, "stop");};
+  master.in.emergency = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_emergency();}, this->master.meta, "emergency");};
+  master.in.forceWait = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_forceWait();}, this->master.meta, "forceWait");};
+  master.in.cancelWait = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_cancelWait();}, this->master.meta, "cancelWait");};
+  ingest.out.finished = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->ingest) = false; return ingest_finished();}, this->ingest.meta, "finished");};
+  factoryFloorSensor.out.high = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->factoryFloorSensor) = false; return factoryFloorSensor_high();}, this->factoryFloorSensor.meta, "high");};
+  sortingSystem.out.finished = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sortingSystem) = false; return sortingSystem_finished();}, this->sortingSystem.meta, "finished");};
 
 
+  master.in.getState = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_getState();}, this->master.meta, "getState");};
 
 
 
 }
 
-void Controller::com_grab()
+void Master::master_start()
 {
-
+  if (state == ::IMaster::State::Off) 
   {
-    state = ::Controller::Intake::Yes;
-    this->grabber.in.grabDisk();
+    state = ::IMaster::State::Idle;
   }
-
-  {
-    state = ::Controller::Intake::No;
-  }
-
-  return;
-
-}
-void Controller::i_init()
-{
-  if (power == ::Controller::Power::Off) 
-  {
-    this->belt.in.initialise();
-    power = ::Controller::Power::On;
-    state = ::Controller::Intake::No;
-  }
-  else if (power == ::Controller::Power::On) dzn_locator.get<dzn::illegal_handler>().illegal();
-  else if ((!(power == ::Controller::Power::On) && !(power == ::Controller::Power::Off))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (!(state == ::IMaster::State::Off)) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
 
 }
-void Controller::i_shutDown()
+void Master::master_stop()
 {
-  dzn_locator.get<dzn::illegal_handler>().illegal();
+  if (state == ::IMaster::State::Idle) 
+  {
+    state = ::IMaster::State::Off;
+  }
+  else if (state == ::IMaster::State::Waiting) 
+  {
+    state = ::IMaster::State::Off;
+  }
+  else if (state == ::IMaster::State::Error) 
+  {
+    state = ::IMaster::State::Off;
+  }
+  else if ((!(state == ::IMaster::State::Error) && (!(state == ::IMaster::State::Waiting) && !(state == ::IMaster::State::Idle)))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else dzn_locator.get<dzn::illegal_handler>().illegal();
+
+  return;
+
+}
+void Master::master_emergency()
+{
+  if (state == ::IMaster::State::Idle) 
+  {
+    state = ::IMaster::State::Error;
+  }
+  else if (state == ::IMaster::State::Waiting) 
+  {
+    state = ::IMaster::State::Error;
+  }
+  else if (state == ::IMaster::State::Error) 
+  {
+    state = ::IMaster::State::Error;
+  }
+  else if (state == ::IMaster::State::IngestingDisk) 
+  {
+    state = ::IMaster::State::Error;
+  }
+  else if (state == ::IMaster::State::Sorting) 
+  {
+    state = ::IMaster::State::Error;
+  }
+  else if ((!(state == ::IMaster::State::Sorting) && (!(state == ::IMaster::State::IngestingDisk) && (!(state == ::IMaster::State::Error) && (!(state == ::IMaster::State::Waiting) && !(state == ::IMaster::State::Idle)))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else dzn_locator.get<dzn::illegal_handler>().illegal();
+
+  return;
+
+}
+void Master::master_forceWait()
+{
+  if (state == ::IMaster::State::Idle) 
+  {
+    state = ::IMaster::State::Waiting;
+  }
+  else if (state == ::IMaster::State::Waiting) 
+  {
+    state = ::IMaster::State::Waiting;
+  }
+  else if (state == ::IMaster::State::Error) 
+  {
+    state = ::IMaster::State::Error;
+  }
+  else if (state == ::IMaster::State::IngestingDisk) 
+  {
+    waitNext = true;
+  }
+  else if (state == ::IMaster::State::Sorting) 
+  {
+    waitNext = true;
+  }
+  else if ((!(state == ::IMaster::State::Sorting) && (!(state == ::IMaster::State::IngestingDisk) && (!(state == ::IMaster::State::Error) && (!(state == ::IMaster::State::Waiting) && !(state == ::IMaster::State::Idle)))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else dzn_locator.get<dzn::illegal_handler>().illegal();
+
+  return;
+
+}
+void Master::master_cancelWait()
+{
+  if (state == ::IMaster::State::Waiting) 
+  {
+    state = ::IMaster::State::Idle;
+  }
+  else if (state == ::IMaster::State::Error) 
+  {
+    state = ::IMaster::State::Error;
+  }
+  else if (state == ::IMaster::State::IngestingDisk) 
+  {
+    waitNext = false;
+  }
+  else if (state == ::IMaster::State::Sorting) 
+  {
+    waitNext = false;
+  }
+  else if ((!(state == ::IMaster::State::Sorting) && (!(state == ::IMaster::State::IngestingDisk) && (!(state == ::IMaster::State::Error) && !(state == ::IMaster::State::Waiting))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else dzn_locator.get<dzn::illegal_handler>().illegal();
+
+  return;
+
+}
+::IMaster::State::type Master::master_getState()
+{
+  { this->reply_IMaster_State = state; }
+
+  return this->reply_IMaster_State;
+}
+void Master::ingest_finished()
+{
+  if (state == ::IMaster::State::IngestingDisk) 
+  {
+    state = ::IMaster::State::Sorting;
+    this->sortingSystem.in.startSorting();
+  }
+  else if (!(state == ::IMaster::State::IngestingDisk)) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else dzn_locator.get<dzn::illegal_handler>().illegal();
+
+  return;
+
+}
+void Master::factoryFloorSensor_high()
+{
 
   {
     ;
   }
-
+  if (state == ::IMaster::State::Idle) 
+  {
+    state = ::IMaster::State::IngestingDisk;
+    this->ingest.in.startIngest();
+  }
+  else 
   return;
 
 }
-void Controller::grabber_finished()
+void Master::sortingSystem_finished()
 {
-  if (state == ::Controller::Intake::No) dzn_locator.get<dzn::illegal_handler>().illegal();
-  else if (state == ::Controller::Intake::Yes) 
+  if (state == ::IMaster::State::Sorting) 
   {
-    state = ::Controller::Intake::No;
+    {
+      if (waitNext) 
+      {
+        waitNext = false;
+        state = ::IMaster::State::Waiting;
+      }
+      else 
+      {
+        state = ::IMaster::State::Idle;
+      }
+    }
   }
-  else if ((!(state == ::Controller::Intake::Yes) && !(state == ::Controller::Intake::No))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (!(state == ::IMaster::State::Sorting)) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
 
 }
-void Controller::grabber_error()
-{
-
-  {
-    power = ::Controller::Power::Off;
-  }
-
-  {
-    state = ::Controller::Intake::No;
-    power = ::Controller::Power::Off;
-  }
-
-  return;
-
-}
-void Controller::belt_atBlack()
-{
-  dzn_locator.get<dzn::illegal_handler>().illegal();
-
-  return;
-
-}
-void Controller::belt_atWhite()
-{
-  dzn_locator.get<dzn::illegal_handler>().illegal();
-
-  return;
-
-}
-void Controller::belt_atEnd()
-{
-  dzn_locator.get<dzn::illegal_handler>().illegal();
-
-  return;
-
-}
 
 
-void Controller::check_bindings() const
+void Master::check_bindings() const
 {
   dzn::check_bindings(&dzn_meta);
 }
-void Controller::dump_tree(std::ostream& os) const
+void Master::dump_tree(std::ostream& os) const
 {
   dzn::dump_tree(os, &dzn_meta);
 }
 
 //SYSTEM
 
-InternalBelt::InternalBelt(const dzn::locator& dzn_locator)
-: dzn_meta{"","InternalBelt",0,0,{},{& beltControl.dzn_meta,& m.dzn_meta,& sW.dzn_meta,& sB.dzn_meta,& sE.dzn_meta},{[this]{iBeltControl.check_bindings();}}}
+SortingRobotSystem::SortingRobotSystem(const dzn::locator& dzn_locator)
+: dzn_meta{"","SortingRobotSystem",0,0,{},{& m.dzn_meta,& factorFloorSensor.dzn_meta,& i.dzn_meta,& wheelMotor.dzn_meta,& wheelStopSensor.dzn_meta,& ingestTimer.dzn_meta,& beltSensorWhite.dzn_meta,& beltSensorBlack.dzn_meta,& sortingSystem.dzn_meta,& cs.dzn_meta,& whiteActuator.dzn_meta,& blackActuator.dzn_meta,& beltMotor.dzn_meta,& sortingTimer.dzn_meta},{[this]{master.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
 
 
-, beltControl(dzn_locator)
 , m(dzn_locator)
-, sW(dzn_locator)
-, sB(dzn_locator)
-, sE(dzn_locator)
+, factorFloorSensor(dzn_locator)
+, i(dzn_locator)
+, wheelMotor(dzn_locator)
+, wheelStopSensor(dzn_locator)
+, ingestTimer(dzn_locator)
+, beltSensorWhite(dzn_locator)
+, beltSensorBlack(dzn_locator)
+, sortingSystem(dzn_locator)
+, cs(dzn_locator)
+, whiteActuator(dzn_locator)
+, blackActuator(dzn_locator)
+, beltMotor(dzn_locator)
+, sortingTimer(dzn_locator)
 
-, iBeltControl(beltControl.beltControl)
+, master(m.master)
 
 {
 
 
-  beltControl.dzn_meta.parent = &dzn_meta;
-  beltControl.dzn_meta.name = "beltControl";
   m.dzn_meta.parent = &dzn_meta;
   m.dzn_meta.name = "m";
-  sW.dzn_meta.parent = &dzn_meta;
-  sW.dzn_meta.name = "sW";
-  sB.dzn_meta.parent = &dzn_meta;
-  sB.dzn_meta.name = "sB";
-  sE.dzn_meta.parent = &dzn_meta;
-  sE.dzn_meta.name = "sE";
+  factorFloorSensor.dzn_meta.parent = &dzn_meta;
+  factorFloorSensor.dzn_meta.name = "factorFloorSensor";
+  i.dzn_meta.parent = &dzn_meta;
+  i.dzn_meta.name = "i";
+  wheelMotor.dzn_meta.parent = &dzn_meta;
+  wheelMotor.dzn_meta.name = "wheelMotor";
+  wheelStopSensor.dzn_meta.parent = &dzn_meta;
+  wheelStopSensor.dzn_meta.name = "wheelStopSensor";
+  ingestTimer.dzn_meta.parent = &dzn_meta;
+  ingestTimer.dzn_meta.name = "ingestTimer";
+  beltSensorWhite.dzn_meta.parent = &dzn_meta;
+  beltSensorWhite.dzn_meta.name = "beltSensorWhite";
+  beltSensorBlack.dzn_meta.parent = &dzn_meta;
+  beltSensorBlack.dzn_meta.name = "beltSensorBlack";
+  sortingSystem.dzn_meta.parent = &dzn_meta;
+  sortingSystem.dzn_meta.name = "sortingSystem";
+  cs.dzn_meta.parent = &dzn_meta;
+  cs.dzn_meta.name = "cs";
+  whiteActuator.dzn_meta.parent = &dzn_meta;
+  whiteActuator.dzn_meta.name = "whiteActuator";
+  blackActuator.dzn_meta.parent = &dzn_meta;
+  blackActuator.dzn_meta.name = "blackActuator";
+  beltMotor.dzn_meta.parent = &dzn_meta;
+  beltMotor.dzn_meta.name = "beltMotor";
+  sortingTimer.dzn_meta.parent = &dzn_meta;
+  sortingTimer.dzn_meta.name = "sortingTimer";
 
 
-  connect(m.motorControl, beltControl.motorControl);
-  connect(sB.sensorBlack, beltControl.presSensorBlackStack);
-  connect(sW.sensorWhite, beltControl.presSensorWhiteStack);
-  connect(sE.sensorEnd, beltControl.sensorEnd);
+  connect(factorFloorSensor.sensor, m.factoryFloorSensor);
+  connect(i.ingest, m.ingest);
+  connect(wheelMotor.motor, i.wheelMotor);
+  connect(wheelStopSensor.sensor, i.wheelStopSensor);
+  connect(ingestTimer.timer, i.timer);
+  connect(sortingSystem.sortingSystem, m.sortingSystem);
+  connect(cs.colourSensor, sortingSystem.colourSensor);
+  connect(beltSensorWhite.sensor, sortingSystem.beltSensorWhite);
+  connect(beltSensorBlack.sensor, sortingSystem.beltSensorBlack);
+  connect(whiteActuator.actuator, sortingSystem.whiteActuator);
+  connect(blackActuator.actuator, sortingSystem.blackActuator);
+  connect(beltMotor.motor, sortingSystem.beltMotor);
+  connect(sortingTimer.timer, sortingSystem.timer);
 
-  dzn::rank(iBeltControl.meta.provides.meta, 0);
+  dzn::rank(master.meta.provides.meta, 0);
 
 }
 
-void InternalBelt::check_bindings() const
+void SortingRobotSystem::check_bindings() const
 {
   dzn::check_bindings(&dzn_meta);
 }
-void InternalBelt::dump_tree(std::ostream& os) const
-{
-  dzn::dump_tree(os, &dzn_meta);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//SYSTEM
-
-GrabberSystem::GrabberSystem(const dzn::locator& dzn_locator)
-: dzn_meta{"","GrabberSystem",0,0,{},{& grabber.dzn_meta,& gsensor.dzn_meta,& gmotor.dzn_meta},{[this]{iGrabber.check_bindings();}}}
-, dzn_rt(dzn_locator.get<dzn::runtime>())
-, dzn_locator(dzn_locator)
-
-
-, grabber(dzn_locator)
-, gsensor(dzn_locator)
-, gmotor(dzn_locator)
-
-, iGrabber(grabber.grabber)
-
-{
-
-
-  grabber.dzn_meta.parent = &dzn_meta;
-  grabber.dzn_meta.name = "grabber";
-  gsensor.dzn_meta.parent = &dzn_meta;
-  gsensor.dzn_meta.name = "gsensor";
-  gmotor.dzn_meta.parent = &dzn_meta;
-  gmotor.dzn_meta.name = "gmotor";
-
-
-  connect(gsensor.sensor, grabber.presence);
-  connect(gmotor.motor, grabber.motor);
-
-  dzn::rank(iGrabber.meta.provides.meta, 0);
-
-}
-
-void GrabberSystem::check_bindings() const
-{
-  dzn::check_bindings(&dzn_meta);
-}
-void GrabberSystem::dump_tree(std::ostream& os) const
-{
-  dzn::dump_tree(os, &dzn_meta);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//SYSTEM
-
-SortingRobot::SortingRobot(const dzn::locator& dzn_locator)
-: dzn_meta{"","SortingRobot",0,0,{},{& belt.dzn_meta,& reporter.dzn_meta,& controller.dzn_meta,& grabber.dzn_meta},{[this]{i.check_bindings();},[this]{com.check_bindings();}}}
-, dzn_rt(dzn_locator.get<dzn::runtime>())
-, dzn_locator(dzn_locator)
-
-
-, belt(dzn_locator)
-, reporter(dzn_locator)
-, controller(dzn_locator)
-, grabber(dzn_locator)
-
-, i(controller.i), com(controller.com)
-
-{
-
-
-  belt.dzn_meta.parent = &dzn_meta;
-  belt.dzn_meta.name = "belt";
-  reporter.dzn_meta.parent = &dzn_meta;
-  reporter.dzn_meta.name = "reporter";
-  controller.dzn_meta.parent = &dzn_meta;
-  controller.dzn_meta.name = "controller";
-  grabber.dzn_meta.parent = &dzn_meta;
-  grabber.dzn_meta.name = "grabber";
-
-
-  connect(grabber.iGrabber, controller.grabber);
-  connect(belt.iBeltControl, controller.belt);
-  connect(reporter.iSateReport, controller.reporter);
-
-  dzn::rank(i.meta.provides.meta, 0);
-  dzn::rank(com.meta.provides.meta, 0);
-
-}
-
-void SortingRobot::check_bindings() const
-{
-  dzn::check_bindings(&dzn_meta);
-}
-void SortingRobot::dump_tree(std::ostream& os) const
+void SortingRobotSystem::dump_tree(std::ostream& os) const
 {
   dzn::dump_tree(os, &dzn_meta);
 }

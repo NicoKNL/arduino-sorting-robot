@@ -1,0 +1,36 @@
+interface IActuator {
+	
+	extern Pin $int$;	
+
+	in void initialise(Pin pin);
+	in void extend();
+	in void withdraw();
+	
+	behaviour {
+		enum State { Uninitialised, Withdrawn, Extended };
+		State state = State.Uninitialised;
+		
+		[state.Uninitialised] {
+			on initialise: {}
+			on extend: illegal; 
+			on withdraw: illegal;
+		}
+		
+		[state.Withdrawn] {
+			on initialise: illegal;
+			on extend: {state = State.Extended;}
+			on withdraw: illegal;
+		}
+		
+		[state.Extended] {
+			on initialise: illegal;
+			on extend: illegal;
+			on withdraw: {state = State.Withdrawn;} 
+		}
+	}
+}
+
+component Actuator
+{
+	provides IActuator actuator;
+}
