@@ -35,7 +35,7 @@ component Ingester {
 	
 	behaviour {
 		IIngest.State state = IIngest.State.Idle;
-		Long delay = $2750$; // in milliseconds, currently 5 seconds
+		Long delay = $3000$; // in milliseconds, currently 5 seconds
 		
 		on wheelStopSensor.high(): {}
 		
