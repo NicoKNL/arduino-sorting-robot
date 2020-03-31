@@ -1,10 +1,13 @@
 interface IActuator {
 	
-	enum State { Withdrawn, Extended };
+	extern Pin $int$;	
+
+	in void initialise(Pin pin);
 	in void extend();
 	in void withdraw();
 	
 	behaviour {
+		enum State { Withdrawn, Extended };
 		State state = State.Withdrawn;
 		
 		on extend: {state = State.Extended;}

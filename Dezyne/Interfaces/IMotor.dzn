@@ -1,0 +1,23 @@
+interface IMotor
+{
+	extern Pin $int$;
+	
+	in void initialise(Pin pin);
+	in void turnOn();
+	in void turnOff();
+
+	behaviour
+	{
+		enum State {On, Off};
+		State state = State.Off;
+
+		on initialise: {state = State.Off;}
+		on turnOn: {state = State.On;}
+		on turnOff: {state = State.Off;}
+	}
+}
+
+component Motor
+{
+	provides IMotor motor;
+}

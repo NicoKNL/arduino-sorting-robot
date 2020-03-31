@@ -1,19 +1,46 @@
+import ITimer.dzn;
+import IMotor.dzn;
+import ISensor.dzn;
+
 interface IIngest {
 	
 	in void startIngest();
 	out void finished();
 	
 	behaviour {
-		enum State { Idle, Monitoring, Ingesting };
-		State state = State.Idle;
-		
-		on startIngest: {
-			state = State.Monitoring;
-		}
+		on startIngest: {}
 	}
 
 }
 
 component Ingester {
 	provides IIngest ingest;
+	requires IMotor wheelMotor;
+	requires ISensor wheelStopSensor;
+	requires ITimer timer;
+	
+	behaviour {
+		enum State { Idle, Monitoring, Ingesting };
+		State state = State.Idle;
+		Long delay = $5000$; // in milliseconds, currently 5 seconds
+		
+		[State.Idle]
+		on ingest.startIngest(): {
+			state = State.Monitoring;
+			timer.start(delay);
+		}
+		
+		[State.Monitoring]
+		on timer.timeout(): {
+			state = State.Ingesting;
+			wheelMotor.turnOn();
+		}
+		
+		[State.Ingesting]
+		on wheelStopSensor.high(): {
+			state = State.Idle;
+			wheelMotor.turnOff();
+		}
+	}
+	
 }

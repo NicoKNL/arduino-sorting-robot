@@ -43,6 +43,8 @@ component SortingSystem {
 			}
 			on colourSensor.detectedUnknown(): {
 				// need some kind of more advanced error handling here
+				// maybe wait for both black and white sensor to go high
+				// and then start timer or smth
 				state = State.Idle;
 			}
 		}
@@ -51,9 +53,9 @@ component SortingSystem {
 				timer.start(delay); // wait {delay} milliseconds
 			}
 			on timer.timeout(): {
+				state = State.Idle;
 				whiteActuator.withdraw();
 				sortingSystem.finished();
-				state = State.Idle;
 			}
 		}
 		[state.SortBlack] {
@@ -61,9 +63,9 @@ component SortingSystem {
 				timer.start(delay); // wait {delay} milliseconds
 			}
 			on timer.timeout(): {
+				state = State.Idle;
 				blackActuator.withdraw();
 				sortingSystem.finished();
-				state = State.Idle;
 			}
 		}
 	}
