@@ -118,7 +118,7 @@ component Master
 		State state = State.Off;
 		bool waitNext = false;
 		
-		on factoryFloorSensor.high() : {}
+		on factoryFloorSensor.high(): {}
 		
 		[state.Off] {
 			on master.start(): {state = State.Idle;}
