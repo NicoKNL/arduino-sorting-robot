@@ -50,6 +50,12 @@ component SortingSystem {
 		State state = State.Idle;
 		Long delay = $5000$; // in milliseconds, currently 5 seconds
 		
+		on colourSensor.detectedWhite(): {}
+		on colourSensor.detectedBlack(): {}
+		on colourSensor.detectedUnknown(): {}
+		on beltSensorWhite.high(): {}
+		on beltSensorBlack.high(): {}
+		
 		[state.Idle] {
 			on sortingSystem.startSorting(): {
 				state = State.AwaitColourScan;
