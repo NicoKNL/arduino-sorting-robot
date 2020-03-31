@@ -1,5 +1,7 @@
 #include "Motor.hh"
 #include <iostream>
+#include "config.hh"
+#include <wiringPi.h>
 
 Motor::Motor(const dzn::locator& loc) : skel::Motor(loc) {
 
@@ -11,12 +13,15 @@ void Motor::motor_initialise(int pin) {
 }
 
 void Motor::motor_turnOn() {
-	// digitalWrite(mPin, HIGH);
 	std::cout << "[Motor] Turning on!\n";
+	if (!Debug::DEBUG) {
+		digitalWrite(mPin, HIGH);
+	}
 }
 
 void Motor::motor_turnOff() {
-	// digitalWrite(mPin, LOW);
 	std::cout << "[Motor] Turning off!\n";
-
+	if (!Debug::DEBUG) {
+		digitalWrite(mPin, LOW);
+	}
 }

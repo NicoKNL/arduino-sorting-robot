@@ -6,6 +6,7 @@
 #include "wiringPi.h"
 #include <vector>
 #include <string>
+#include "config.hh"
 /*******************************************************************************
  * PIN LAYOUT
  ******************************************************************************/
@@ -70,6 +71,15 @@ int main(int argc, char* argv[]) {
 	pinMode(COLOR_SENSOR_0_IN_PIN, INPUT);
 	pinMode(COLOR_SENSOR_1_IN_PIN, INPUT);
 
+	// ENSURE ALL PINS TO LOW
+	digitalWrite(MOVE_BELT_OUT_PIN, LOW);
+	digitalWrite(MAIN_PUSHER_OUT_PIN, LOW);
+	digitalWrite(WHITE_PUSHER_OUT_PIN, LOW);
+	digitalWrite(BLACK_PUSHER_OUT_PIN, LOW);
+	digitalWrite(STATUS_2_OUT_PIN, LOW);
+	digitalWrite(STATUS_1_OUT_PIN, LOW);
+	digitalWrite(STATUS_0_OUT_PIN, LOW);
+
 	SortingRobotSystem robbie_de_robot(locator);
 
 	robbie_de_robot.check_bindings();
@@ -117,7 +127,9 @@ int main(int argc, char* argv[]) {
 
 		std::cout << "post step\n";
 
-		delay(500); // 500 ms
+		if (Debug::DEBUG) {
+			delay(500); // 500 ms
+		}
 	}
 	return 0;
 }

@@ -21,7 +21,7 @@ Ingester::Ingester(const dzn::locator& dzn_locator)
 : dzn_meta{"","Ingester",0,0,{& wheelMotor.meta,& wheelStopSensor.meta,& timer.meta},{},{[this]{ingest.check_bindings();},[this]{wheelMotor.check_bindings();},[this]{wheelStopSensor.check_bindings();},[this]{timer.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
-, state(::IIngest::State::Idle), delay(5000)
+, state(::IIngest::State::Idle), delay(2750)
 
 , ingest({{"ingest",this,&dzn_meta},{"",0,0}})
 

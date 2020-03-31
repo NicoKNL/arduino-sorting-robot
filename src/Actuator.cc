@@ -1,5 +1,7 @@
 #include "Actuator.hh"
 #include <iostream>
+#include "config.hh"
+#include <wiringPi.h>
 
 Actuator::Actuator(const dzn::locator& loc) : skel::Actuator(loc) {
 
@@ -11,11 +13,15 @@ void Actuator::actuator_initialise(int pin) {
 }
 
 void Actuator::actuator_extend() {
-	// digitalWrite(mPin, HIGH);
 	std::cout << "[Actuator] Extending!\n";
+	if (!Debug::DEBUG) {
+		digitalWrite(mPin, HIGH);
+	}
 }
 
 void Actuator::actuator_withdraw() {
-	// digitalWrite(mPin, LOW);
 	std::cout << "[Actuator] Withdrawing!\n";
+	if (!Debug::DEBUG) {
+		digitalWrite(mPin, LOW);
+	}
 }

@@ -1,5 +1,7 @@
 #include "ColourSensor.hh"
 #include <iostream>
+#include "config.hh"
+#include <wiringPi.h>
 
 ColourSensor::ColourSensor(const dzn::locator& loc) : skel::ColourSensor(loc) {
 
@@ -18,11 +20,17 @@ void ColourSensor::detect() {
 	// 01 - white disk
 	// 10 - black disk
 	// 11 - other
-	// int stateA = digitalRead(pinA);
-	// int stateB = digitalRead(pinB);
+
 	int stateA;
 	int stateB;
-	std::cin >> stateA >> stateB;
+
+	if (Debug::DEBUG) {
+		std::cin >> stateA >> stateB;
+	} else {
+		stateA = digitalRead(mPinA);
+		stateB = digitalRead(mPinB);
+	}
+
 	int state = stateA;
 	state += 2 * stateB;
 

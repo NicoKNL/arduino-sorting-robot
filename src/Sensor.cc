@@ -1,5 +1,7 @@
 #include "Sensor.hh"
 #include <iostream>
+#include "config.hh"
+#include <wiringPi.h>
 
 Sensor::Sensor(const dzn::locator& loc) : skel::Sensor(loc) {
 
@@ -13,8 +15,13 @@ void Sensor::sensor_initialise(int pin) {
 void Sensor::detect() {
 	std::cout << "[Sensor] detecting!\n";
 	int state;
-	std::cin >> state;
-	// state = digitalRead(mPin);
+
+	if (Debug::DEBUG) {
+		std::cin >> state;
+	} else {
+		state = digitalRead(mPin);
+	}
+
 	if (state == 0) {
 		std::cout << "[Sensor] Nothing detected...\n";
 	} else {
