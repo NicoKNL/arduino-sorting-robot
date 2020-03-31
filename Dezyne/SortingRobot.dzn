@@ -118,63 +118,61 @@ component Master
 	behaviour
 	{
 		IMaster.State state = IMaster.State.Off;
-		enum State {Off, Idle, Waiting, Error, IngestingDisk, Sorting};
-		State state = State.Off;
 		bool waitNext = false;
 		
 		on factoryFloorSensor.high(): {}
 		
 		[state.Off] {
-			on master.start(): {state = State.Idle;}
+			on master.start(): {state = IMaster.State.Idle;}
 		}
 		
 		[state.Idle] {
-			on master.stop(): {state = State.Off;}
-			on master.emergency(): {state = State.Error;}
-			on master.forceWait(): {state = State.Waiting;}
+			on master.stop(): {state = IMaster.State.Off;}
+			on master.emergency(): {state = IMaster.State.Error;}
+			on master.forceWait(): {state = IMaster.State.Waiting;}
 			
 			on factoryFloorSensor.high(): {
-				state = State.IngestingDisk;
+				state = IMaster.State.IngestingDisk;
 				ingest.startIngest();
 			}
 		}
 		
 		[state.Waiting] {
-			on master.stop(): {state = State.Off;}
-			on master.emergency(): {state = State.Error;}
-			on master.forceWait(): {state = State.Waiting;}
-			on master.cancelWait(): {state = State.Idle;}			
+			on master.stop(): {state = IMaster.State.Off;}
+			on master.emergency(): {state = IMaster.State.Error;}
+			on master.forceWait(): {state = IMaster.State.Waiting;}
+			on master.cancelWait(): {state = IMaster.State.Idle;}			
 		}
 		
 		[state.Error] {
-			on master.stop(): {state = State.Off;}
-			on master.emergency(): {state = State.Error;}
-			on master.forceWait(): {state = State.Error;}
-			on master.cancelWait(): {state = State.Error;}			
+			on master.stop(): {state = IMaster.State.Off;}
+			on master.emergency(): {state = IMaster.State.Error;}
+			on master.forceWait(): {state = IMaster.State.Error;}
+			on master.cancelWait(): {state = IMaster.State.Error;}			
 		}
 		
 		[state.IngestingDisk] {
-			on master.emergency(): {state = State.Error;}
+			on master.emergency(): {state = IMaster.State.Error;}
 			on master.forceWait(): {waitNext = true;}
 			on master.cancelWait(): {waitNext = false;}
 			
 			on ingest.finished(): {
-				state = State.Sorting;
+				state = IMaster.State.Sorting;
 				sortingSystem.startSorting();
 			}			
 		}
 		
 		[state.Sorting] {
-			on master.emergency(): {state = State.Error;}
+			on master.emergency(): {state = IMaster.State.Error;}
 			on master.forceWait(): {waitNext = true;}
 			on master.cancelWait(): {waitNext = false;}
 			
 			on sortingSystem.finished(): {
 				if (waitNext) {
 					waitNext = false;
-					state = State.Waiting;
+					state = IMaster.State.Waiting;
 				} else {
-					state = State.Idle;
+					state = IMaster.State.Idle;
 				}
 			}			
 		}
