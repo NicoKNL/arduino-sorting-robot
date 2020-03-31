@@ -24,53 +24,53 @@ namespace dzn {
 
 
 /********************************** INTERFACE *********************************/
-#ifndef ISENSOR_HH
-#define ISENSOR_HH
+#ifndef IMOTOR_HH
+#define IMOTOR_HH
 
 
 
-struct ISensor
+struct IMotor
 {
-#ifndef ENUM_ISensor_State
-#define ENUM_ISensor_State 1
+#ifndef ENUM_IMotor_State
+#define ENUM_IMotor_State 1
 
 
   struct State
   {
     enum type
     {
-      Unknown,Low,High
+      On,Off
     };
   };
 
 
-#endif // ENUM_ISensor_State
+#endif // ENUM_IMotor_State
 
   struct
   {
     std::function< void(int)> initialise;
+    std::function< void()> turnOn;
+    std::function< void()> turnOff;
   } in;
 
   struct
   {
-    std::function< void()> high;
-    std::function< void()> low;
   } out;
 
   dzn::port::meta meta;
-  inline ISensor(const dzn::port::meta& m) : meta(m) {}
+  inline IMotor(const dzn::port::meta& m) : meta(m) {}
 
   void check_bindings() const
   {
     if (! in.initialise) throw dzn::binding_error(meta, "in.initialise");
+    if (! in.turnOn) throw dzn::binding_error(meta, "in.turnOn");
+    if (! in.turnOff) throw dzn::binding_error(meta, "in.turnOff");
 
-    if (! out.high) throw dzn::binding_error(meta, "out.high");
-    if (! out.low) throw dzn::binding_error(meta, "out.low");
 
   }
 };
 
-inline void connect (ISensor& provided, ISensor& required)
+inline void connect (IMotor& provided, IMotor& required)
 {
   provided.out = required.out;
   required.in = provided.in;
@@ -79,41 +79,39 @@ inline void connect (ISensor& provided, ISensor& required)
 }
 
 
-#ifndef ENUM_TO_STRING_ISensor_State
-#define ENUM_TO_STRING_ISensor_State 1
-inline std::string to_string(::ISensor::State::type v)
+#ifndef ENUM_TO_STRING_IMotor_State
+#define ENUM_TO_STRING_IMotor_State 1
+inline std::string to_string(::IMotor::State::type v)
 {
   switch(v)
   {
-    case ::ISensor::State::Unknown: return "State_Unknown";
-    case ::ISensor::State::Low: return "State_Low";
-    case ::ISensor::State::High: return "State_High";
+    case ::IMotor::State::On: return "State_On";
+    case ::IMotor::State::Off: return "State_Off";
 
   }
   return "";
 }
-#endif // ENUM_TO_STRING_ISensor_State
+#endif // ENUM_TO_STRING_IMotor_State
 
-#ifndef STRING_TO_ENUM_ISensor_State
-#define STRING_TO_ENUM_ISensor_State 1
-inline ::ISensor::State::type to_ISensor_State(std::string s)
+#ifndef STRING_TO_ENUM_IMotor_State
+#define STRING_TO_ENUM_IMotor_State 1
+inline ::IMotor::State::type to_IMotor_State(std::string s)
 {
-  static std::map<std::string, ::ISensor::State::type> m = {
-    {"State_Unknown", ::ISensor::State::Unknown},
-    {"State_Low", ::ISensor::State::Low},
-    {"State_High", ::ISensor::State::High},
+  static std::map<std::string, ::IMotor::State::type> m = {
+    {"State_On", ::IMotor::State::On},
+    {"State_Off", ::IMotor::State::Off},
   };
   return m.at(s);
 }
-#endif // STRING_TO_ENUM_ISensor_State
+#endif // STRING_TO_ENUM_IMotor_State
 
 
-#endif // ISENSOR_HH
+#endif // IMOTOR_HH
 
 /********************************** INTERFACE *********************************/
 /***********************************  FOREIGN  **********************************/
-#ifndef SKEL_SENSOR_HH
-#define SKEL_SENSOR_HH
+#ifndef SKEL_MOTOR_HH
+#define SKEL_MOTOR_HH
 
 #include <dzn/locator.hh>
 #include <dzn/runtime.hh>
@@ -122,43 +120,47 @@ inline ::ISensor::State::type to_ISensor_State(std::string s)
 
 
 namespace skel {
-  struct Sensor
+  struct Motor
   {
     dzn::meta dzn_meta;
     dzn::runtime& dzn_rt;
     dzn::locator const& dzn_locator;
-    ::ISensor sensor;
+    ::IMotor motor;
 
 
-    Sensor(const dzn::locator& dzn_locator)
-    : dzn_meta{"","Sensor",0,0,{},{},{[this]{sensor.check_bindings();}}}
+    Motor(const dzn::locator& dzn_locator)
+    : dzn_meta{"","Motor",0,0,{},{},{[this]{motor.check_bindings();}}}
     , dzn_rt(dzn_locator.get<dzn::runtime>())
     , dzn_locator(dzn_locator)
 
-    , sensor({{"sensor",this,&dzn_meta},{"",0,0}})
+    , motor({{"motor",this,&dzn_meta},{"",0,0}})
 
 
     {
-      sensor.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sensor) = false; return sensor_initialise(pin);}, this->sensor.meta, "initialise");};
+      motor.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_initialise(pin);}, this->motor.meta, "initialise");};
+      motor.in.turnOn = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_turnOn();}, this->motor.meta, "turnOn");};
+      motor.in.turnOff = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_turnOff();}, this->motor.meta, "turnOff");};
 
 
     }
-    virtual ~ Sensor() {}
+    virtual ~ Motor() {}
     virtual std::ostream& stream_members(std::ostream& os) const { return os; }
     void check_bindings() const;
     void dump_tree(std::ostream& os) const;
     void set_state(std::map<std::string,std::map<std::string,std::string> >){}
     void set_state(std::map<std::string,std::string>_alist){}
-    friend std::ostream& operator << (std::ostream& os, const Sensor& m)  {
+    friend std::ostream& operator << (std::ostream& os, const Motor& m)  {
       return m.stream_members(os);
     }
     private:
-    virtual void sensor_initialise (int pin) = 0;
+    virtual void motor_initialise (int pin) = 0;
+    virtual void motor_turnOn () = 0;
+    virtual void motor_turnOff () = 0;
 
   };
 }
 
-#endif // SENSOR_HH
+#endif // MOTOR_HH
 
 /***********************************  FOREIGN  **********************************/
 
