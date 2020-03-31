@@ -67,23 +67,31 @@ int main(int argc, char* argv[]) {
 	robbie_de_robot.check_bindings();
 
 	// Initialize pins on components
-	// robbie_de_robot.whiteActuator.actuator.in.initialise(WHITE_PUSHER_OUT_PIN);
-	// robbie_de_robot.blackActuator.actuator.in.initialise(BLACK_PUSHER_OUT_PIN);
-	// robbie_de_robot.wheelMotor.motor.in.initialise(MAIN_PUSHER_OUT_PIN);
-	// robbie_de_robot.beltMotor.motor.in.initialise(MOVE_BELT_OUT_PIN);
+	robbie_de_robot.whiteActuator.actuator.in.initialise(WHITE_PUSHER_OUT_PIN);
+	robbie_de_robot.blackActuator.actuator.in.initialise(BLACK_PUSHER_OUT_PIN);
+	robbie_de_robot.wheelMotor.motor.in.initialise(MAIN_PUSHER_OUT_PIN);
+	robbie_de_robot.beltMotor.motor.in.initialise(MOVE_BELT_OUT_PIN);
 
-	// robbie_de_robot.factorFloorSensor.sensor.in.initialise(MAIN_PRESENCE_IN_PIN);
-	// robbie_de_robot.wheelStopSensor.sensor.in.initialise(MAIN_PUSHER_ENDSTOP_IN_PIN);
-	// robbie_de_robot.cs.colourSensor.in.initialise(COLOR_SENSOR_0_IN_PIN, COLOR_SENSOR_1_IN_PIN);
-	// robbie_de_robot.beltSensorWhite.sensor.in.initialise(WHITE_SENSOR_IN_PIN);
-	// robbie_de_robot.beltSensorBlack.sensor.in.initialise(BLACK_SENSOR_IN_PIN);
+	robbie_de_robot.factorFloorSensor.sensor.in.initialise(MAIN_PRESENCE_IN_PIN);
+	robbie_de_robot.wheelStopSensor.sensor.in.initialise(MAIN_PUSHER_ENDSTOP_IN_PIN);
+	robbie_de_robot.cs.colourSensor.in.initialise(COLOR_SENSOR_0_IN_PIN, COLOR_SENSOR_1_IN_PIN);
+	robbie_de_robot.beltSensorWhite.sensor.in.initialise(WHITE_SENSOR_IN_PIN);
+	robbie_de_robot.beltSensorBlack.sensor.in.initialise(BLACK_SENSOR_IN_PIN);
 
 	// Start the system! Just like Sten! <3
 	robbie_de_robot.master.in.start();
 
 	while (true) {
 		std::cout << "step\n";
-		// robbie_de_robot.sensor.detect(); // Input sensor detection
+
+		// Input sensor detection
+		robbie_de_robot.factorFloorSensor.detect();
+		robbie_de_robot.cs.detect();
+		robbie_de_robot.beltSensorWhite.detect();
+		robbie_de_robot.beltSensorBlack.detect();
+
+		std::cout << "post step\n";
+
 		delay(500); // 500 ms
 	}
 	return 0;

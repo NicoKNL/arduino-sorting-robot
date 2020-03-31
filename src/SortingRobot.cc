@@ -40,7 +40,6 @@ Master::Master(const dzn::locator& dzn_locator)
   master.in.cancelWait = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_cancelWait();}, this->master.meta, "cancelWait");};
   ingest.out.finished = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->ingest) = false; return ingest_finished();}, this->ingest.meta, "finished");};
   factoryFloorSensor.out.high = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->factoryFloorSensor) = false; return factoryFloorSensor_high();}, this->factoryFloorSensor.meta, "high");};
-  factoryFloorSensor.out.low = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->factoryFloorSensor) = false; return factoryFloorSensor_low();}, this->factoryFloorSensor.meta, "low");};
   sortingSystem.out.finished = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sortingSystem) = false; return sortingSystem_finished();}, this->sortingSystem.meta, "finished");};
 
 
@@ -55,12 +54,7 @@ void Master::master_start()
   {
     state = ::Master::State::Idle;
   }
-  else if (state == ::Master::State::Idle) ;
-  else if (state == ::Master::State::Waiting) ;
-  else if (state == ::Master::State::Error) ;
-  else if (state == ::Master::State::IngestingDisk) ;
-  else if (state == ::Master::State::Sorting) ;
-  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && (!(state == ::Master::State::Idle) && !(state == ::Master::State::Off))))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (!(state == ::Master::State::Off)) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -68,8 +62,7 @@ void Master::master_start()
 }
 void Master::master_stop()
 {
-  if (state == ::Master::State::Off) ;
-  else if (state == ::Master::State::Idle) 
+  if (state == ::Master::State::Idle) 
   {
     state = ::Master::State::Off;
   }
@@ -81,15 +74,7 @@ void Master::master_stop()
   {
     state = ::Master::State::Off;
   }
-  else if (state == ::Master::State::IngestingDisk) 
-  {
-    state = ::Master::State::Off;
-  }
-  else if (state == ::Master::State::Sorting) 
-  {
-    state = ::Master::State::Off;
-  }
-  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && (!(state == ::Master::State::Idle) && !(state == ::Master::State::Off))))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if ((!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && !(state == ::Master::State::Idle)))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -97,8 +82,7 @@ void Master::master_stop()
 }
 void Master::master_emergency()
 {
-  if (state == ::Master::State::Off) ;
-  else if (state == ::Master::State::Idle) 
+  if (state == ::Master::State::Idle) 
   {
     state = ::Master::State::Error;
   }
@@ -118,7 +102,7 @@ void Master::master_emergency()
   {
     state = ::Master::State::Error;
   }
-  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && (!(state == ::Master::State::Idle) && !(state == ::Master::State::Off))))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && !(state == ::Master::State::Idle)))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -126,13 +110,18 @@ void Master::master_emergency()
 }
 void Master::master_forceWait()
 {
-  if (state == ::Master::State::Off) ;
-  else if (state == ::Master::State::Idle) 
+  if (state == ::Master::State::Idle) 
   {
     state = ::Master::State::Waiting;
   }
-  else if (state == ::Master::State::Waiting) ;
-  else if (state == ::Master::State::Error) ;
+  else if (state == ::Master::State::Waiting) 
+  {
+    state = ::Master::State::Waiting;
+  }
+  else if (state == ::Master::State::Error) 
+  {
+    state = ::Master::State::Error;
+  }
   else if (state == ::Master::State::IngestingDisk) 
   {
     waitNext = true;
@@ -141,7 +130,7 @@ void Master::master_forceWait()
   {
     waitNext = true;
   }
-  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && (!(state == ::Master::State::Idle) && !(state == ::Master::State::Off))))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && !(state == ::Master::State::Idle)))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -149,16 +138,23 @@ void Master::master_forceWait()
 }
 void Master::master_cancelWait()
 {
-  if (state == ::Master::State::Off) ;
-  else if (state == ::Master::State::Idle) ;
-  else if (state == ::Master::State::Waiting) 
+  if (state == ::Master::State::Waiting) 
   {
     state = ::Master::State::Idle;
   }
-  else if (state == ::Master::State::Error) ;
-  else if (state == ::Master::State::IngestingDisk) ;
-  else if (state == ::Master::State::Sorting) ;
-  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && (!(state == ::Master::State::Idle) && !(state == ::Master::State::Off))))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (state == ::Master::State::Error) 
+  {
+    state = ::Master::State::Error;
+  }
+  else if (state == ::Master::State::IngestingDisk) 
+  {
+    waitNext = false;
+  }
+  else if (state == ::Master::State::Sorting) 
+  {
+    waitNext = false;
+  }
+  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && !(state == ::Master::State::Waiting))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -179,21 +175,16 @@ void Master::ingest_finished()
 }
 void Master::factoryFloorSensor_high()
 {
+
+  {
+    ;
+  }
   if (state == ::Master::State::Idle) 
   {
     state = ::Master::State::IngestingDisk;
     this->ingest.in.startIngest();
   }
-  else if (!(state == ::Master::State::Idle)) dzn_locator.get<dzn::illegal_handler>().illegal();
-  else dzn_locator.get<dzn::illegal_handler>().illegal();
-
-  return;
-
-}
-void Master::factoryFloorSensor_low()
-{
-  dzn_locator.get<dzn::illegal_handler>().illegal();
-
+  else 
   return;
 
 }

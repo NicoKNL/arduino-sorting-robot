@@ -31,20 +31,6 @@ namespace dzn {
 
 struct IColourSensor
 {
-#ifndef ENUM_IColourSensor_State
-#define ENUM_IColourSensor_State 1
-
-
-  struct State
-  {
-    enum type
-    {
-      Unknown,White,Black
-    };
-  };
-
-
-#endif // ENUM_IColourSensor_State
 
   struct
   {
@@ -81,33 +67,7 @@ inline void connect (IColourSensor& provided, IColourSensor& required)
 }
 
 
-#ifndef ENUM_TO_STRING_IColourSensor_State
-#define ENUM_TO_STRING_IColourSensor_State 1
-inline std::string to_string(::IColourSensor::State::type v)
-{
-  switch(v)
-  {
-    case ::IColourSensor::State::Unknown: return "State_Unknown";
-    case ::IColourSensor::State::White: return "State_White";
-    case ::IColourSensor::State::Black: return "State_Black";
 
-  }
-  return "";
-}
-#endif // ENUM_TO_STRING_IColourSensor_State
-
-#ifndef STRING_TO_ENUM_IColourSensor_State
-#define STRING_TO_ENUM_IColourSensor_State 1
-inline ::IColourSensor::State::type to_IColourSensor_State(std::string s)
-{
-  static std::map<std::string, ::IColourSensor::State::type> m = {
-    {"State_Unknown", ::IColourSensor::State::Unknown},
-    {"State_White", ::IColourSensor::State::White},
-    {"State_Black", ::IColourSensor::State::Black},
-  };
-  return m.at(s);
-}
-#endif // STRING_TO_ENUM_IColourSensor_State
 
 
 #endif // ICOLOURSENSOR_HH

@@ -31,6 +31,20 @@ namespace dzn {
 
 struct IMaster
 {
+#ifndef ENUM_IMaster_State
+#define ENUM_IMaster_State 1
+
+
+  struct State
+  {
+    enum type
+    {
+      Off,Idle,Waiting,Error,IngestingDisk,Sorting
+    };
+  };
+
+
+#endif // ENUM_IMaster_State
 
   struct
   {
@@ -69,7 +83,39 @@ inline void connect (IMaster& provided, IMaster& required)
 }
 
 
+#ifndef ENUM_TO_STRING_IMaster_State
+#define ENUM_TO_STRING_IMaster_State 1
+inline std::string to_string(::IMaster::State::type v)
+{
+  switch(v)
+  {
+    case ::IMaster::State::Off: return "State_Off";
+    case ::IMaster::State::Idle: return "State_Idle";
+    case ::IMaster::State::Waiting: return "State_Waiting";
+    case ::IMaster::State::Error: return "State_Error";
+    case ::IMaster::State::IngestingDisk: return "State_IngestingDisk";
+    case ::IMaster::State::Sorting: return "State_Sorting";
 
+  }
+  return "";
+}
+#endif // ENUM_TO_STRING_IMaster_State
+
+#ifndef STRING_TO_ENUM_IMaster_State
+#define STRING_TO_ENUM_IMaster_State 1
+inline ::IMaster::State::type to_IMaster_State(std::string s)
+{
+  static std::map<std::string, ::IMaster::State::type> m = {
+    {"State_Off", ::IMaster::State::Off},
+    {"State_Idle", ::IMaster::State::Idle},
+    {"State_Waiting", ::IMaster::State::Waiting},
+    {"State_Error", ::IMaster::State::Error},
+    {"State_IngestingDisk", ::IMaster::State::IngestingDisk},
+    {"State_Sorting", ::IMaster::State::Sorting},
+  };
+  return m.at(s);
+}
+#endif // STRING_TO_ENUM_IMaster_State
 
 
 #endif // IMASTER_HH
@@ -398,7 +444,6 @@ struct Master
   void master_cancelWait();
   void ingest_finished();
   void factoryFloorSensor_high();
-  void factoryFloorSensor_low();
   void sortingSystem_finished();
 
 };

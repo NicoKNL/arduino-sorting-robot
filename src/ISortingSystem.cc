@@ -42,9 +42,7 @@ SortingSystem::SortingSystem(const dzn::locator& dzn_locator)
   colourSensor.out.detectedBlack = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->colourSensor) = false; return colourSensor_detectedBlack();}, this->colourSensor.meta, "detectedBlack");};
   colourSensor.out.detectedUnknown = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->colourSensor) = false; return colourSensor_detectedUnknown();}, this->colourSensor.meta, "detectedUnknown");};
   beltSensorWhite.out.high = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->beltSensorWhite) = false; return beltSensorWhite_high();}, this->beltSensorWhite.meta, "high");};
-  beltSensorWhite.out.low = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->beltSensorWhite) = false; return beltSensorWhite_low();}, this->beltSensorWhite.meta, "low");};
   beltSensorBlack.out.high = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->beltSensorBlack) = false; return beltSensorBlack_high();}, this->beltSensorBlack.meta, "high");};
-  beltSensorBlack.out.low = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->beltSensorBlack) = false; return beltSensorBlack_low();}, this->beltSensorBlack.meta, "low");};
   timer.out.timeout = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->timer) = false; return timer_timeout();}, this->timer.meta, "timeout");};
 
 
@@ -95,7 +93,7 @@ void SortingSystem::colourSensor_detectedUnknown()
 {
   if (state == ::SortingSystem::State::AwaitColourScan) 
   {
-    state = ::SortingSystem::State::Idle;
+    state = ::SortingSystem::State::SortOther;
   }
   else if (!(state == ::SortingSystem::State::AwaitColourScan)) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
@@ -115,28 +113,18 @@ void SortingSystem::beltSensorWhite_high()
   return;
 
 }
-void SortingSystem::beltSensorWhite_low()
-{
-  dzn_locator.get<dzn::illegal_handler>().illegal();
-
-  return;
-
-}
 void SortingSystem::beltSensorBlack_high()
 {
   if (state == ::SortingSystem::State::SortBlack) 
   {
     this->timer.in.start(delay);
   }
-  else if (!(state == ::SortingSystem::State::SortBlack)) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (state == ::SortingSystem::State::SortOther) 
+  {
+    this->timer.in.start(delay);
+  }
+  else if ((!(state == ::SortingSystem::State::SortOther) && !(state == ::SortingSystem::State::SortBlack))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
-
-  return;
-
-}
-void SortingSystem::beltSensorBlack_low()
-{
-  dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
 
@@ -155,7 +143,12 @@ void SortingSystem::timer_timeout()
     this->blackActuator.in.withdraw();
     this->sortingSystem.out.finished();
   }
-  else if ((!(state == ::SortingSystem::State::SortBlack) && !(state == ::SortingSystem::State::SortWhite))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (state == ::SortingSystem::State::SortOther) 
+  {
+    state = ::SortingSystem::State::Idle;
+    this->sortingSystem.out.finished();
+  }
+  else if ((!(state == ::SortingSystem::State::SortOther) && (!(state == ::SortingSystem::State::SortBlack) && !(state == ::SortingSystem::State::SortWhite)))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;

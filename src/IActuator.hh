@@ -39,7 +39,7 @@ struct IActuator
   {
     enum type
     {
-      Withdrawn,Extended
+      Uninitialised,Withdrawn,Extended
     };
   };
 
@@ -85,6 +85,7 @@ inline std::string to_string(::IActuator::State::type v)
 {
   switch(v)
   {
+    case ::IActuator::State::Uninitialised: return "State_Uninitialised";
     case ::IActuator::State::Withdrawn: return "State_Withdrawn";
     case ::IActuator::State::Extended: return "State_Extended";
 
@@ -98,6 +99,7 @@ inline std::string to_string(::IActuator::State::type v)
 inline ::IActuator::State::type to_IActuator_State(std::string s)
 {
   static std::map<std::string, ::IActuator::State::type> m = {
+    {"State_Uninitialised", ::IActuator::State::Uninitialised},
     {"State_Withdrawn", ::IActuator::State::Withdrawn},
     {"State_Extended", ::IActuator::State::Extended},
   };

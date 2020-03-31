@@ -11,13 +11,12 @@ void Sensor::sensor_initialise(int pin) {
 }
 
 void Sensor::detect() {
-	std::cout << "[Sensor] detected!\n";
+	std::cout << "[Sensor] detecting!\n";
 	int state;
 	std::cin >> state;
-	// digitalRead(mPin);
+	// state = digitalRead(mPin);
 	if (state == 0) {
-		std::cout << "[Sensor] Setting to low!\n";
-		sensor.out.low();
+		std::cout << "[Sensor] Nothing detected...\n";
 	} else {
 		std::cout << "[Sensor] Setting to high!\n";
 		sensor.out.high();

@@ -13,8 +13,18 @@ void ColourSensor::colourSensor_initialise(int pinA, int pinB) {
 
 void ColourSensor::detect() {
 	std::cout << "[ColourSensor] detecting...\n";
-	int state;
-	std::cin >> state;
+
+	// 00 - nothing
+	// 01 - white disk
+	// 10 - black disk
+	// 11 - other
+	// int stateA = digitalRead(pinA);
+	// int stateB = digitalRead(pinB);
+	int stateA;
+	int stateB;
+	std::cin >> stateA >> stateB;
+	int state = stateA;
+	state += 2 * stateB;
 
 	// NOTE: Exact states unkown, ask Olivier for definition
 	if (state == 1) {

@@ -11,9 +11,11 @@ void Motor::motor_initialise(int pin) {
 }
 
 void Motor::motor_turnOn() {
+	// digitalWrite(mPin, HIGH);
 	std::cout << "[Motor] Turning on!\n";
 }
 
 void Motor::motor_turnOff() {
+	// digitalWrite(mPin, LOW);
 	std::cout << "[Motor] Turning off!\n";
 }

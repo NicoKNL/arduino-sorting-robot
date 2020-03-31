@@ -31,20 +31,6 @@ namespace dzn {
 
 struct ISensor
 {
-#ifndef ENUM_ISensor_State
-#define ENUM_ISensor_State 1
-
-
-  struct State
-  {
-    enum type
-    {
-      Unknown,Low,High
-    };
-  };
-
-
-#endif // ENUM_ISensor_State
 
   struct
   {
@@ -54,7 +40,6 @@ struct ISensor
   struct
   {
     std::function< void()> high;
-    std::function< void()> low;
   } out;
 
   dzn::port::meta meta;
@@ -65,7 +50,6 @@ struct ISensor
     if (! in.initialise) throw dzn::binding_error(meta, "in.initialise");
 
     if (! out.high) throw dzn::binding_error(meta, "out.high");
-    if (! out.low) throw dzn::binding_error(meta, "out.low");
 
   }
 };
@@ -79,33 +63,7 @@ inline void connect (ISensor& provided, ISensor& required)
 }
 
 
-#ifndef ENUM_TO_STRING_ISensor_State
-#define ENUM_TO_STRING_ISensor_State 1
-inline std::string to_string(::ISensor::State::type v)
-{
-  switch(v)
-  {
-    case ::ISensor::State::Unknown: return "State_Unknown";
-    case ::ISensor::State::Low: return "State_Low";
-    case ::ISensor::State::High: return "State_High";
 
-  }
-  return "";
-}
-#endif // ENUM_TO_STRING_ISensor_State
-
-#ifndef STRING_TO_ENUM_ISensor_State
-#define STRING_TO_ENUM_ISensor_State 1
-inline ::ISensor::State::type to_ISensor_State(std::string s)
-{
-  static std::map<std::string, ::ISensor::State::type> m = {
-    {"State_Unknown", ::ISensor::State::Unknown},
-    {"State_Low", ::ISensor::State::Low},
-    {"State_High", ::ISensor::State::High},
-  };
-  return m.at(s);
-}
-#endif // STRING_TO_ENUM_ISensor_State
 
 
 #endif // ISENSOR_HH

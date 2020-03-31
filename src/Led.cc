@@ -12,10 +12,10 @@ void Led::led_initialise (int pin) {
 }
 
 void Led::led_turnOn() {
-  std::cout << "Ledje gaat aan op: " << mPin << '\n';
-	digitalWrite(mPin, 1);
+  std::cout << "[Led] gaat aan op: " << mPin << '\n';
+	digitalWrite(mPin, HIGH);
 }
 void Led::led_turnOff(){
-  std::cout << "Ledje gaat uit op: " << mPin << '\n';
-	digitalWrite(mPin, 0);
+  std::cout << "[Led] gaat uit op: " << mPin << '\n';
+	digitalWrite(mPin, LOW);
 }

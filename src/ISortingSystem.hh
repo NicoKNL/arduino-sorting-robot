@@ -31,6 +31,20 @@ namespace dzn {
 
 struct ISortingSystem
 {
+#ifndef ENUM_ISortingSystem_State
+#define ENUM_ISortingSystem_State 1
+
+
+  struct State
+  {
+    enum type
+    {
+      Idle,AwaitColourScan,SortWhite,SortBlack,SortOther
+    };
+  };
+
+
+#endif // ENUM_ISortingSystem_State
 
   struct
   {
@@ -63,7 +77,37 @@ inline void connect (ISortingSystem& provided, ISortingSystem& required)
 }
 
 
+#ifndef ENUM_TO_STRING_ISortingSystem_State
+#define ENUM_TO_STRING_ISortingSystem_State 1
+inline std::string to_string(::ISortingSystem::State::type v)
+{
+  switch(v)
+  {
+    case ::ISortingSystem::State::Idle: return "State_Idle";
+    case ::ISortingSystem::State::AwaitColourScan: return "State_AwaitColourScan";
+    case ::ISortingSystem::State::SortWhite: return "State_SortWhite";
+    case ::ISortingSystem::State::SortBlack: return "State_SortBlack";
+    case ::ISortingSystem::State::SortOther: return "State_SortOther";
 
+  }
+  return "";
+}
+#endif // ENUM_TO_STRING_ISortingSystem_State
+
+#ifndef STRING_TO_ENUM_ISortingSystem_State
+#define STRING_TO_ENUM_ISortingSystem_State 1
+inline ::ISortingSystem::State::type to_ISortingSystem_State(std::string s)
+{
+  static std::map<std::string, ::ISortingSystem::State::type> m = {
+    {"State_Idle", ::ISortingSystem::State::Idle},
+    {"State_AwaitColourScan", ::ISortingSystem::State::AwaitColourScan},
+    {"State_SortWhite", ::ISortingSystem::State::SortWhite},
+    {"State_SortBlack", ::ISortingSystem::State::SortBlack},
+    {"State_SortOther", ::ISortingSystem::State::SortOther},
+  };
+  return m.at(s);
+}
+#endif // STRING_TO_ENUM_ISortingSystem_State
 
 
 #endif // ISORTINGSYSTEM_HH
@@ -253,6 +297,7 @@ namespace skel {
 
 
     {
+      actuator.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->actuator) = false; return actuator_initialise(pin);}, this->actuator.meta, "initialise");};
       actuator.in.extend = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->actuator) = false; return actuator_extend();}, this->actuator.meta, "extend");};
       actuator.in.withdraw = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->actuator) = false; return actuator_withdraw();}, this->actuator.meta, "withdraw");};
 
@@ -268,6 +313,7 @@ namespace skel {
       return m.stream_members(os);
     }
     private:
+    virtual void actuator_initialise (int pin) = 0;
     virtual void actuator_extend () = 0;
     virtual void actuator_withdraw () = 0;
 
@@ -275,6 +321,61 @@ namespace skel {
 }
 
 #endif // ACTUATOR_HH
+
+/***********************************  FOREIGN  **********************************/
+/***********************************  FOREIGN  **********************************/
+#ifndef SKEL_MOTOR_HH
+#define SKEL_MOTOR_HH
+
+#include <dzn/locator.hh>
+#include <dzn/runtime.hh>
+
+#include "IMotor.hh"
+
+
+
+namespace skel {
+  struct Motor
+  {
+    dzn::meta dzn_meta;
+    dzn::runtime& dzn_rt;
+    dzn::locator const& dzn_locator;
+    ::IMotor motor;
+
+
+    Motor(const dzn::locator& dzn_locator)
+    : dzn_meta{"","Motor",0,0,{},{},{[this]{motor.check_bindings();}}}
+    , dzn_rt(dzn_locator.get<dzn::runtime>())
+    , dzn_locator(dzn_locator)
+
+    , motor({{"motor",this,&dzn_meta},{"",0,0}})
+
+
+    {
+      motor.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_initialise(pin);}, this->motor.meta, "initialise");};
+      motor.in.turnOn = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_turnOn();}, this->motor.meta, "turnOn");};
+      motor.in.turnOff = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->motor) = false; return motor_turnOff();}, this->motor.meta, "turnOff");};
+
+
+    }
+    virtual ~ Motor() {}
+    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
+    void check_bindings() const;
+    void dump_tree(std::ostream& os) const;
+    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
+    void set_state(std::map<std::string,std::string>_alist){}
+    friend std::ostream& operator << (std::ostream& os, const Motor& m)  {
+      return m.stream_members(os);
+    }
+    private:
+    virtual void motor_initialise (int pin) = 0;
+    virtual void motor_turnOn () = 0;
+    virtual void motor_turnOff () = 0;
+
+  };
+}
+
+#endif // MOTOR_HH
 
 /***********************************  FOREIGN  **********************************/
 /********************************** COMPONENT *********************************/
@@ -286,6 +387,7 @@ namespace skel {
 #include "ISensor.hh"
 #include "IActuator.hh"
 #include "IActuator.hh"
+#include "IMotor.hh"
 #include "ITimer.hh"
 
 
@@ -303,7 +405,7 @@ struct SortingSystem
   {
     enum type
     {
-      Idle,AwaitColourScan,SortWhite,SortBlack
+      Idle,AwaitColourScan,SortWhite,SortBlack,SortOther
     };
   };
 
@@ -323,6 +425,7 @@ struct SortingSystem
   ::ISensor beltSensorBlack;
   ::IActuator whiteActuator;
   ::IActuator blackActuator;
+  ::IMotor beltMotor;
   ::ITimer timer;
 
 
@@ -339,9 +442,7 @@ struct SortingSystem
   void colourSensor_detectedBlack();
   void colourSensor_detectedUnknown();
   void beltSensorWhite_high();
-  void beltSensorWhite_low();
   void beltSensorBlack_high();
-  void beltSensorBlack_low();
   void timer_timeout();
 
 };

@@ -118,6 +118,8 @@ component Master
 		State state = State.Off;
 		bool waitNext = false;
 		
+		on factoryFloorSensor.high() : {}
+		
 		[state.Off] {
 			on master.start(): {state = State.Idle;}
 		}
@@ -130,7 +132,7 @@ component Master
 			on factoryFloorSensor.high(): {
 				state = State.IngestingDisk;
 				ingest.startIngest();
-			}	
+			}
 		}
 		
 		[state.Waiting] {

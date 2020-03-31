@@ -31,6 +31,20 @@ namespace dzn {
 
 struct IIngest
 {
+#ifndef ENUM_IIngest_State
+#define ENUM_IIngest_State 1
+
+
+  struct State
+  {
+    enum type
+    {
+      Idle,Monitoring,Ingesting
+    };
+  };
+
+
+#endif // ENUM_IIngest_State
 
   struct
   {
@@ -63,7 +77,33 @@ inline void connect (IIngest& provided, IIngest& required)
 }
 
 
+#ifndef ENUM_TO_STRING_IIngest_State
+#define ENUM_TO_STRING_IIngest_State 1
+inline std::string to_string(::IIngest::State::type v)
+{
+  switch(v)
+  {
+    case ::IIngest::State::Idle: return "State_Idle";
+    case ::IIngest::State::Monitoring: return "State_Monitoring";
+    case ::IIngest::State::Ingesting: return "State_Ingesting";
 
+  }
+  return "";
+}
+#endif // ENUM_TO_STRING_IIngest_State
+
+#ifndef STRING_TO_ENUM_IIngest_State
+#define STRING_TO_ENUM_IIngest_State 1
+inline ::IIngest::State::type to_IIngest_State(std::string s)
+{
+  static std::map<std::string, ::IIngest::State::type> m = {
+    {"State_Idle", ::IIngest::State::Idle},
+    {"State_Monitoring", ::IIngest::State::Monitoring},
+    {"State_Ingesting", ::IIngest::State::Ingesting},
+  };
+  return m.at(s);
+}
+#endif // STRING_TO_ENUM_IIngest_State
 
 
 #endif // IINGEST_HH
@@ -281,7 +321,6 @@ struct Ingester
   private:
   void ingest_startIngest();
   void wheelStopSensor_high();
-  void wheelStopSensor_low();
   void timer_timeout();
 
 };

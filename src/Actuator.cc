@@ -11,9 +11,11 @@ void Actuator::actuator_initialise(int pin) {
 }
 
 void Actuator::actuator_extend() {
+	// digitalWrite(mPin, HIGH);
 	std::cout << "[Actuator] Extending!\n";
 }
 
 void Actuator::actuator_withdraw() {
+	// digitalWrite(mPin, LOW);
 	std::cout << "[Actuator] Withdrawing!\n";
 }
