@@ -6,11 +6,12 @@ import IMotor.dzn;
 
 interface ISortingSystem {
 	
+	enum State { Idle, AwaitColourScan, SortWhite, SortBlack, SortOther };
+	
 	in void startSorting();
 	out void finished();
 	
 	behaviour {
-		enum State { Idle, AwaitColourScan, SortWhite, SortBlack, SortOther };
 		State state = State.Idle;
 		
 		[state.Idle] {
@@ -46,8 +47,7 @@ component SortingSystem {
 	requires ITimer timer;
 	
 	behaviour {
-		enum State { Idle, AwaitColourScan, SortWhite, SortBlack, SortOther};
-		State state = State.Idle;
+		ISortingSystem.State state = ISortingSystem.State.Idle;
 		Long delay = $5000$; // in milliseconds, currently 5 seconds
 		
 		on colourSensor.detectedWhite(): {}
@@ -58,21 +58,21 @@ component SortingSystem {
 		
 		[state.Idle] {
 			on sortingSystem.startSorting(): {
-				state = State.AwaitColourScan;
+				state = ISortingSystem.State.AwaitColourScan;
 			}
 		}
 		
 		[state.AwaitColourScan] {
 			on colourSensor.detectedWhite(): {
 				whiteActuator.extend();
-				state = State.SortWhite;
+				state = ISortingSystem.State.SortWhite;
 			}
 			on colourSensor.detectedBlack(): {
 				blackActuator.extend();
-				state = State.SortBlack;
+				state = ISortingSystem.State.SortBlack;
 			}
 			on colourSensor.detectedUnknown(): {
-				state = State.SortOther;
+				state = ISortingSystem.State.SortOther;
 			}
 		}
 		
@@ -81,7 +81,7 @@ component SortingSystem {
 				timer.start(delay); // wait {delay} milliseconds
 			}
 			on timer.timeout(): {
-				state = State.Idle;
+				state = ISortingSystem.State.Idle;
 				whiteActuator.withdraw();
 				sortingSystem.finished();
 			}
@@ -92,7 +92,7 @@ component SortingSystem {
 				timer.start(delay); // wait {delay} milliseconds
 			}
 			on timer.timeout(): {
-				state = State.Idle;
+				state = ISortingSystem.State.Idle;
 				blackActuator.withdraw();
 				sortingSystem.finished();
 			}
@@ -103,7 +103,7 @@ component SortingSystem {
 				timer.start(delay);
 			}
 			on timer.timeout(): {
-				state = State.Idle;
+				state = ISortingSystem.State.Idle;
 				sortingSystem.finished();
 			}
 		}

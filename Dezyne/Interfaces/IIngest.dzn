@@ -4,11 +4,12 @@ import ISensor.dzn;
 
 interface IIngest {
 	
+	enum State { Idle, Monitoring, Ingesting };
+	
 	in void startIngest();
 	out void finished();
 	
 	behaviour {
-		enum State { Idle, Monitoring, Ingesting };
 		State state = State.Idle;
 		
 		[state.Idle] {
@@ -33,15 +34,14 @@ component Ingester {
 	requires ITimer timer;
 	
 	behaviour {
-		enum State { Idle, Monitoring, Ingesting };
-		State state = State.Idle;
+		IIngest.State state = IIngest.State.Idle;
 		Long delay = $5000$; // in milliseconds, currently 5 seconds
 		
 		on wheelStopSensor.high(): {}
 		
 		[state.Idle] {
 			on ingest.startIngest(): {
-				state = State.Monitoring;
+				state = IIngest.State.Monitoring;
 				timer.start(delay);
 			}
 		}
@@ -49,14 +49,14 @@ component Ingester {
 		
 		[state.Monitoring] {
 			on timer.timeout(): {
-				state = State.Ingesting;
+				state = IIngest.State.Ingesting;
 				wheelMotor.turnOn();
 			}
 		}
 		
 		[state.Ingesting] {
 			on wheelStopSensor.high(): {
-				state = State.Idle;
+				state = IIngest.State.Idle;
 				wheelMotor.turnOff();
 				ingest.finished();
 			}
