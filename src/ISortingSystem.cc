@@ -21,7 +21,7 @@ SortingSystem::SortingSystem(const dzn::locator& dzn_locator)
 : dzn_meta{"","SortingSystem",0,0,{& colourSensor.meta,& beltSensorWhite.meta,& beltSensorBlack.meta,& whiteActuator.meta,& blackActuator.meta,& beltMotor.meta,& timer.meta},{},{[this]{sortingSystem.check_bindings();},[this]{colourSensor.check_bindings();},[this]{beltSensorWhite.check_bindings();},[this]{beltSensorBlack.check_bindings();},[this]{whiteActuator.check_bindings();},[this]{blackActuator.check_bindings();},[this]{beltMotor.check_bindings();},[this]{timer.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
-, state(::SortingSystem::State::Idle), delay(5000)
+, state(::ISortingSystem::State::Idle), delay(5000)
 
 , sortingSystem({{"sortingSystem",this,&dzn_meta},{"",0,0}})
 
@@ -53,11 +53,11 @@ SortingSystem::SortingSystem(const dzn::locator& dzn_locator)
 
 void SortingSystem::sortingSystem_startSorting()
 {
-  if (state == ::SortingSystem::State::Idle) 
+  if (state == ::ISortingSystem::State::Idle) 
   {
-    state = ::SortingSystem::State::AwaitColourScan;
+    state = ::ISortingSystem::State::AwaitColourScan;
   }
-  else if (!(state == ::SortingSystem::State::Idle)) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (!(state == ::ISortingSystem::State::Idle)) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -69,10 +69,10 @@ void SortingSystem::colourSensor_detectedWhite()
   {
     ;
   }
-  if (state == ::SortingSystem::State::AwaitColourScan) 
+  if (state == ::ISortingSystem::State::AwaitColourScan) 
   {
     this->whiteActuator.in.extend();
-    state = ::SortingSystem::State::SortWhite;
+    state = ::ISortingSystem::State::SortWhite;
   }
   else 
   return;
@@ -84,10 +84,10 @@ void SortingSystem::colourSensor_detectedBlack()
   {
     ;
   }
-  if (state == ::SortingSystem::State::AwaitColourScan) 
+  if (state == ::ISortingSystem::State::AwaitColourScan) 
   {
     this->blackActuator.in.extend();
-    state = ::SortingSystem::State::SortBlack;
+    state = ::ISortingSystem::State::SortBlack;
   }
   else 
   return;
@@ -99,9 +99,9 @@ void SortingSystem::colourSensor_detectedUnknown()
   {
     ;
   }
-  if (state == ::SortingSystem::State::AwaitColourScan) 
+  if (state == ::ISortingSystem::State::AwaitColourScan) 
   {
-    state = ::SortingSystem::State::SortOther;
+    state = ::ISortingSystem::State::SortOther;
   }
   else 
   return;
@@ -113,7 +113,7 @@ void SortingSystem::beltSensorWhite_high()
   {
     ;
   }
-  if (state == ::SortingSystem::State::SortWhite) 
+  if (state == ::ISortingSystem::State::SortWhite) 
   {
     this->timer.in.start(delay);
   }
@@ -127,11 +127,11 @@ void SortingSystem::beltSensorBlack_high()
   {
     ;
   }
-  if (state == ::SortingSystem::State::SortBlack) 
+  if (state == ::ISortingSystem::State::SortBlack) 
   {
     this->timer.in.start(delay);
   }
-  else if (state == ::SortingSystem::State::SortOther) 
+  else if (state == ::ISortingSystem::State::SortOther) 
   {
     this->timer.in.start(delay);
   }
@@ -141,24 +141,24 @@ void SortingSystem::beltSensorBlack_high()
 }
 void SortingSystem::timer_timeout()
 {
-  if (state == ::SortingSystem::State::SortWhite) 
+  if (state == ::ISortingSystem::State::SortWhite) 
   {
-    state = ::SortingSystem::State::Idle;
+    state = ::ISortingSystem::State::Idle;
     this->whiteActuator.in.withdraw();
     this->sortingSystem.out.finished();
   }
-  else if (state == ::SortingSystem::State::SortBlack) 
+  else if (state == ::ISortingSystem::State::SortBlack) 
   {
-    state = ::SortingSystem::State::Idle;
+    state = ::ISortingSystem::State::Idle;
     this->blackActuator.in.withdraw();
     this->sortingSystem.out.finished();
   }
-  else if (state == ::SortingSystem::State::SortOther) 
+  else if (state == ::ISortingSystem::State::SortOther) 
   {
-    state = ::SortingSystem::State::Idle;
+    state = ::ISortingSystem::State::Idle;
     this->sortingSystem.out.finished();
   }
-  else if ((!(state == ::SortingSystem::State::SortOther) && (!(state == ::SortingSystem::State::SortBlack) && !(state == ::SortingSystem::State::SortWhite)))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if ((!(state == ::ISortingSystem::State::SortOther) && (!(state == ::ISortingSystem::State::SortBlack) && !(state == ::ISortingSystem::State::SortWhite)))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;

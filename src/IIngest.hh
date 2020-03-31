@@ -283,22 +283,8 @@ struct Ingester
   dzn::meta dzn_meta;
   dzn::runtime& dzn_rt;
   dzn::locator const& dzn_locator;
-#ifndef ENUM_Ingester_State
-#define ENUM_Ingester_State 1
 
-
-  struct State
-  {
-    enum type
-    {
-      Idle,Monitoring,Ingesting
-    };
-  };
-
-
-#endif // ENUM_Ingester_State
-
-  ::Ingester::State::type state;
+  ::IIngest::State::type state;
   long delay;
 
 

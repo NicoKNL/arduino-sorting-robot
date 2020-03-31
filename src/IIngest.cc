@@ -21,7 +21,7 @@ Ingester::Ingester(const dzn::locator& dzn_locator)
 : dzn_meta{"","Ingester",0,0,{& wheelMotor.meta,& wheelStopSensor.meta,& timer.meta},{},{[this]{ingest.check_bindings();},[this]{wheelMotor.check_bindings();},[this]{wheelStopSensor.check_bindings();},[this]{timer.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
-, state(::Ingester::State::Idle), delay(5000)
+, state(::IIngest::State::Idle), delay(5000)
 
 , ingest({{"ingest",this,&dzn_meta},{"",0,0}})
 
@@ -45,12 +45,12 @@ Ingester::Ingester(const dzn::locator& dzn_locator)
 
 void Ingester::ingest_startIngest()
 {
-  if (state == ::Ingester::State::Idle) 
+  if (state == ::IIngest::State::Idle) 
   {
-    state = ::Ingester::State::Monitoring;
+    state = ::IIngest::State::Monitoring;
     this->timer.in.start(delay);
   }
-  else if (!(state == ::Ingester::State::Idle)) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (!(state == ::IIngest::State::Idle)) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -62,9 +62,9 @@ void Ingester::wheelStopSensor_high()
   {
     ;
   }
-  if (state == ::Ingester::State::Ingesting) 
+  if (state == ::IIngest::State::Ingesting) 
   {
-    state = ::Ingester::State::Idle;
+    state = ::IIngest::State::Idle;
     this->wheelMotor.in.turnOff();
     this->ingest.out.finished();
   }
@@ -74,12 +74,12 @@ void Ingester::wheelStopSensor_high()
 }
 void Ingester::timer_timeout()
 {
-  if (state == ::Ingester::State::Monitoring) 
+  if (state == ::IIngest::State::Monitoring) 
   {
-    state = ::Ingester::State::Ingesting;
+    state = ::IIngest::State::Ingesting;
     this->wheelMotor.in.turnOn();
   }
-  else if (!(state == ::Ingester::State::Monitoring)) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (!(state == ::IIngest::State::Monitoring)) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;

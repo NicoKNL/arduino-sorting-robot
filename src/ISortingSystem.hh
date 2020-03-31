@@ -397,22 +397,8 @@ struct SortingSystem
   dzn::meta dzn_meta;
   dzn::runtime& dzn_rt;
   dzn::locator const& dzn_locator;
-#ifndef ENUM_SortingSystem_State
-#define ENUM_SortingSystem_State 1
 
-
-  struct State
-  {
-    enum type
-    {
-      Idle,AwaitColourScan,SortWhite,SortBlack,SortOther
-    };
-  };
-
-
-#endif // ENUM_SortingSystem_State
-
-  ::SortingSystem::State::type state;
+  ::ISortingSystem::State::type state;
   long delay;
 
 
