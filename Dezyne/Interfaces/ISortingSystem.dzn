@@ -10,7 +10,7 @@ interface ISortingSystem {
 	out void finished();
 	
 	behaviour {
-		enum State { Idle, AwaitColourScan, SortWhite, SortBlack};
+		enum State { Idle, AwaitColourScan, SortWhite, SortBlack, SortOther };
 		State state = State.Idle;
 		
 		[state.Idle] {
@@ -29,7 +29,7 @@ interface ISortingSystem {
 			on startSorting: illegal;
 		}
 		
-		[state.Idle] {
+		[state.SortOther] {
 			on startSorting: illegal;
 		}
 	}
@@ -46,7 +46,7 @@ component SortingSystem {
 	requires ITimer timer;
 	
 	behaviour {
-		enum State { Idle, AwaitColourScan, SortWhite, SortBlack};
+		enum State { Idle, AwaitColourScan, SortWhite, SortBlack, SortOther};
 		State state = State.Idle;
 		Long delay = $5000$; // in milliseconds, currently 5 seconds
 		
@@ -66,10 +66,7 @@ component SortingSystem {
 				state = State.SortBlack;
 			}
 			on colourSensor.detectedUnknown(): {
-				// need some kind of more advanced error handling here
-				// maybe wait for both black and white sensor to go high
-				// and then start timer or smth
-				state = State.Idle;
+				state = State.SortOther;
 			}
 		}
 		
@@ -91,6 +88,16 @@ component SortingSystem {
 			on timer.timeout(): {
 				state = State.Idle;
 				blackActuator.withdraw();
+				sortingSystem.finished();
+			}
+		}
+		
+		[state.SortOther] {
+			on beltSensorBlack.high(): {
+				timer.start(delay);
+			}
+			on timer.timeout(): {
+				state = State.Idle;
 				sortingSystem.finished();
 			}
 		}
