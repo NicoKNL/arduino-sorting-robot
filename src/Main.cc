@@ -83,6 +83,10 @@ int main(int argc, char* argv[]) {
 
 	while (true) {
 		std::cout << "step\n";
+		std::cout << "[STATE] " << robbie_de_robot.master.state;
+		// Check timers
+		robbie_de_robot.ingestTimer.check_timer();
+		robbie_de_robot.sortingTimer.check_timer();
 
 		// Input sensor detection
 		robbie_de_robot.factorFloorSensor.detect();
@@ -90,6 +94,7 @@ int main(int argc, char* argv[]) {
 		robbie_de_robot.cs.detect();
 		robbie_de_robot.beltSensorWhite.detect();
 		robbie_de_robot.beltSensorBlack.detect();
+
 
 		std::cout << "post step\n";
 

@@ -58,6 +58,7 @@ component Ingester {
 			on wheelStopSensor.high(): {
 				state = State.Idle;
 				wheelMotor.turnOff();
+				ingest.finished();
 			}
 		}
 	}

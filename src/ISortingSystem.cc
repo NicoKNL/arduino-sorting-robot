@@ -65,56 +65,68 @@ void SortingSystem::sortingSystem_startSorting()
 }
 void SortingSystem::colourSensor_detectedWhite()
 {
+
+  {
+    ;
+  }
   if (state == ::SortingSystem::State::AwaitColourScan) 
   {
     this->whiteActuator.in.extend();
     state = ::SortingSystem::State::SortWhite;
   }
-  else if (!(state == ::SortingSystem::State::AwaitColourScan)) dzn_locator.get<dzn::illegal_handler>().illegal();
-  else dzn_locator.get<dzn::illegal_handler>().illegal();
-
+  else 
   return;
 
 }
 void SortingSystem::colourSensor_detectedBlack()
 {
+
+  {
+    ;
+  }
   if (state == ::SortingSystem::State::AwaitColourScan) 
   {
     this->blackActuator.in.extend();
     state = ::SortingSystem::State::SortBlack;
   }
-  else if (!(state == ::SortingSystem::State::AwaitColourScan)) dzn_locator.get<dzn::illegal_handler>().illegal();
-  else dzn_locator.get<dzn::illegal_handler>().illegal();
-
+  else 
   return;
 
 }
 void SortingSystem::colourSensor_detectedUnknown()
 {
+
+  {
+    ;
+  }
   if (state == ::SortingSystem::State::AwaitColourScan) 
   {
     state = ::SortingSystem::State::SortOther;
   }
-  else if (!(state == ::SortingSystem::State::AwaitColourScan)) dzn_locator.get<dzn::illegal_handler>().illegal();
-  else dzn_locator.get<dzn::illegal_handler>().illegal();
-
+  else 
   return;
 
 }
 void SortingSystem::beltSensorWhite_high()
 {
+
+  {
+    ;
+  }
   if (state == ::SortingSystem::State::SortWhite) 
   {
     this->timer.in.start(delay);
   }
-  else if (!(state == ::SortingSystem::State::SortWhite)) dzn_locator.get<dzn::illegal_handler>().illegal();
-  else dzn_locator.get<dzn::illegal_handler>().illegal();
-
+  else 
   return;
 
 }
 void SortingSystem::beltSensorBlack_high()
 {
+
+  {
+    ;
+  }
   if (state == ::SortingSystem::State::SortBlack) 
   {
     this->timer.in.start(delay);
@@ -123,9 +135,7 @@ void SortingSystem::beltSensorBlack_high()
   {
     this->timer.in.start(delay);
   }
-  else if ((!(state == ::SortingSystem::State::SortOther) && !(state == ::SortingSystem::State::SortBlack))) dzn_locator.get<dzn::illegal_handler>().illegal();
-  else dzn_locator.get<dzn::illegal_handler>().illegal();
-
+  else 
   return;
 
 }

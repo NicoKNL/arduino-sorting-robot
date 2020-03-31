@@ -58,14 +58,17 @@ void Ingester::ingest_startIngest()
 }
 void Ingester::wheelStopSensor_high()
 {
+
+  {
+    ;
+  }
   if (state == ::Ingester::State::Ingesting) 
   {
     state = ::Ingester::State::Idle;
     this->wheelMotor.in.turnOff();
+    this->ingest.out.finished();
   }
-  else if (!(state == ::Ingester::State::Ingesting)) dzn_locator.get<dzn::illegal_handler>().illegal();
-  else dzn_locator.get<dzn::illegal_handler>().illegal();
-
+  else 
   return;
 
 }

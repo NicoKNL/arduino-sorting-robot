@@ -41,6 +41,7 @@ bool Timer::is_running() {
  * Checks whether the timer has run out.
  */
 void Timer::check_timer() {
+    std::cout << "[Timer] Checking timer...\n";
     if (!is_running()) return;
 
     if (millis() >= targetTime) {

@@ -43,6 +43,7 @@ Master::Master(const dzn::locator& dzn_locator)
   sortingSystem.out.finished = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sortingSystem) = false; return sortingSystem_finished();}, this->sortingSystem.meta, "finished");};
 
 
+  master.in.getState = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_getState();}, this->master.meta, "getState");};
 
 
 
@@ -159,6 +160,12 @@ void Master::master_cancelWait()
 
   return;
 
+}
+::IMaster::State::type Master::master_getState()
+{
+  dzn_locator.get<dzn::illegal_handler>().illegal();
+
+  return this->reply_IMaster_State;
 }
 void Master::ingest_finished()
 {

@@ -44,16 +44,19 @@ component SortingRobotSystem
 
 interface IMaster
 {
+	enum State {Off, Idle, Waiting, Error, IngestingDisk, Sorting};
+	
 	in void start();
 	in void stop();
 	in void emergency();
 	in void forceWait();
 	in void cancelWait();
-
+	
 	behaviour
 	{
-		enum State {Off, Idle, Waiting, Error, IngestingDisk, Sorting};
 		State state = State.Off;
+		
+		on getState: { reply(state); }
 		
 		[state.Off] {
 			on start: {state = State.Idle;}
@@ -114,6 +117,7 @@ component Master
 
 	behaviour
 	{
+		IMaster.State state = IMaster.State.Off;
 		enum State {Off, Idle, Waiting, Error, IngestingDisk, Sorting};
 		State state = State.Off;
 		bool waitNext = false;
