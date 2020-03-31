@@ -29,6 +29,7 @@ component SortingRobotSystem
 		ColourSensor cs;
 		Actuator whiteActuator;
 		Actuator blackActuator;
+		Motor beltMotor;
 		Timer sortingTimer;
 		sortingSystem.sortingSystem <=> m.sortingSystem;
 		sortingSystem.colourSensor <=> cs.colourSensor;
@@ -36,6 +37,7 @@ component SortingRobotSystem
 		sortingSystem.beltSensorBlack <=> beltSensorBlack.sensor;
 		sortingSystem.whiteActuator <=> whiteActuator.actuator;
 		sortingSystem.blackActuator <=> blackActuator.actuator;
+		sortingSystem.beltMotor <=> beltMotor.motor;
 		sortingSystem.timer <=> sortingTimer.timer;
 	}
 }

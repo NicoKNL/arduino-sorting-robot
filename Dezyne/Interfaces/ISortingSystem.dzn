@@ -2,6 +2,7 @@ import ITimer.dzn;
 import IColourSensor.dzn;
 import ISensor.dzn;
 import IActuator.dzn;
+import IMotor.dzn;
 
 interface ISortingSystem {
 	
@@ -20,6 +21,7 @@ component SortingSystem {
 	requires ISensor beltSensorBlack;
 	requires IActuator whiteActuator;
 	requires IActuator blackActuator;
+	requires IMotor beltMotor;
 	requires ITimer timer;
 	
 	behaviour {

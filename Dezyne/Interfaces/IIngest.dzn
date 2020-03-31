@@ -24,22 +24,26 @@ component Ingester {
 		State state = State.Idle;
 		Long delay = $5000$; // in milliseconds, currently 5 seconds
 		
-		[State.Idle]
-		on ingest.startIngest(): {
-			state = State.Monitoring;
-			timer.start(delay);
+		[State.Idle] {
+			on ingest.startIngest(): {
+				state = State.Monitoring;
+				timer.start(delay);
+			}
 		}
 		
-		[State.Monitoring]
-		on timer.timeout(): {
-			state = State.Ingesting;
-			wheelMotor.turnOn();
+		
+		[State.Monitoring] {
+			on timer.timeout(): {
+				state = State.Ingesting;
+				wheelMotor.turnOn();
+			}
 		}
 		
-		[State.Ingesting]
-		on wheelStopSensor.high(): {
-			state = State.Idle;
-			wheelMotor.turnOff();
+		[State.Ingesting] {
+			on wheelStopSensor.high(): {
+				state = State.Idle;
+				wheelMotor.turnOff();
+			}
 		}
 	}
 	
