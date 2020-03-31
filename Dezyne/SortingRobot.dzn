@@ -1,6 +1,6 @@
 import IIngest.dzn;
 import ISensor.dzn;
-import ISortingSystem.dzn;
+import SortingSystem.dzn;
 
 component SortingRobotSystem
 {
@@ -16,7 +16,7 @@ component SortingRobotSystem
 		m.master <=> master;
 		i.ingest <=> m.ingest;
 		sensors.factoryFloorSensor <=> m.factoryFloorSensor;
-		sortingSystem.sortingSystem <=> m.sortingSystem;
+		sortingSystem.controller <=> m.sortingSystem;
 		
 	}
 }
@@ -44,13 +44,14 @@ component Master
 	provides IMaster master;
 	requires IIngest ingest;
 	requires ISensor factoryFloorSensor;
-	requires ISortingSystem sortingSystem;
+	requires ISortingController sortingSystem;
 
 	behaviour
 	{
 		enum State {Off, Idle, Waiting, Error, IngestingDisk, Sorting};
-		//bool waitNext = false;
 		State state = State.Off;
+		bool waitNext = false;
+		
 
 		[state.Off]
 		{
@@ -92,7 +93,7 @@ component Master
 			on master.stop(): {state = State.Off;}
 			on master.emergency(): {state = State.Error;} 
 			on master.forceWait(): {
-				//waitNext = true;
+				waitNext = true;
 			}
 			on master.continue(): {}
 			
@@ -106,18 +107,17 @@ component Master
 			on master.stop(): {state = State.Off;}
 			on master.emergency(): {state = State.Error;} 
 			on master.forceWait(): {
-			//waitNext = true;
+			waitNext = true;
 			}
 			on master.continue(): {}
 			
 			on sortingSystem.finished(): {
-				//if (waitNext) {
-				//	waitNext = false;
-				//	state = State.Waiting;
-				//} else {
-				//	state = State.Idle;
-				//}
-				state = State.Idle;
+				if (waitNext) {
+					waitNext = false;
+					state = State.Waiting;
+				} else {
+					state = State.Idle;
+				}
 			}
 		}
 	}

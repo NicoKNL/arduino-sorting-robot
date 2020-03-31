@@ -33,3 +33,11 @@ component Sensor
 {
 	provides ISensor factoryFloorSensor;
 }
+
+component whiteSensor {
+	provides ISensor beltWhiteSensor;
+}
+
+component blackSensor {
+	provides ISensor beltBlackSensor;
+}

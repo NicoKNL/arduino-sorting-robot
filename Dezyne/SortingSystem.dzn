@@ -1,0 +1,74 @@
+import ITimer.dzn;
+import IColourSensor.dzn;
+import ISensor.dzn;
+import IActuator.dzn;
+
+component SortingSystem {
+	provides ISortingController controller;
+}
+
+interface ISortingController {
+	
+	in void startSorting();
+	out void finished();
+	
+	behaviour {
+		on startSorting: {}
+	}
+}
+
+component SortingController {
+	provides ISortingController controller;
+	requires IColourSensor colourSensor;
+	requires ISensor beltWhiteSensor;
+	requires ISensor beltBlackSensor;
+	requires IActuator whiteActuator;
+	requires IActuator blackActuator;
+	requires ITimer timer;
+	
+	behaviour {
+		enum State { Idle, AwaitColourScan, SortWhite, SortBlack};
+		State state = State.Idle;
+		Long delay = $5000$; // in milliseconds, currently 5 seconds
+		
+		[state.Idle] {
+			on controller.startSorting(): {
+				state = State.AwaitColourScan;
+			}
+		}
+		[state.AwaitColourScan] {
+			on colourSensor.detectedWhite(): {
+				whiteActuator.extend();
+				state = State.SortWhite;
+			}
+			on colourSensor.detectedBlack(): {
+				blackActuator.extend();
+				state = State.SortBlack;
+			}
+			on colourSensor.detectedUnknown(): {
+				// need some kind of more advanced error handling here
+				state = State.Idle;
+			}
+		}
+		[state.SortWhite] {
+			on beltWhiteSensor.high(): {
+				timer.start(delay); // wait {delay} milliseconds
+			}
+			on timer.timeout(): {
+				whiteActuator.withdraw();
+				controller.finished();
+				state = State.Idle;
+			}
+		}
+		[state.SortBlack] {
+			on beltBlackSensor.high(): {
+				timer.start(delay); // wait {delay} milliseconds
+			}
+			on timer.timeout(): {
+				blackActuator.withdraw();
+				controller.finished();
+				state = State.Idle;
+			}
+		}
+	}
+}

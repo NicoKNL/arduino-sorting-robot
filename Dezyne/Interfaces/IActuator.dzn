@@ -1,0 +1,23 @@
+interface IActuator {
+	
+	enum State {Withdrawn, Extended};
+	in void extend();
+	in void withdraw();
+	
+	behaviour {
+		State state = State.Withdrawn;
+		
+		on extend: {state = State.Extended;}
+		on withdraw: {state = State.Withdrawn;} 
+	}
+}
+
+component WhiteActuator
+{
+	provides IActuator whiteActuator;
+}
+
+component BlackActuator
+{
+	provides IActuator blackActuator;
+}

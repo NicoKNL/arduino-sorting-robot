@@ -1,0 +1,30 @@
+extern Long $long$;
+
+interface ITimer {
+	in void start(Long milliseconds);
+	in void cancel();
+	out void timeout();
+	
+	behaviour {
+		enum State { Idle, Running };
+		State state = State.Idle;
+		
+		[state.Idle] {
+			on start: state = State.Running;
+			on cancel: illegal;
+		}	
+		
+		[state.Running] {
+			on start: illegal;
+			on cancel: state = State.Idle;
+			on inevitable: {
+				state = State.Idle;
+				timeout;
+			}
+		}
+	}
+}
+
+component Timer {
+	provides ITimer timer;
+}

@@ -1,0 +1,22 @@
+interface IColourSensor
+{
+	extern Pin $int$;
+	
+	in void initialise(Pin pinA, Pin pinB);
+	out void detectedWhite();
+	out void detectedBlack();
+	out void detectedUnknown();
+
+	behaviour
+	{
+		enum State {Unknown, White, Black};
+		State state = State.Unknown;
+		
+		on initialise: {}
+	}
+}
+
+component ColourSensor
+{
+	provides IColourSensor colourSensor;
+}

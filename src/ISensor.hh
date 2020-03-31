@@ -127,19 +127,19 @@ namespace skel {
     dzn::meta dzn_meta;
     dzn::runtime& dzn_rt;
     dzn::locator const& dzn_locator;
-    ::ISensor sensor;
+    ::ISensor factoryFloorSensor;
 
 
     Sensor(const dzn::locator& dzn_locator)
-    : dzn_meta{"","Sensor",0,0,{},{},{[this]{sensor.check_bindings();}}}
+    : dzn_meta{"","Sensor",0,0,{},{},{[this]{factoryFloorSensor.check_bindings();}}}
     , dzn_rt(dzn_locator.get<dzn::runtime>())
     , dzn_locator(dzn_locator)
 
-    , sensor({{"sensor",this,&dzn_meta},{"",0,0}})
+    , factoryFloorSensor({{"factoryFloorSensor",this,&dzn_meta},{"",0,0}})
 
 
     {
-      sensor.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sensor) = false; return sensor_initialise(pin);}, this->sensor.meta, "initialise");};
+      factoryFloorSensor.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->factoryFloorSensor) = false; return factoryFloorSensor_initialise(pin);}, this->factoryFloorSensor.meta, "initialise");};
 
 
     }
@@ -153,12 +153,112 @@ namespace skel {
       return m.stream_members(os);
     }
     private:
-    virtual void sensor_initialise (int pin) = 0;
+    virtual void factoryFloorSensor_initialise (int pin) = 0;
 
   };
 }
 
 #endif // SENSOR_HH
+
+/***********************************  FOREIGN  **********************************/
+/***********************************  FOREIGN  **********************************/
+#ifndef SKEL_WHITESENSOR_HH
+#define SKEL_WHITESENSOR_HH
+
+#include <dzn/locator.hh>
+#include <dzn/runtime.hh>
+
+
+
+
+namespace skel {
+  struct whiteSensor
+  {
+    dzn::meta dzn_meta;
+    dzn::runtime& dzn_rt;
+    dzn::locator const& dzn_locator;
+    ::ISensor beltWhiteSensor;
+
+
+    whiteSensor(const dzn::locator& dzn_locator)
+    : dzn_meta{"","whiteSensor",0,0,{},{},{[this]{beltWhiteSensor.check_bindings();}}}
+    , dzn_rt(dzn_locator.get<dzn::runtime>())
+    , dzn_locator(dzn_locator)
+
+    , beltWhiteSensor({{"beltWhiteSensor",this,&dzn_meta},{"",0,0}})
+
+
+    {
+      beltWhiteSensor.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->beltWhiteSensor) = false; return beltWhiteSensor_initialise(pin);}, this->beltWhiteSensor.meta, "initialise");};
+
+
+    }
+    virtual ~ whiteSensor() {}
+    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
+    void check_bindings() const;
+    void dump_tree(std::ostream& os) const;
+    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
+    void set_state(std::map<std::string,std::string>_alist){}
+    friend std::ostream& operator << (std::ostream& os, const whiteSensor& m)  {
+      return m.stream_members(os);
+    }
+    private:
+    virtual void beltWhiteSensor_initialise (int pin) = 0;
+
+  };
+}
+
+#endif // WHITESENSOR_HH
+
+/***********************************  FOREIGN  **********************************/
+/***********************************  FOREIGN  **********************************/
+#ifndef SKEL_BLACKSENSOR_HH
+#define SKEL_BLACKSENSOR_HH
+
+#include <dzn/locator.hh>
+#include <dzn/runtime.hh>
+
+
+
+
+namespace skel {
+  struct blackSensor
+  {
+    dzn::meta dzn_meta;
+    dzn::runtime& dzn_rt;
+    dzn::locator const& dzn_locator;
+    ::ISensor beltBlackSensor;
+
+
+    blackSensor(const dzn::locator& dzn_locator)
+    : dzn_meta{"","blackSensor",0,0,{},{},{[this]{beltBlackSensor.check_bindings();}}}
+    , dzn_rt(dzn_locator.get<dzn::runtime>())
+    , dzn_locator(dzn_locator)
+
+    , beltBlackSensor({{"beltBlackSensor",this,&dzn_meta},{"",0,0}})
+
+
+    {
+      beltBlackSensor.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->beltBlackSensor) = false; return beltBlackSensor_initialise(pin);}, this->beltBlackSensor.meta, "initialise");};
+
+
+    }
+    virtual ~ blackSensor() {}
+    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
+    void check_bindings() const;
+    void dump_tree(std::ostream& os) const;
+    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
+    void set_state(std::map<std::string,std::string>_alist){}
+    friend std::ostream& operator << (std::ostream& os, const blackSensor& m)  {
+      return m.stream_members(os);
+    }
+    private:
+    virtual void beltBlackSensor_initialise (int pin) = 0;
+
+  };
+}
+
+#endif // BLACKSENSOR_HH
 
 /***********************************  FOREIGN  **********************************/
 

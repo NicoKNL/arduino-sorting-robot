@@ -18,15 +18,16 @@
 
 
 Master::Master(const dzn::locator& dzn_locator)
-: dzn_meta{"","Master",0,0,{& sensor.meta,& led.meta},{},{[this]{master.check_bindings();},[this]{sensor.check_bindings();},[this]{led.check_bindings();}}}
+: dzn_meta{"","Master",0,0,{& ingest.meta,& factoryFloorSensor.meta,& sortingSystem.meta},{},{[this]{master.check_bindings();},[this]{ingest.check_bindings();},[this]{factoryFloorSensor.check_bindings();},[this]{sortingSystem.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
-, state(::Master::State::Off)
+, state(::Master::State::Off), waitNext(false)
 
 , master({{"master",this,&dzn_meta},{"",0,0}})
 
-, sensor({{"",0,0},{"sensor",this,&dzn_meta}})
-, led({{"",0,0},{"led",this,&dzn_meta}})
+, ingest({{"",0,0},{"ingest",this,&dzn_meta}})
+, factoryFloorSensor({{"",0,0},{"factoryFloorSensor",this,&dzn_meta}})
+, sortingSystem({{"",0,0},{"sortingSystem",this,&dzn_meta}})
 
 
 {
@@ -35,8 +36,12 @@ Master::Master(const dzn::locator& dzn_locator)
   master.in.start = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_start();}, this->master.meta, "start");};
   master.in.stop = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_stop();}, this->master.meta, "stop");};
   master.in.emergency = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_emergency();}, this->master.meta, "emergency");};
-  sensor.out.high = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sensor) = false; return sensor_high();}, this->sensor.meta, "high");};
-  sensor.out.low = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sensor) = false; return sensor_low();}, this->sensor.meta, "low");};
+  master.in.forceWait = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_forceWait();}, this->master.meta, "forceWait");};
+  master.in.continue = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_continue();}, this->master.meta, "continue");};
+  ingest.out.finished = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->ingest) = false; return ingest_finished();}, this->ingest.meta, "finished");};
+  factoryFloorSensor.out.high = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->factoryFloorSensor) = false; return factoryFloorSensor_high();}, this->factoryFloorSensor.meta, "high");};
+  factoryFloorSensor.out.low = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->factoryFloorSensor) = false; return factoryFloorSensor_low();}, this->factoryFloorSensor.meta, "low");};
+  sortingSystem.out.finished = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sortingSystem) = false; return sortingSystem_finished();}, this->sortingSystem.meta, "finished");};
 
 
 
@@ -48,11 +53,14 @@ void Master::master_start()
 {
   if (state == ::Master::State::Off) 
   {
-    state = ::Master::State::On;
-    this->led.in.turnOff();
+    state = ::Master::State::Idle;
   }
-  else if (state == ::Master::State::On) ;
-  else if ((!(state == ::Master::State::On) && !(state == ::Master::State::Off))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (state == ::Master::State::Idle) ;
+  else if (state == ::Master::State::Waiting) ;
+  else if (state == ::Master::State::Error) ;
+  else if (state == ::Master::State::IngestingDisk) ;
+  else if (state == ::Master::State::Sorting) ;
+  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && (!(state == ::Master::State::Idle) && !(state == ::Master::State::Off))))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -61,12 +69,27 @@ void Master::master_start()
 void Master::master_stop()
 {
   if (state == ::Master::State::Off) ;
-  else if (state == ::Master::State::On) 
+  else if (state == ::Master::State::Idle) 
   {
-    this->led.in.turnOff();
     state = ::Master::State::Off;
   }
-  else if ((!(state == ::Master::State::On) && !(state == ::Master::State::Off))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (state == ::Master::State::Waiting) 
+  {
+    state = ::Master::State::Off;
+  }
+  else if (state == ::Master::State::Error) 
+  {
+    state = ::Master::State::Off;
+  }
+  else if (state == ::Master::State::IngestingDisk) 
+  {
+    state = ::Master::State::Off;
+  }
+  else if (state == ::Master::State::Sorting) 
+  {
+    state = ::Master::State::Off;
+  }
+  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && (!(state == ::Master::State::Idle) && !(state == ::Master::State::Off))))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -75,30 +98,122 @@ void Master::master_stop()
 void Master::master_emergency()
 {
   if (state == ::Master::State::Off) ;
-  else if (state == ::Master::State::On) 
+  else if (state == ::Master::State::Idle) 
   {
-    this->led.in.turnOff();
-    state = ::Master::State::Off;
+    state = ::Master::State::Error;
   }
-  else if ((!(state == ::Master::State::On) && !(state == ::Master::State::Off))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (state == ::Master::State::Waiting) 
+  {
+    state = ::Master::State::Error;
+  }
+  else if (state == ::Master::State::Error) 
+  {
+    state = ::Master::State::Error;
+  }
+  else if (state == ::Master::State::IngestingDisk) 
+  {
+    state = ::Master::State::Error;
+  }
+  else if (state == ::Master::State::Sorting) 
+  {
+    state = ::Master::State::Error;
+  }
+  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && (!(state == ::Master::State::Idle) && !(state == ::Master::State::Off))))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
 
 }
-void Master::sensor_high()
+void Master::master_forceWait()
 {
-  if (state == ::Master::State::On) this->led.in.turnOn();
-  else if (!(state == ::Master::State::On)) dzn_locator.get<dzn::illegal_handler>().illegal();
+  if (state == ::Master::State::Off) ;
+  else if (state == ::Master::State::Idle) 
+  {
+    state = ::Master::State::Waiting;
+  }
+  else if (state == ::Master::State::Waiting) ;
+  else if (state == ::Master::State::Error) ;
+  else if (state == ::Master::State::IngestingDisk) 
+  {
+    waitNext = true;
+  }
+  else if (state == ::Master::State::Sorting) 
+  {
+    waitNext = true;
+  }
+  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && (!(state == ::Master::State::Idle) && !(state == ::Master::State::Off))))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
 
 }
-void Master::sensor_low()
+void Master::master_continue()
 {
-  if (state == ::Master::State::On) this->led.in.turnOff();
-  else if (!(state == ::Master::State::On)) dzn_locator.get<dzn::illegal_handler>().illegal();
+  if (state == ::Master::State::Off) ;
+  else if (state == ::Master::State::Idle) ;
+  else if (state == ::Master::State::Waiting) 
+  {
+    state = ::Master::State::Idle;
+  }
+  else if (state == ::Master::State::Error) ;
+  else if (state == ::Master::State::IngestingDisk) ;
+  else if (state == ::Master::State::Sorting) ;
+  else if ((!(state == ::Master::State::Sorting) && (!(state == ::Master::State::IngestingDisk) && (!(state == ::Master::State::Error) && (!(state == ::Master::State::Waiting) && (!(state == ::Master::State::Idle) && !(state == ::Master::State::Off))))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else dzn_locator.get<dzn::illegal_handler>().illegal();
+
+  return;
+
+}
+void Master::ingest_finished()
+{
+  if (state == ::Master::State::IngestingDisk) 
+  {
+    state = ::Master::State::Sorting;
+    this->sortingSystem.in.startSorting();
+  }
+  else if (!(state == ::Master::State::IngestingDisk)) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else dzn_locator.get<dzn::illegal_handler>().illegal();
+
+  return;
+
+}
+void Master::factoryFloorSensor_high()
+{
+  if (state == ::Master::State::Idle) 
+  {
+    state = ::Master::State::IngestingDisk;
+    this->ingest.in.startIngest();
+  }
+  else if (!(state == ::Master::State::Idle)) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else dzn_locator.get<dzn::illegal_handler>().illegal();
+
+  return;
+
+}
+void Master::factoryFloorSensor_low()
+{
+  dzn_locator.get<dzn::illegal_handler>().illegal();
+
+  return;
+
+}
+void Master::sortingSystem_finished()
+{
+  if (state == ::Master::State::Sorting) 
+  {
+    {
+      if (waitNext) 
+      {
+        waitNext = false;
+        state = ::Master::State::Waiting;
+      }
+      else 
+      {
+        state = ::Master::State::Idle;
+      }
+    }
+  }
+  else if (!(state == ::Master::State::Sorting)) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -118,14 +233,15 @@ void Master::dump_tree(std::ostream& os) const
 //SYSTEM
 
 SortingRobotSystem::SortingRobotSystem(const dzn::locator& dzn_locator)
-: dzn_meta{"","SortingRobotSystem",0,0,{},{& m.dzn_meta,& led.dzn_meta,& sensor.dzn_meta},{[this]{master.check_bindings();}}}
+: dzn_meta{"","SortingRobotSystem",0,0,{},{& m.dzn_meta,& i.dzn_meta,& sensors.dzn_meta,& sortingSystem.dzn_meta},{[this]{master.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
 
 
 , m(dzn_locator)
-, led(dzn_locator)
-, sensor(dzn_locator)
+, i(dzn_locator)
+, sensors(dzn_locator)
+, sortingSystem(dzn_locator)
 
 , master(m.master)
 
@@ -134,14 +250,17 @@ SortingRobotSystem::SortingRobotSystem(const dzn::locator& dzn_locator)
 
   m.dzn_meta.parent = &dzn_meta;
   m.dzn_meta.name = "m";
-  led.dzn_meta.parent = &dzn_meta;
-  led.dzn_meta.name = "led";
-  sensor.dzn_meta.parent = &dzn_meta;
-  sensor.dzn_meta.name = "sensor";
+  i.dzn_meta.parent = &dzn_meta;
+  i.dzn_meta.name = "i";
+  sensors.dzn_meta.parent = &dzn_meta;
+  sensors.dzn_meta.name = "sensors";
+  sortingSystem.dzn_meta.parent = &dzn_meta;
+  sortingSystem.dzn_meta.name = "sortingSystem";
 
 
-  connect(led.led, m.led);
-  connect(sensor.sensor, m.sensor);
+  connect(i.ingest, m.ingest);
+  connect(sensors.factoryFloorSensor, m.factoryFloorSensor);
+  connect(sortingSystem.controller, m.sortingSystem);
 
   dzn::rank(master.meta.provides.meta, 0);
 
