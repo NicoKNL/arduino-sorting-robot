@@ -1,6 +1,6 @@
 interface IActuator {
 	
-	enum State {Withdrawn, Extended};
+	enum State { Withdrawn, Extended };
 	in void extend();
 	in void withdraw();
 	
@@ -12,12 +12,7 @@ interface IActuator {
 	}
 }
 
-component WhiteActuator
+component Actuator
 {
-	provides IActuator whiteActuator;
-}
-
-component BlackActuator
-{
-	provides IActuator blackActuator;
+	provides IActuator actuator;
 }

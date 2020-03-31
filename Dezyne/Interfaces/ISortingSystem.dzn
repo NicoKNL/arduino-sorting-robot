@@ -3,11 +3,7 @@ import IColourSensor.dzn;
 import ISensor.dzn;
 import IActuator.dzn;
 
-component SortingSystem {
-	provides ISortingController controller;
-}
-
-interface ISortingController {
+interface ISortingSystem {
 	
 	in void startSorting();
 	out void finished();
@@ -17,11 +13,11 @@ interface ISortingController {
 	}
 }
 
-component SortingController {
-	provides ISortingController controller;
+component SortingSystem {
+	provides ISortingSystem sortingSystem;
 	requires IColourSensor colourSensor;
-	requires ISensor beltWhiteSensor;
-	requires ISensor beltBlackSensor;
+	requires ISensor beltSensorWhite;
+	requires ISensor beltSensorBlack;
 	requires IActuator whiteActuator;
 	requires IActuator blackActuator;
 	requires ITimer timer;
@@ -32,7 +28,7 @@ component SortingController {
 		Long delay = $5000$; // in milliseconds, currently 5 seconds
 		
 		[state.Idle] {
-			on controller.startSorting(): {
+			on sortingSystem.startSorting(): {
 				state = State.AwaitColourScan;
 			}
 		}
@@ -51,22 +47,22 @@ component SortingController {
 			}
 		}
 		[state.SortWhite] {
-			on beltWhiteSensor.high(): {
+			on beltSensorWhite.high(): {
 				timer.start(delay); // wait {delay} milliseconds
 			}
 			on timer.timeout(): {
 				whiteActuator.withdraw();
-				controller.finished();
+				sortingSystem.finished();
 				state = State.Idle;
 			}
 		}
 		[state.SortBlack] {
-			on beltBlackSensor.high(): {
+			on beltSensorBlack.high(): {
 				timer.start(delay); // wait {delay} milliseconds
 			}
 			on timer.timeout(): {
 				blackActuator.withdraw();
-				controller.finished();
+				sortingSystem.finished();
 				state = State.Idle;
 			}
 		}

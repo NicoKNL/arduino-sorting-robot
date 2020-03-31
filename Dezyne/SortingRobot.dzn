@@ -1,6 +1,6 @@
 import IIngest.dzn;
 import ISensor.dzn;
-import SortingSystem.dzn;
+import ISortingSystem.dzn;
 
 component SortingRobotSystem
 {
@@ -10,13 +10,26 @@ component SortingRobotSystem
 	{
 		Master m;
 		Ingester i;
-		Sensor sensors;
+		Sensor factorFloorSensor;
+		Sensor beltSensorWhite;
+		Sensor beltSensorBlack;
 		SortingSystem sortingSystem;
+		ColourSensor cs;
+		Actuator whiteActuator;
+		Actuator blackActuator;
+		Timer timer;
 		
 		m.master <=> master;
 		i.ingest <=> m.ingest;
-		sensors.factoryFloorSensor <=> m.factoryFloorSensor;
-		sortingSystem.controller <=> m.sortingSystem;
+		factorFloorSensor.sensor <=> m.factoryFloorSensor;
+		
+		sortingSystem.sortingSystem <=> m.sortingSystem;
+		sortingSystem.colourSensor <=> cs.colourSensor;
+		sortingSystem.beltSensorWhite <=> beltSensorWhite.sensor;
+		sortingSystem.beltSensorBlack <=> beltSensorBlack.sensor;
+		sortingSystem.whiteActuator <=> whiteActuator.actuator;
+		sortingSystem.blackActuator <=> blackActuator.actuator;
+		sortingSystem.timer <=> timer.timer;
 		
 	}
 }
@@ -44,7 +57,7 @@ component Master
 	provides IMaster master;
 	requires IIngest ingest;
 	requires ISensor factoryFloorSensor;
-	requires ISortingController sortingSystem;
+	requires ISortingSystem sortingSystem;
 
 	behaviour
 	{
