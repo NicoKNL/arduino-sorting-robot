@@ -86,6 +86,7 @@ int main(int argc, char* argv[]) {
 
 		// Input sensor detection
 		robbie_de_robot.factorFloorSensor.detect();
+		robbie_de_robot.wheelStopSensor.detect();
 		robbie_de_robot.cs.detect();
 		robbie_de_robot.beltSensorWhite.detect();
 		robbie_de_robot.beltSensorBlack.detect();
