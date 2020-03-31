@@ -3,7 +3,7 @@
 //
 
 #include "Timer.hh"
-
+#include <wiringPi.h>
 /**
  * Implementation of the timer.
  *
@@ -18,6 +18,7 @@ Timer::Timer(const dzn::locator &loc) : skel::Timer(loc) {
  * Starts the timer by setting the target value to the current time plus the provided offset.
  */
 void Timer::timer_start(long milliseconds) {
+    std::cout << "[Timer] Starting timer for " << milliseconds << " ms.\n";
     targetTime = millis() + milliseconds;
 }
 
@@ -25,6 +26,7 @@ void Timer::timer_start(long milliseconds) {
  * Cancel the timer.
  */
 void Timer::timer_cancel() {
+    std::cout << "[Timer] Canceling timer.\n";
     targetTime = 0;
 }
 
