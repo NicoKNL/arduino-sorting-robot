@@ -48,6 +48,7 @@ struct IActuator
 
   struct
   {
+    std::function< void(int)> initialise;
     std::function< void()> extend;
     std::function< void()> withdraw;
   } in;
@@ -61,6 +62,7 @@ struct IActuator
 
   void check_bindings() const
   {
+    if (! in.initialise) throw dzn::binding_error(meta, "in.initialise");
     if (! in.extend) throw dzn::binding_error(meta, "in.extend");
     if (! in.withdraw) throw dzn::binding_error(meta, "in.withdraw");
 
@@ -108,8 +110,8 @@ inline ::IActuator::State::type to_IActuator_State(std::string s)
 
 /********************************** INTERFACE *********************************/
 /***********************************  FOREIGN  **********************************/
-#ifndef SKEL_WHITEACTUATOR_HH
-#define SKEL_WHITEACTUATOR_HH
+#ifndef SKEL_ACTUATOR_HH
+#define SKEL_ACTUATOR_HH
 
 #include <dzn/locator.hh>
 #include <dzn/runtime.hh>
@@ -118,97 +120,47 @@ inline ::IActuator::State::type to_IActuator_State(std::string s)
 
 
 namespace skel {
-  struct WhiteActuator
+  struct Actuator
   {
     dzn::meta dzn_meta;
     dzn::runtime& dzn_rt;
     dzn::locator const& dzn_locator;
-    ::IActuator whiteActuator;
+    ::IActuator actuator;
 
 
-    WhiteActuator(const dzn::locator& dzn_locator)
-    : dzn_meta{"","WhiteActuator",0,0,{},{},{[this]{whiteActuator.check_bindings();}}}
+    Actuator(const dzn::locator& dzn_locator)
+    : dzn_meta{"","Actuator",0,0,{},{},{[this]{actuator.check_bindings();}}}
     , dzn_rt(dzn_locator.get<dzn::runtime>())
     , dzn_locator(dzn_locator)
 
-    , whiteActuator({{"whiteActuator",this,&dzn_meta},{"",0,0}})
+    , actuator({{"actuator",this,&dzn_meta},{"",0,0}})
 
 
     {
-      whiteActuator.in.extend = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->whiteActuator) = false; return whiteActuator_extend();}, this->whiteActuator.meta, "extend");};
-      whiteActuator.in.withdraw = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->whiteActuator) = false; return whiteActuator_withdraw();}, this->whiteActuator.meta, "withdraw");};
+      actuator.in.initialise = [&](int pin){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->actuator) = false; return actuator_initialise(pin);}, this->actuator.meta, "initialise");};
+      actuator.in.extend = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->actuator) = false; return actuator_extend();}, this->actuator.meta, "extend");};
+      actuator.in.withdraw = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->actuator) = false; return actuator_withdraw();}, this->actuator.meta, "withdraw");};
 
 
     }
-    virtual ~ WhiteActuator() {}
+    virtual ~ Actuator() {}
     virtual std::ostream& stream_members(std::ostream& os) const { return os; }
     void check_bindings() const;
     void dump_tree(std::ostream& os) const;
     void set_state(std::map<std::string,std::map<std::string,std::string> >){}
     void set_state(std::map<std::string,std::string>_alist){}
-    friend std::ostream& operator << (std::ostream& os, const WhiteActuator& m)  {
+    friend std::ostream& operator << (std::ostream& os, const Actuator& m)  {
       return m.stream_members(os);
     }
     private:
-    virtual void whiteActuator_extend () = 0;
-    virtual void whiteActuator_withdraw () = 0;
+    virtual void actuator_initialise (int pin) = 0;
+    virtual void actuator_extend () = 0;
+    virtual void actuator_withdraw () = 0;
 
   };
 }
 
-#endif // WHITEACTUATOR_HH
-
-/***********************************  FOREIGN  **********************************/
-/***********************************  FOREIGN  **********************************/
-#ifndef SKEL_BLACKACTUATOR_HH
-#define SKEL_BLACKACTUATOR_HH
-
-#include <dzn/locator.hh>
-#include <dzn/runtime.hh>
-
-
-
-
-namespace skel {
-  struct BlackActuator
-  {
-    dzn::meta dzn_meta;
-    dzn::runtime& dzn_rt;
-    dzn::locator const& dzn_locator;
-    ::IActuator blackActuator;
-
-
-    BlackActuator(const dzn::locator& dzn_locator)
-    : dzn_meta{"","BlackActuator",0,0,{},{},{[this]{blackActuator.check_bindings();}}}
-    , dzn_rt(dzn_locator.get<dzn::runtime>())
-    , dzn_locator(dzn_locator)
-
-    , blackActuator({{"blackActuator",this,&dzn_meta},{"",0,0}})
-
-
-    {
-      blackActuator.in.extend = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->blackActuator) = false; return blackActuator_extend();}, this->blackActuator.meta, "extend");};
-      blackActuator.in.withdraw = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->blackActuator) = false; return blackActuator_withdraw();}, this->blackActuator.meta, "withdraw");};
-
-
-    }
-    virtual ~ BlackActuator() {}
-    virtual std::ostream& stream_members(std::ostream& os) const { return os; }
-    void check_bindings() const;
-    void dump_tree(std::ostream& os) const;
-    void set_state(std::map<std::string,std::map<std::string,std::string> >){}
-    void set_state(std::map<std::string,std::string>_alist){}
-    friend std::ostream& operator << (std::ostream& os, const BlackActuator& m)  {
-      return m.stream_members(os);
-    }
-    private:
-    virtual void blackActuator_extend () = 0;
-    virtual void blackActuator_withdraw () = 0;
-
-  };
-}
-
-#endif // BLACKACTUATOR_HH
+#endif // ACTUATOR_HH
 
 /***********************************  FOREIGN  **********************************/
 
