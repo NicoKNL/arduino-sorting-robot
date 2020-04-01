@@ -7,6 +7,8 @@
 #include <vector>
 #include <string>
 #include "config.hh"
+#include "StatusReporter.hh"
+
 /*******************************************************************************
  * PIN LAYOUT
  ******************************************************************************/
@@ -30,9 +32,10 @@
 #define COLOR_SENSOR_0_IN_PIN 4
 #define COLOR_SENSOR_1_IN_PIN 5
 
-
-void logState(SortingRobotSystem robo, std::vector<std::string> translation) {
+// TODO: Perhaps better to add to the StatusReporter singleton class
+void logState(SortingRobotSystem robo, StatusReporter sr, std::vector<std::string> translation) {
 	std::cout << "\n\n    [STATE] " << translation[robo.master.in.getState()] << "\n\n";
+	sr.setStatus(robo.master.in.getState());
 }
 
 /*******************************************************************************
@@ -80,9 +83,9 @@ int main(int argc, char* argv[]) {
 	digitalWrite(STATUS_1_OUT_PIN, LOW);
 	digitalWrite(STATUS_0_OUT_PIN, LOW);
 
+	// Additional objects
 	SortingRobotSystem robbie_de_robot(locator);
-
-	robbie_de_robot.check_bindings();
+	StatusReporter sr(STATUS_0_OUT_PIN, STATUS_1_OUT_PIN, STATUS_2_OUT_PIN);
 
 	// Initialize pins on components
 	robbie_de_robot.whiteActuator.actuator.in.initialise(WHITE_PUSHER_OUT_PIN);
@@ -97,33 +100,34 @@ int main(int argc, char* argv[]) {
 	robbie_de_robot.beltSensorBlack.sensor.in.initialise(BLACK_SENSOR_IN_PIN);
 
 	// Start the system! Just like Sten! <3
+	robbie_de_robot.check_bindings();
 	robbie_de_robot.master.in.start();
 
 	while (true) {
 		std::cout << "step\n";
-		logState(robbie_de_robot, t);
+		logState(robbie_de_robot, sr, t);
+		
 		// Check timers
 		robbie_de_robot.ingestTimer.check_timer();
-		logState(robbie_de_robot, t);
+		logState(robbie_de_robot, sr, t);
 		robbie_de_robot.sortingTimer.check_timer();
-		logState(robbie_de_robot, t);
-
+		logState(robbie_de_robot, sr, t);
 
 		// Input sensor detection
 		robbie_de_robot.factorFloorSensor.detect();
-		logState(robbie_de_robot, t);
+		logState(robbie_de_robot, sr, t);
 
 		robbie_de_robot.wheelStopSensor.detect();
-		logState(robbie_de_robot, t);
+		logState(robbie_de_robot, sr, t);
 
 		robbie_de_robot.cs.detect();
-		logState(robbie_de_robot, t);
+		logState(robbie_de_robot, sr, t);
 
 		robbie_de_robot.beltSensorWhite.detect();
-		logState(robbie_de_robot, t);
+		logState(robbie_de_robot, sr, t);
 
 		robbie_de_robot.beltSensorBlack.detect();
-		logState(robbie_de_robot, t);
+		logState(robbie_de_robot, sr, t);
 
 		std::cout << "post step\n";
 
