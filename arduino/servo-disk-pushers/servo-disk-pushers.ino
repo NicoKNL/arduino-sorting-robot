@@ -8,8 +8,11 @@ bool DEBUG = true;
 char input;
 bool black_debug_active;
 bool white_debug_active;
-///////////////////////////////////////////////////////////
 
+// Pins for debug output
+#define black_DEBUG_PIN 9
+#define white_DEBUG_PIN 10
+///////////////////////////////////////////////////////////
 
 // Nico: Potentially the OUT_PINs must be pin 9 and 10. Current config works on my funduino nano however.
 
@@ -20,10 +23,6 @@ bool white_debug_active;
 // Pins for the white disk pusher
 #define white_IN_PIN 6
 #define white_OUT_PIN 7
-
-// Pins for debug output
-#define black_DEBUG_PIN 9
-#define white_DEBUG_PIN 10
 
 // Servo objects which allow easy control of the servos
 Servo sb; // servo black

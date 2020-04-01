@@ -1,54 +1,77 @@
+// Nico: Assumption is that the NEMA17 is configured to run 1/64 as stepsize
+
+///////////////// DEBUG TOGGLE ////////////////////////////
+// Note: When using the serial monitor make sure to disable
+//       line endings by setting it to 'No line ending'.
+//       Default is 'Newline'.
+bool DEBUG = true;
+char input;
+bool motor_active;
+
+// Pins for debug output
+#define motor_DEBUG_PIN 9
+///////////////////////////////////////////////////////////
+
 // Define stepper motor connections
-#define dirPin 4
-#define stepPin 3
+#define motor_IN_PIN 4  // For reading whether the motor should run
+#define motor_OUT_PIN 5 // For sending the output to the stepper driver
 
-// Define joystick inputs
-#define JoyStick_X 1
-#define JoyStick_Y 2
-
-int SPEED = 10; // Higher values = lower speed
-int DEADZONE = 15;
-
-// NOTE: Assumption is that the NEMA17 is configured to run 1/64 as stepsize
+// Additional config
+int STEP_DELAY = 10; // Higher values = lower speed
 
 void setup () {
-  pinMode(JoyStick_X, INPUT);
-  pinMode(JoyStick_Y, INPUT);
-
-  // Declare pins as output:
-  pinMode(stepPin, OUTPUT);
-  pinMode(dirPin, OUTPUT);
+  // Declare pins as input
+  pinMode(motor_IN_PIN, INPUT);
+  pinMode(motor_OUT_PIN, OUTPUT);
   
-  Serial.begin(9600); // 9600 bps
+  if (DEBUG) {
+    // Enable the debug pins
+    pinMode(motor_DEBUG_PIN, OUTPUT);
+
+    // Enable serial
+    Serial.begin(9600);
+    Serial.println("Char to send toggle motor signal: t");
+
+    // Enable tracking for toggle behaviour
+    motor_active = false;
+  }
+}
+
+/*
+ * Steps the motor 1 step ahead
+ */
+void stepMotor() {
+  digitalWrite(motor_OUT_PIN, HIGH);
+  delayMicroseconds(STEP_DELAY);
+  digitalWrite(motor_OUT_PIN, LOW);
+  delayMicroseconds(STEP_DELAY);
 }
 
 void loop() {
-  int x = analogRead(JoyStick_X); 
-  int y = analogRead(JoyStick_Y); 
-  
-  //  Serial.print(x, DEC); Serial.print( ","); // For when you also want to use the other direction of the stick
-  Serial.println(y, DEC);
+  if (DEBUG) {
+    if (Serial.available()) {
+      input = Serial.read();
+      Serial.print("You typed: ");
+      Serial.println(input);
 
-  // Early out for when nothing needs to be done
-  if (512 - DEADZONE < y && y < 512 + DEADZONE) {
-    return;
+      if (input == 't') {
+        motor_active = !motor_active;
+        digitalWrite(motor_DEBUG_PIN, motor_active);
+      } else {
+        Serial.println("Please use 't'.");
+      }
+    }
+  }
+
+  if (digitalRead(motor_IN_PIN) && !motor_active) {
+    motor_active = true;
+  } else if (!digitalRead(motor_IN_PIN) && motor_active) {
+    motor_active = false;
   } else {
-    // Set the direction of the belt
-    if (y > 512) {
-      digitalWrite(dirPin, HIGH);
-    } else {
-      digitalWrite(dirPin, LOW);
-    }
+    // Do nothing...
+  }
 
-    // While we not re-enter the deadzone
-    while(y < 512 - DEADZONE || y > 512 + DEADZONE) {
-      // KEEP MOVING BABY!!
-      digitalWrite(stepPin, HIGH);
-      delayMicroseconds(SPEED);
-      digitalWrite(stepPin, LOW);
-      delayMicroseconds(SPEED);
-
-      y = analogRead(JoyStick_Y);
-    }
+  if (motor_active) {
+    stepMotor();
   }
 }
