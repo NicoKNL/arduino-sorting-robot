@@ -13,16 +13,21 @@ bool motor_active;
 ///////////////////////////////////////////////////////////
 
 // Define stepper motor connections
-#define motor_IN_PIN 4  // For reading whether the motor should run
-#define motor_OUT_PIN 5 // For sending the output to the stepper driver
+#define motor_IN_PIN 5  // For reading whether the motor should run
+#define motor_OUT_PIN 3 // For sending the output to the stepper driver
+#define motor_DIR_PIN 4 // For sending the direction to the stepper driver
 
 // Additional config
-int STEP_DELAY = 10; // Higher values = lower speed
+int STEP_DELAY = 30; // Higher values = lower speed
 
 void setup () {
   // Declare pins as input
   pinMode(motor_IN_PIN, INPUT);
   pinMode(motor_OUT_PIN, OUTPUT);
+  pinMode(motor_DIR_PIN, OUTPUT);
+
+  // Set the direction
+  digitalWrite(motor_DIR_PIN, HIGH);
   
   if (DEBUG) {
     // Enable the debug pins
@@ -57,18 +62,20 @@ void loop() {
       if (input == 't') {
         motor_active = !motor_active;
         digitalWrite(motor_DEBUG_PIN, motor_active);
+        Serial.print("Motor status: ");
+        Serial.println(motor_active);
       } else {
         Serial.println("Please use 't'.");
       }
     }
-  }
-
-  if (digitalRead(motor_IN_PIN) && !motor_active) {
-    motor_active = true;
-  } else if (!digitalRead(motor_IN_PIN) && motor_active) {
-    motor_active = false;
   } else {
-    // Do nothing...
+    if (digitalRead(motor_IN_PIN) && !motor_active) {
+      motor_active = true;
+    } else if (!digitalRead(motor_IN_PIN) && motor_active) {
+      motor_active = false;
+    } else {
+      // Do nothing...
+    }
   }
 
   if (motor_active) {
