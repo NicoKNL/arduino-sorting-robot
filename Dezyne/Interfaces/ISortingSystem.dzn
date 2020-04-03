@@ -59,6 +59,7 @@ component SortingSystem {
 		[state.Idle] {
 			on sortingSystem.startSorting(): {
 				state = ISortingSystem.State.AwaitColourScan;
+				beltMotor.turnOn();
 			}
 		}
 		
@@ -83,6 +84,7 @@ component SortingSystem {
 			on timer.timeout(): {
 				state = ISortingSystem.State.Idle;
 				whiteActuator.withdraw();
+				beltMotor.turnOff();
 				sortingSystem.finished();
 			}
 		}
@@ -94,6 +96,7 @@ component SortingSystem {
 			on timer.timeout(): {
 				state = ISortingSystem.State.Idle;
 				blackActuator.withdraw();
+				beltMotor.turnOff();
 				sortingSystem.finished();
 			}
 		}
@@ -104,6 +107,7 @@ component SortingSystem {
 			}
 			on timer.timeout(): {
 				state = ISortingSystem.State.Idle;
+				beltMotor.turnOff();
 				sortingSystem.finished();
 			}
 		}
