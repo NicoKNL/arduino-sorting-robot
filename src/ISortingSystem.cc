@@ -56,6 +56,7 @@ void SortingSystem::sortingSystem_startSorting()
   if (state == ::ISortingSystem::State::Idle) 
   {
     state = ::ISortingSystem::State::AwaitColourScan;
+    this->beltMotor.in.turnOn();
   }
   else if (!(state == ::ISortingSystem::State::Idle)) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
@@ -145,17 +146,20 @@ void SortingSystem::timer_timeout()
   {
     state = ::ISortingSystem::State::Idle;
     this->whiteActuator.in.withdraw();
+    this->beltMotor.in.turnOff();
     this->sortingSystem.out.finished();
   }
   else if (state == ::ISortingSystem::State::SortBlack) 
   {
     state = ::ISortingSystem::State::Idle;
     this->blackActuator.in.withdraw();
+    this->beltMotor.in.turnOff();
     this->sortingSystem.out.finished();
   }
   else if (state == ::ISortingSystem::State::SortOther) 
   {
     state = ::ISortingSystem::State::Idle;
+    this->beltMotor.in.turnOff();
     this->sortingSystem.out.finished();
   }
   else if ((!(state == ::ISortingSystem::State::SortOther) && (!(state == ::ISortingSystem::State::SortBlack) && !(state == ::ISortingSystem::State::SortWhite)))) dzn_locator.get<dzn::illegal_handler>().illegal();

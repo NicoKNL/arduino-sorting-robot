@@ -4,7 +4,7 @@
 // Note: When using the serial monitor make sure to disable
 //       line endings by setting it to 'No line ending'.
 //       Default is 'Newline'.
-bool DEBUG = true;
+bool DEBUG = false;
 char input;
 bool motor_active;
 
@@ -18,7 +18,7 @@ bool motor_active;
 #define motor_DIR_PIN 4 // For sending the direction to the stepper driver
 
 // Additional config
-int STEP_DELAY = 30; // Higher values = lower speed
+int STEP_DELAY = 80; // Higher values = lower speed
 
 void setup () {
   // Declare pins as input
