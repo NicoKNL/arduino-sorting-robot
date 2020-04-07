@@ -1,0 +1,1 @@
+/usr/bin/c++.exe -g  -Wl,--enable-auto-import CMakeFiles/clionProj.dir/MQTT.cpp.o CMakeFiles/clionProj.dir/main.cpp.o  -o clionProj.exe -Wl,--out-implib,libclionProj.dll.a -Wl,--major-image-version,0,--minor-image-version,0 
