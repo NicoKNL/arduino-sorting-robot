@@ -30,7 +30,7 @@ void mqtt_client::on_connect(int rc)
     }
 }
 
-void mqtt_client:on_message(const struct mosquitto_message *message) {
+void mqtt_client::on_message(const struct mosquitto_message *message) {
 
     //message stored here
     char strCounter[DEFAULT_MAX_MESSAGE];
