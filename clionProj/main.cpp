@@ -7,6 +7,7 @@
 #include <mosquitto.h>
 #include <string>
 #include <sstream>
+// #include <cmath>
 
 // const char * BROKER_ADDRESS "86.91.204.180"
 const char * BROKER_ADDRESS = "127.0.0.1";
@@ -25,6 +26,8 @@ std::vector<bool> EXTERNAL_ALIVE = {0, 1, 1, 1, 1};
 std::vector<int> EXTERNAL_HEARTBEAT_CHECKER = {-10, -10, -10, -10, -10}; // We're being gracious here...
 std::vector<int> DISKS_TAKEN = {0, 0, 0, 0, 0};
 std::vector<int> DISK_COUNTERS = {0, 0, 0, 0, 0}; // We probably don't care about this
+
+bool requested_disks_taken = false;
 
 mosquitto* mosq;
 
@@ -56,8 +59,14 @@ void request_disk_counters() {
 }
 
 void request_disks_taken() {
+    // Reset disk counters as apparently, we have no clueee
+    for (int i = 1; i < 5; ++i) {
+        DISKS_TAKEN[i] = 0;
+    }
+
     // This method is for recovering. See final paragraph in protocol docs.
     send_message("requestDisksTaken:" + std::to_string(OUR_ROBOT_ID));
+    requested_disks_taken = true;
 }
 
 void respond_disks_taken() {
@@ -142,6 +151,11 @@ bool setup_mqtt() {
             ++DISKS_TAKEN[external_robot_id];
 
         }
+        else if (message.find("requestDisksTaken") == 0) {
+            if (!requested_disks_taken) {
+                respond_disks_taken();
+            }
+        }
         else if (message.find("respondDiskCounters") == 0) {
             //hacky way: otherwise the nr of disks in the end
             //from the last robot, are not taken into account
@@ -156,51 +170,32 @@ bool setup_mqtt() {
                 ++i;
             }
 
+            // TODO: if debug
             for (int j = 1; j < 5; j++) {
                 std::cout << DISK_COUNTERS[j] << ", ";
             }
             std::cout << '\n';
-            // //TODO: test that this method for extracting number of disks per robot into an array works
-            // strCounter[strlen(strCounter) + 1] = ',';
-            //
-            // int DisksPerRobot[NROF_ROBOTS + 1];
-            // int robotCounter = 0;
-            // for (int i = 0; i < strlen(tstr); i++) {
-            //     if (tstr[i] == ':') {
-            //         int begin = i + 1;
-            //         int end = i + 1;
-            //         bool found = false;
-            //
-            //         while (end < strlen(tstr) - 1) {
-            //             if (tstr[end + 1] == ',') {
-            //                 found = true;
-            //             } else end++;
-            //             if (found = true) {
-            //                 char s[255];
-            //                 int count = 0;
-            //                 for (int index = begin; index <= end; t++) {
-            //                     s[count++] = tstr[index];
-            //                 }
-            //                 //convert disks that robot has to int
-            //                 //then put into the corresponding array
-            //                 int numberOfDisks = atol(s);
-            //                 DisksPerRobot[robotCounter++];
-            //                 //continue the initial loop
-            //                 found = false;
-            //                 end++;
-            //             }
-            //         }
-            //     }
-            //     break;
-            // }
-            // for (int i = 0; i < robotCounter; i++) {
-            //     cout << DisksPerRobot[i] <<' ';
-            // }
-
         }
-        else if (strcmp(strCounter, "respondDisksTaken") == 0) {
-            //TODO: from this message, fairness can be derived/defined
-            std::cout << "Received respondDisksTaken\n";
+        else if (message.find("respondDisksTaken") == 0) {
+            if (requested_disks_taken) {
+                //TODO: from this message, fairness can be derived/defined
+                std::cout << "Received respondDisksTaken\n";
+
+                std::stringstream ss(message.substr(18));
+                std::string tmp;
+
+                int i = 1;
+                while (std::getline(ss, tmp, ',')) {
+                    DISKS_TAKEN[i] = std::max(DISKS_TAKEN[i], std::stoi(tmp));
+                    ++i;
+                }
+
+                // TODO: if debug
+                for (int j = 1; j < 5; j++) {
+                    std::cout << DISKS_TAKEN[j] << ", ";
+                }
+                std::cout << '\n';
+            }
 
             //if the method from respondDiskCounters works, just copy here and change array name in the end"
             //TODO: if "fair", call method to take/sort disks
@@ -246,6 +241,8 @@ void initialHearbeatSync() {
 int main(int argc, char *argv[]) {
     // Initialize libmosquitto
     if (!setup_mqtt()) return 1;
+
+    request_disks_taken();
 
     // // Functional programming return storage objects
     char msg_out[255];// the output message (?)
