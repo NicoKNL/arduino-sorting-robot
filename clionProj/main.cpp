@@ -1,16 +1,24 @@
 //DBL Embedded Systems, group NotFullNerds
-#include "mqtt.h"
+// #include "mqtt.h"
 #include <wiringPi.h>
 #include <iostream>
 #include <vector>
+#include <cstring>
+#include <mosquitto.h>
 
-#define BROKER_ADDRESS "86.91.204.180"
-#define MQTT_PORT 1883
-#define MQTT_TOPIC_IN "factory/robot0/in"
-#define MQTT_TOPIC_OUT "factory/robot0/in"
-#define ROBOT_ID "3"
+// const char * BROKER_ADDRESS "86.91.204.180"
+const char * BROKER_ADDRESS = "127.0.0.1";
+const int MQTT_PORT = 1883;
+// #define MQTT_PORT 23321
 
+const char * MQTT_TOPIC_IN = "factory/robot0/in";
+const char * MQTT_TOPIC_OUT = "factory/robot0/out";
+const char * ROBOT_ID = "3";
+const int KEEPALIVE = 60;
 
+mosquitto* mosq;
+
+const char * REQUEST_DISKS_TAKEN = "requestDisksTaken:3";
 // struct mosquitto_message{
 // 	int mid;
 // 	char *topic;
@@ -19,38 +27,137 @@
 // 	int qos;
 // 	bool retain;
 // };
+bool setup_mqtt() {
+    mosquitto_lib_init();
+    mosq = mosquitto_new(nullptr, true, nullptr);
 
-void initialHearbeatSync(const mqtt_client * handler) {
-    while (true) {
+    if (!mosq) {
+        fprintf(stderr, "MQTT Error: Out of memory.\n");
+        return false;
+    }
+
+    mosquitto_message_callback_set(mosq, [](mosquitto* _mosq, void* obj, const mosquitto_message* msg) {
+        if (!msg->payloadlen) {
+            fprintf(stderr, "MQTT Error: malformed message length received.\n");
+            return;
+        }
+
+        char* payload = (char*) msg->payload;
+
+        std::cout << payload << '\n';
+
+        char strCounter[100];
+
+        if (true) {
+            return;
+        }
+        else if (strcmp(strCounter, "start") == 0) {
+            //start the robot, sth like
+            //robbie_de_robot.master.in.start();
+            std::cout << "Received start\n";
+        }
+        else if (strcmp(strCounter, "stop") == 0) {
+            //wait with sleep() or check some pins to know when the system finished sorting
+            //then stop
+            std::cout << "Received stop\n";
+        }
+        else if (strcmp(strCounter, "respondDiskCounters") == 0) {
+            //hacky way: otherwise the nr of disks in the end
+            //from the last robot, are not taken into account
+            std::cout << "Received respondDiskCounters\n";
+
+            // //TODO: test that this method for extracting number of disks per robot into an array works
+            // strCounter[strlen(strCounter) + 1] = ',';
+            //
+            // int DisksPerRobot[NROF_ROBOTS + 1];
+            // int robotCounter = 0;
+            // for (int i = 0; i < strlen(tstr); i++) {
+            //     if (tstr[i] == ':') {
+            //         int begin = i + 1;
+            //         int end = i + 1;
+            //         bool found = false;
+            //
+            //         while (end < strlen(tstr) - 1) {
+            //             if (tstr[end + 1] == ',') {
+            //                 found = true;
+            //             } else end++;
+            //             if (found = true) {
+            //                 char s[255];
+            //                 int count = 0;
+            //                 for (int index = begin; index <= end; t++) {
+            //                     s[count++] = tstr[index];
+            //                 }
+            //                 //convert disks that robot has to int
+            //                 //then put into the corresponding array
+            //                 int numberOfDisks = atol(s);
+            //                 DisksPerRobot[robotCounter++];
+            //                 //continue the initial loop
+            //                 found = false;
+            //                 end++;
+            //             }
+            //         }
+            //     }
+            //     break;
+            // }
+            // for (int i = 0; i < robotCounter; i++) {
+            //     cout << DisksPerRobot[i] <<' ';
+            // }
+
+        }
+        else if (strcmp(strCounter, "respondDisksTaken") == 0) {
+            //TODO: from this message, fairness can be derived/defined
+            std::cout << "Received respondDisksTaken\n";
+
+            //if the method from respondDiskCounters works, just copy here and change array name in the end"
+            //TODO: if "fair", call method to take/sort disks
+            //calls a method/modifies pins from Dezyne Main.cc
+        }
+
+    });
+
+    if (mosquitto_connect_async(mosq, BROKER_ADDRESS, MQTT_PORT, KEEPALIVE) != MOSQ_ERR_SUCCESS) {
+        fprintf(stderr, "MQTT Error: could not establish connection.\n");
+        return false;
+    }
+
+    mosquitto_subscribe(mosq, nullptr, "factory/robot0/in", 0);
+    mosquitto_loop_start(mosq);
+
+    return true;
+}
+
+void destroy_mqtt() {
+    mosquitto_disconnect(mosq);
+    mosquitto_loop_stop(mosq, true);
+    mosquitto_destroy(mosq);
+    mosquitto_lib_cleanup();
+}
+
+void initialHearbeatSync() {
+    // while (true) {
       // 1. Check for initial heartbeats to see which robots are on the factory floor
       // 2. Occasionally send out our own hearbeat according to the protocol
-    }
+    // }
     return;
 }
-
-bool checkEmergencyStop(const mqtt_client * handler) {
-    return false;
-}
-
-void checkHeartbeats(const mqtt_client * handler) {
-    return;
-}
+//
+// bool checkEmergencyStop(const mqtt_client * handler) {
+//     return false;
+// }
+//
+// void checkHeartbeats(const mqtt_client * handler) {
+//     return;
+// }
 
 int main(int argc, char *argv[]) {
     // Initialize libmosquitto
-    int rc = 0;   // the return code
-    rc = mosqpp::lib_init();
+    if (!setup_mqtt()) return 1;
 
-    if (rc != MOSQ_ERR_SUCCESS) {
-      // do stuff
-    }
-
-    // Functional programming return storage objects
-    char client_id[255];
+    // // Functional programming return storage objects
     char msg_out[255];// the output message (?)
 
     // Setup the mqtt client
-    mqtt_client * handler = new mqtt_client(client_id, BROKER_ADDRESS, MQTT_PORT, MQTT_TOPIC_IN, MQTT_TOPIC_OUT);
+    // mqtt_client * handler = new mqtt_client(ROBOT_ID, BROKER_ADDRESS, MQTT_PORT);
 
     // Dezyne trigger variables
     bool fatalError = false;
@@ -60,12 +167,14 @@ int main(int argc, char *argv[]) {
 
     //Main loop
     while (true) {
-        rc = handler->loop();                        // Keep MQTT connection
-        if (!MOSQ_ERR_SUCCESS)
-            handler->reconnect();
-        else {
-            handler->on_subscribe(0, 0, NULL);
-        }
+        // rc = handler->loop();                        // Keep MQTT connection
+        // std::cout << rc << ", " << MOSQ_ERR_SUCCESS << '\n';
+        // if (!MOSQ_ERR_SUCCESS)
+        //     handler->reconnect();
+        // else {
+        //
+        //     handler->on_subscribe(0, 0, NULL);
+        // }
 
         // Check if we need to perform an emergency stop
         // checkEmergencyStop(handler);
@@ -78,15 +187,16 @@ int main(int argc, char *argv[]) {
         //send this every few seconds, or whenever a message is received?
 
         // How many disks have been seen by other robots on the factory belt individually
-        /* strcpy(tstr, "requestDiskCounters");
-         handler->publish(NULL, "factory/robot1/in/", strlen(tstr), tstr); */
-
+        // strcpy(msg_out, "requestDiskCounters");
+        // handler->publish(NULL, MQTT_TOPIC_OUT, strlen(msg_out), msg_out);
+        // std::cout << "message sent...\n";
         //TODO: Send signal: take more disks (based on fairness) (if or while loop)
 
         // // Request to get an overview of the number of disks taken by each robot
         // // on the factory belt. This will be used for the fairness principle.
-        // strcpy(msg_out, strcat("requestDisksTaken:", ROBOT_ID));
-        // handler->publish(NULL, MQTT_TOPIC_OUT, strlen(msg_out), msg_out);
+        strcpy(msg_out, REQUEST_DISKS_TAKEN);
+        mosquitto_publish(mosq, nullptr, MQTT_TOPIC_OUT, strlen(msg_out), msg_out, 0, false);
+
         //
         //
         // //TODO: after taking a disk, publish the message
@@ -115,15 +225,15 @@ int main(int argc, char *argv[]) {
 
         // mosquitto_message msg_out;
         // handler->subscribe(&msg_out);
-        char * message;
-        handler->check_messages(message);
-        std::cout << message << '\n';
+        // char * message;
+        // handler->check_messages(message);
+        // std::cout << message << '\n';
         //deprecated, might not even need this
         delay(1000);
         // sleep(1e5);
     }
 
-    mosqpp::lib_cleanup();
+    // mosqpp::lib_cleanup();
 
     return 0;
 }

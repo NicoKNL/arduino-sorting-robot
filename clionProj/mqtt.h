@@ -17,11 +17,11 @@ private:
     char m_id[255];
     char m_host[255];
     int m_port;
-    struct mosquitto_message *m_message = new mosquitto_message[3];
+    // struct mosquitto_message *m_message = new mosquitto_message[3];
     // mosquitto_message * m_messages = new mosquitto_message[1];
 
 public:
-    mqtt_client(const char *id, const char *host, int port, char *out, char *in);
+    mqtt_client(const char *id, const char *host, int port);
     ~mqtt_client();
 
     void on_connect(int rc);

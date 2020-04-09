@@ -6,10 +6,10 @@
 #define NROF_ROBOTS 4
 #define our_robot_ID 2
 
-mqtt_client::mqtt_client(const char *id, const char *host, int port, char *out, char *in) : mosquittopp(id)
+mqtt_client::mqtt_client(const char *id, const char *host, int port) : mosquittopp(id)
 {
-    strcpy(m_topic_out, out);
-    strcpy(m_topic_in, in);
+    // strcpy(m_topic_out, out);
+    // strcpy(m_topic_in, in);
     m_port = port;
     int keepalive = DEFAULT_KEEP_ALIVE; // seconds
     connect(host, port, keepalive); // Connect to MQTT Broker
@@ -106,6 +106,7 @@ void mqtt_client::on_subscribe(int mid, int qos_count, const int *granted_qos)
 }
 
 void mqtt_client::check_messages(char *message) {
+    return;
     // messages	pointer to a “struct mosquitto_message *”.  The received messages will be returned here.  On error, this will be set to NULL.
     // msg_count	the number of messages to retrieve.
     // want_retained	if set to true, stale retained messages will be treated as normal messages with regards to msg_count.  If set to false, they will be ignored.
@@ -122,20 +123,20 @@ void mqtt_client::check_messages(char *message) {
     // tls	a libmosquitto_tls struct containing TLS related parameters, or NULL for no use of TLS.
 
     // Note: want_retained must perhaps be set to true
-    subscribe_simple(&m_message,
-                     1,
-                     false,
-                     m_topic_out,
-                     0,
-                     m_host,
-                     m_port,
-                     m_id,
-                     DEFAULT_KEEP_ALIVE,
-                     true,
-                     NULL,
-                     NULL,
-                     NULL,
-                     NULL);
-   	printf("%s %s\n", m_message->topic, (char *)m_message->payload);
-    strcpy(message, (char*)m_message->payload);
+    // subscribe_simple(&m_message,
+    //                  1,
+    //                  false,
+    //                  m_topic_out,
+    //                  0,
+    //                  m_host,
+    //                  m_port,
+    //                  m_id,
+    //                  DEFAULT_KEEP_ALIVE,
+    //                  true,
+    //                  NULL,
+    //                  NULL,
+    //                  NULL,
+    //                  NULL);
+   	// printf("%s %s\n", m_message->topic, (char *)m_message->payload);
+    // strcpy(message, (char*)m_message->payload);
 }
