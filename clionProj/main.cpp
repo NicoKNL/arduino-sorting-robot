@@ -36,7 +36,6 @@ void send_message(std::string message) {
 }
 
 void heartbeat() {
-    std::cout << "hearbeat\n";
     if (HEARTBEAT_TRACKER % HEARTBEAT_DELAY == 0) {
         send_message("hearbeat" + std::to_string(ROBOT_ID));
     }
