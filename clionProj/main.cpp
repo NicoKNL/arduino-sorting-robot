@@ -14,12 +14,15 @@ const int MQTT_PORT = 1883;
 
 const char * MQTT_TOPIC_IN = "factory/robot0/in";
 const char * MQTT_TOPIC_OUT = "factory/robot0/out";
-const int ROBOT_ID = 3;
+const int OUR_ROBOT_ID = 3;
 const int KEEPALIVE = 60;
 const int HEARTBEAT_DELAY = 5;
+const int MAX_HEARTBEAT_DELAY = 5;
 mosquitto* mosq;
 
 int HEARTBEAT_TRACKER = 0;
+std::vector<bool> EXTERNAL_ALIVE = {1, 1, 1, 1};
+std::vector<int> EXTERNAL_HEARTBEAT_CHECKER = {-10, -10, -10, -10}; // We're being gracious here...
 
 const char * REQUEST_DISKS_TAKEN = "requestDisksTaken:3";
 // struct mosquitto_message{
@@ -37,9 +40,26 @@ void send_message(std::string message) {
 
 void heartbeat() {
     if (HEARTBEAT_TRACKER % HEARTBEAT_DELAY == 0) {
-        send_message("hearbeat" + std::to_string(ROBOT_ID));
+        send_message("hearbeat" + std::to_string(OUR_ROBOT_ID));
     }
     ++HEARTBEAT_TRACKER;
+}
+
+void update_external_hearbeats() {
+    for (int i = 0; i < 4; ++i) {
+        // Skip for our own robot.
+        if (i == OUR_ROBOT_ID) {
+          continue;
+        }
+
+        if (EXTERNAL_ALIVE[i]) {
+            ++EXTERNAL_HEARTBEAT_CHECKER[i];
+            if (EXTERNAL_HEARTBEAT_CHECKER[i] >= MAX_HEARTBEAT_DELAY) {
+                EXTERNAL_ALIVE[i] = false;
+                std::cout << "[INFO] External robot died: " << i << '\n';
+            }
+        }
+    }
 }
 
 bool setup_mqtt() {
@@ -57,13 +77,29 @@ bool setup_mqtt() {
             return;
         }
 
+        // Get message
         char* payload = (char*) msg->payload;
 
-        std::cout << payload << '\n';
+        // Convert to std string
+        std::string message;
+        message += payload;
+
+        // Debugging TODO: wrap in debug statement
+        std::cout << message << '\n';
 
         char strCounter[100];
 
-        if (true) {
+        if (message.find("heartbeat") == 0) {
+            // whose hearbeat is it?
+            int external_robot_id = message[9] - '0';
+            std::cout << external_robot_id << '\n';
+
+            // Only keep track of robots that are announced as alive
+            if (EXTERNAL_ALIVE[external_robot_id] && external_robot_id != OUR_ROBOT_ID) {
+                EXTERNAL_HEARTBEAT_CHECKER[external_robot_id] = 0;
+            }
+        }
+        else if (true) {
             return;
         }
         else if (strcmp(strCounter, "start") == 0) {
@@ -172,7 +208,7 @@ int main(int argc, char *argv[]) {
     char msg_out[255];// the output message (?)
 
     // Setup the mqtt client
-    // mqtt_client * handler = new mqtt_client(ROBOT_ID, BROKER_ADDRESS, MQTT_PORT);
+    // mqtt_client * handler = new mqtt_client(OUR_ROBOT_ID, BROKER_ADDRESS, MQTT_PORT);
 
     // Dezyne trigger variables
     bool fatalError = false;
@@ -248,6 +284,7 @@ int main(int argc, char *argv[]) {
         // handler->check_messages(message);
         // std::cout << message << '\n';
         //deprecated, might not even need this
+        update_external_hearbeats();
         delay(1000);
         // sleep(1e5);
     }
