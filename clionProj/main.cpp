@@ -7,12 +7,11 @@
 #include <mosquitto.h>
 #include <string>
 #include <sstream>
-// #include <cmath>
 
-// const char * BROKER_ADDRESS "86.91.204.180"
+// const char * BROKER_ADDRESS = "86.91.204.180";
 const char * BROKER_ADDRESS = "127.0.0.1";
 const int MQTT_PORT = 1883;
-// #define MQTT_PORT 23321
+// const int MQTT_PORT = 23321;
 
 const char * MQTT_TOPIC_IN = "factory/robot0/in";
 const char * MQTT_TOPIC_OUT = "factory/robot0/out";
@@ -59,19 +58,21 @@ void request_disk_counters() {
 }
 
 void request_disks_taken() {
+    requested_disks_taken = true;
+
     // Reset disk counters as apparently, we have no clueee
     for (int i = 1; i < 5; ++i) {
         DISKS_TAKEN[i] = 0;
     }
 
+
     // This method is for recovering. See final paragraph in protocol docs.
     send_message("requestDisksTaken:" + std::to_string(OUR_ROBOT_ID));
-    requested_disks_taken = true;
 }
 
 void respond_disks_taken() {
     send_message("respondDisksTaken:" +
-            std::to_string(OUR_ROBOT_ID) +
+            std::to_string(OUR_ROBOT_ID) + "," +
             std::to_string(DISKS_TAKEN[1]) + "," +
             std::to_string(DISKS_TAKEN[2]) + "," +
             std::to_string(DISKS_TAKEN[3]) + "," +
@@ -153,6 +154,7 @@ bool setup_mqtt() {
         }
         else if (message.find("requestDisksTaken") == 0) {
             if (!requested_disks_taken) {
+                std::cout << " responding ..... \n";
                 respond_disks_taken();
             }
         }
@@ -181,8 +183,10 @@ bool setup_mqtt() {
                 //TODO: from this message, fairness can be derived/defined
                 std::cout << "Received respondDisksTaken\n";
 
-                std::stringstream ss(message.substr(18));
+                std::stringstream ss(message.substr(20));
                 std::string tmp;
+
+                std::cout << "SANITY CHECK: " << message.substr(20) << '\n';
 
                 int i = 1;
                 while (std::getline(ss, tmp, ',')) {
@@ -195,6 +199,8 @@ bool setup_mqtt() {
                     std::cout << DISKS_TAKEN[j] << ", ";
                 }
                 std::cout << '\n';
+
+                requested_disks_taken = false;
             }
 
             //if the method from respondDiskCounters works, just copy here and change array name in the end"
@@ -222,101 +228,50 @@ void destroy_mqtt() {
     mosquitto_lib_cleanup();
 }
 
-void initialHearbeatSync() {
-    // while (true) {
-      // 1. Check for initial heartbeats to see which robots are on the factory floor
-      // 2. Occasionally send out our own hearbeat according to the protocol
-    // }
-    return;
-}
-//
-// bool checkEmergencyStop(const mqtt_client * handler) {
-//     return false;
-// }
-//
-// void checkHeartbeats(const mqtt_client * handler) {
-//     return;
-// }
-
 int main(int argc, char *argv[]) {
     // Initialize libmosquitto
     if (!setup_mqtt()) return 1;
 
     request_disks_taken();
 
-    // // Functional programming return storage objects
-    char msg_out[255];// the output message (?)
-
-    // Setup the mqtt client
-    // mqtt_client * handler = new mqtt_client(OUR_ROBOT_ID, BROKER_ADDRESS, MQTT_PORT);
-
     // Dezyne trigger variables
     bool fatalError = false;
     bool robotFailsFairness = false;
 
-    // initialHearbeatSync(handler);
 
     //Main loop
     while (true) {
+        // if (debug) {
         std::cout << "loop\n";
         heartbeat();
 
         // TODO:
             // When we take disk, increment counter!
 
-        //how is this actually useful?
-        //check how many disks have passed in front of each robot (so not necessarily processed))
-        //send this every few seconds, or whenever a message is received?
+        //TODO: after taking a disk, publish the message
+        take_disk();
 
-        // How many disks have been seen by other robots on the factory belt individually
-        // strcpy(msg_out, "requestDiskCounters");
-        // handler->publish(NULL, MQTT_TOPIC_OUT, strlen(msg_out), msg_out);
-        // std::cout << "message sent...\n";
-        //TODO: Send signal: take more disks (based on fairness) (if or while loop)
+        // TODO: what logic triggers fatalError = true? Determine what kind of
+        // error would this be
+        if (fatalError == true) {
+            raise_emergency_stop();
+        }
 
-        // // Request to get an overview of the number of disks taken by each robot
-        // // on the factory belt. This will be used for the fairness principle.
-        // strcpy(msg_out, REQUEST_DISKS_TAKEN);
-        // mosquitto_publish(mosq, nullptr, MQTT_TOPIC_OUT, strlen(msg_out), msg_out, 0, false);
+        // TODO: what logic triggers this? After detecting that our robot takes
+        // "too many" or "too few" disks compared to the others
+        if (robotFailsFairness == true) {
+            raise_error();
+        }
 
-        //
-        //
-        // //TODO: after taking a disk, publish the message
-        // //(as soon as it arrives, the broker increases the counter for the corresponding robot)
-        // strcpy(msg_out, "tookDisk: A");
-        // handler->publish(NULL, MQTT_TOPIC_OUT, strlen(msg_out), msg_out);
-        //
-        // //determine what kind of error would this be
-        // if (fatalError == true) {
-        //     strcpy(msg_out, "emergency");
-        //     handler->publish(NULL, MQTT_TOPIC_OUT, strlen(msg_out), msg_out);
-        // }
-        //
-        // //after detecting that our robot takes "too many" or "too few" disks compared to the others
-        // if (robotFailsFairness == true) {
-        //     strcpy(msg_out, "error: <our_robot_ID> ");
-        //     handler->publish(NULL, MQTT_TOPIC_OUT, strlen(msg_out), msg_out);
-        // }
-        //
-        // strcpy(msg_out, "tookDisk: B");
-
-        // handler->publish(NULL, "factory/robot1/in", strlen(tstr),
-                         // tstr);    // Publish the data to MQTT topic "IGoT/sensors"
-
-
-
-        // mosquitto_message msg_out;
-        // handler->subscribe(&msg_out);
-        // char * message;
-        // handler->check_messages(message);
-        // std::cout << message << '\n';
-        //deprecated, might not even need this
+        // Finally, update the external hearbeat counts to track how long we
+        // haven't heard from other bots on the factory floor
         update_external_hearbeats();
         delay(1000);
-        // sleep(1e5);
     }
 
-    // mosqpp::lib_cleanup();
+    // Exiting program. Cleanup.
+    destroy_mqtt();
+    // TODO: wiringPi cleanup...
 
     return 0;
 }
