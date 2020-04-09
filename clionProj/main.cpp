@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstring>
 #include <mosquitto.h>
+#include <string>
 
 // const char * BROKER_ADDRESS "86.91.204.180"
 const char * BROKER_ADDRESS = "127.0.0.1";
@@ -13,10 +14,12 @@ const int MQTT_PORT = 1883;
 
 const char * MQTT_TOPIC_IN = "factory/robot0/in";
 const char * MQTT_TOPIC_OUT = "factory/robot0/out";
-const char * ROBOT_ID = "3";
+const int ROBOT_ID = 3;
 const int KEEPALIVE = 60;
-
+const int HEARTBEAT_DELAY = 5;
 mosquitto* mosq;
+
+int HEARTBEAT_TRACKER = 0;
 
 const char * REQUEST_DISKS_TAKEN = "requestDisksTaken:3";
 // struct mosquitto_message{
@@ -27,6 +30,19 @@ const char * REQUEST_DISKS_TAKEN = "requestDisksTaken:3";
 // 	int qos;
 // 	bool retain;
 // };
+
+void send_message(std::string message) {
+    mosquitto_publish(mosq, nullptr, MQTT_TOPIC_OUT, message.length(), message.c_str(), 0, false);
+}
+
+void heartbeat() {
+    std::cout << "hearbeat\n";
+    if (HEARTBEAT_TRACKER % HEARTBEAT_DELAY == 0) {
+        send_message("hearbeat" + std::to_string(ROBOT_ID));
+    }
+    ++HEARTBEAT_TRACKER;
+}
+
 bool setup_mqtt() {
     mosquitto_lib_init();
     mosq = mosquitto_new(nullptr, true, nullptr);
@@ -167,6 +183,10 @@ int main(int argc, char *argv[]) {
 
     //Main loop
     while (true) {
+        std::cout << "loop\n";
+        heartbeat();
+
+
         // rc = handler->loop();                        // Keep MQTT connection
         // std::cout << rc << ", " << MOSQ_ERR_SUCCESS << '\n';
         // if (!MOSQ_ERR_SUCCESS)
