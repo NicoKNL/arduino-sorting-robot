@@ -53,7 +53,7 @@ void mqtt_client::on_message(const struct mosquitto_message *message) {
         std::cout << "Received respondDiskCounters\n";
 
         //TODO: test that this method for extracting number of disks per robot into an array works
-        /*strCounter[strlen(strCounter) + 1] = ',';
+        strCounter[strlen(strCounter) + 1] = ',';
 
         int DisksPerRobot[NROF_ROBOTS + 1];
         int robotCounter = 0;
@@ -87,7 +87,7 @@ void mqtt_client::on_message(const struct mosquitto_message *message) {
         }
         for (int i = 0; i < robotCounter; i++) {
             cout << DisksPerRobot[i] <<' ';
-        }*/
+        }
 
     }
     else if (strcmp(strCounter, "respondDisksTaken") == 0) {
@@ -123,20 +123,20 @@ void mqtt_client::check_messages(char *message) {
     // tls	a libmosquitto_tls struct containing TLS related parameters, or NULL for no use of TLS.
 
     // Note: want_retained must perhaps be set to true
-    // subscribe_simple(&m_message,
-    //                  1,
-    //                  false,
-    //                  m_topic_out,
-    //                  0,
-    //                  m_host,
-    //                  m_port,
-    //                  m_id,
-    //                  DEFAULT_KEEP_ALIVE,
-    //                  true,
-    //                  NULL,
-    //                  NULL,
-    //                  NULL,
-    //                  NULL);
-   	// printf("%s %s\n", m_message->topic, (char *)m_message->payload);
-    // strcpy(message, (char*)m_message->payload);
+    subscribe_simple(&m_message,
+                     1,
+                     false,
+                     m_topic_out,
+                     0,
+                     m_host,
+                     m_port,
+                     m_id,
+                     DEFAULT_KEEP_ALIVE,
+                     true,
+                     NULL,
+                     NULL,
+                     NULL,
+                     NULL);
+   	printf("%s %s\n", m_message->topic, (char *)m_message->payload);
+    strcpy(message, (char*)m_message->payload);
 }

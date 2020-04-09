@@ -6,6 +6,7 @@
 #include <cstring>
 #include <mosquitto.h>
 #include <string>
+#include <sstream>
 
 // const char * BROKER_ADDRESS "86.91.204.180"
 const char * BROKER_ADDRESS = "127.0.0.1";
@@ -17,22 +18,15 @@ const char * MQTT_TOPIC_OUT = "factory/robot0/out";
 const int OUR_ROBOT_ID = 3;
 const int KEEPALIVE = 60;
 const int HEARTBEAT_DELAY = 5;
-const int MAX_HEARTBEAT_DELAY = 5;
-mosquitto* mosq;
+const int MAX_HEARTBEAT_DELAY = 5; // TODO: Change back to 60
 
 int HEARTBEAT_TRACKER = 0;
-std::vector<bool> EXTERNAL_ALIVE = {1, 1, 1, 1};
-std::vector<int> EXTERNAL_HEARTBEAT_CHECKER = {-10, -10, -10, -10}; // We're being gracious here...
+std::vector<bool> EXTERNAL_ALIVE = {0, 1, 1, 1, 1};
+std::vector<int> EXTERNAL_HEARTBEAT_CHECKER = {-10, -10, -10, -10, -10}; // We're being gracious here...
+std::vector<int> DISKS_TAKEN = {0, 0, 0, 0, 0};
+std::vector<int> DISK_COUNTERS = {0, 0, 0, 0, 0}; // We probably don't care about this
 
-const char * REQUEST_DISKS_TAKEN = "requestDisksTaken:3";
-// struct mosquitto_message{
-// 	int mid;
-// 	char *topic;
-// 	void *payload;
-// 	int payloadlen;
-// 	int qos;
-// 	bool retain;
-// };
+mosquitto* mosq;
 
 void send_message(std::string message) {
     mosquitto_publish(mosq, nullptr, MQTT_TOPIC_OUT, message.length(), message.c_str(), 0, false);
@@ -45,8 +39,38 @@ void heartbeat() {
     ++HEARTBEAT_TRACKER;
 }
 
+void take_disk() {
+    send_message("tookDisk:" + std::to_string(OUR_ROBOT_ID));
+}
+
+void raise_emergency_stop() {
+    send_message("emergencyStop");
+}
+
+void raise_error() {
+    send_message("error:" + std::to_string(OUR_ROBOT_ID));
+}
+
+void request_disk_counters() {
+    send_message("requestDiskCounters");
+}
+
+void request_disks_taken() {
+    // This method is for recovering. See final paragraph in protocol docs.
+    send_message("requestDisksTaken:" + std::to_string(OUR_ROBOT_ID));
+}
+
+void respond_disks_taken() {
+    send_message("respondDisksTaken:" +
+            std::to_string(OUR_ROBOT_ID) +
+            std::to_string(DISKS_TAKEN[1]) + "," +
+            std::to_string(DISKS_TAKEN[2]) + "," +
+            std::to_string(DISKS_TAKEN[3]) + "," +
+            std::to_string(DISKS_TAKEN[4]));
+}
+
 void update_external_hearbeats() {
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 1; i < 5; ++i) {
         // Skip for our own robot.
         if (i == OUR_ROBOT_ID) {
           continue;
@@ -99,24 +123,43 @@ bool setup_mqtt() {
                 EXTERNAL_HEARTBEAT_CHECKER[external_robot_id] = 0;
             }
         }
-        else if (true) {
-            return;
-        }
-        else if (strcmp(strCounter, "start") == 0) {
+        else if (message.find("start") == 0) {
             //start the robot, sth like
             //robbie_de_robot.master.in.start();
-            std::cout << "Received start\n";
+            std::cout << "[INFO] Received start\n";
         }
-        else if (strcmp(strCounter, "stop") == 0) {
+        else if (message.find("stop") == 0) {
             //wait with sleep() or check some pins to know when the system finished sorting
             //then stop
-            std::cout << "Received stop\n";
+            std::cout << "[INFO] Received stop\n";
         }
-        else if (strcmp(strCounter, "respondDiskCounters") == 0) {
+        else if (message.find("emergencyStop") == 0) {
+            std::cout << "[INFO] Received emergency stop\n";
+        }
+        else if (message.find("tookDisk") == 0) {
+            int external_robot_id = message[9] - '0';
+            // Does tookDisk redirect to our channel???
+            ++DISKS_TAKEN[external_robot_id];
+
+        }
+        else if (message.find("respondDiskCounters") == 0) {
             //hacky way: otherwise the nr of disks in the end
             //from the last robot, are not taken into account
-            std::cout << "Received respondDiskCounters\n";
+            std::cout << "[INFO] Received respondDiskCounters\n";
 
+            std::stringstream ss(message.substr(20));
+            std::string tmp;
+
+            int i = 1;
+            while (std::getline(ss, tmp, ',')) {
+                DISK_COUNTERS[i] = std::stoi(tmp);
+                ++i;
+            }
+
+            for (int j = 1; j < 5; j++) {
+                std::cout << DISK_COUNTERS[j] << ", ";
+            }
+            std::cout << '\n';
             // //TODO: test that this method for extracting number of disks per robot into an array works
             // strCounter[strlen(strCounter) + 1] = ',';
             //
@@ -171,7 +214,7 @@ bool setup_mqtt() {
         return false;
     }
 
-    mosquitto_subscribe(mosq, nullptr, "factory/robot0/in", 0);
+    mosquitto_subscribe(mosq, nullptr, MQTT_TOPIC_IN, 0);
     mosquitto_loop_start(mosq);
 
     return true;
@@ -221,21 +264,8 @@ int main(int argc, char *argv[]) {
         std::cout << "loop\n";
         heartbeat();
 
-
-        // rc = handler->loop();                        // Keep MQTT connection
-        // std::cout << rc << ", " << MOSQ_ERR_SUCCESS << '\n';
-        // if (!MOSQ_ERR_SUCCESS)
-        //     handler->reconnect();
-        // else {
-        //
-        //     handler->on_subscribe(0, 0, NULL);
-        // }
-
-        // Check if we need to perform an emergency stop
-        // checkEmergencyStop(handler);
-
-        // Check hearbeats
-        // checkHeartbeats(handler);
+        // TODO:
+            // When we take disk, increment counter!
 
         //how is this actually useful?
         //check how many disks have passed in front of each robot (so not necessarily processed))
@@ -249,8 +279,8 @@ int main(int argc, char *argv[]) {
 
         // // Request to get an overview of the number of disks taken by each robot
         // // on the factory belt. This will be used for the fairness principle.
-        strcpy(msg_out, REQUEST_DISKS_TAKEN);
-        mosquitto_publish(mosq, nullptr, MQTT_TOPIC_OUT, strlen(msg_out), msg_out, 0, false);
+        // strcpy(msg_out, REQUEST_DISKS_TAKEN);
+        // mosquitto_publish(mosq, nullptr, MQTT_TOPIC_OUT, strlen(msg_out), msg_out, 0, false);
 
         //
         //
