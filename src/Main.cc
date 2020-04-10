@@ -1,7 +1,7 @@
 #include <dzn/runtime.hh>
 #include <dzn/locator.hh>
 
-#include "commutils.h"
+#include "commutils.hh"
 
 #include "SortingRobot.hh"
 #include <iostream>
@@ -34,8 +34,58 @@
 #define COLOR_SENSOR_1_IN_PIN 5
 
 
+
+bool system_start_requested = false;
+bool system_started = false;
+
 void logState(SortingRobotSystem robo, std::vector<std::string> translation) {
     std::cout << "\n\n    [STATE] " << translation[robo.master.in.getState()] << "\n\n";
+}
+
+bool setup_mqtt() {
+    mosquitto_lib_init();
+
+    Communicator &comms = Communicator::getInstance();
+
+    // First arg here const char* with ID
+    mosquitto* mosq = mosquitto_new(nullptr, true, nullptr);
+
+    if (!mosq) {
+        fprintf(stderr, "MQTT Error: Out of memory.\n");
+        return false;
+    }
+
+    comms.set_mosq(mosq);
+
+    mosquitto_message_callback_set(mosq, [](mosquitto* _mosq, void* obj, const mosquitto_message* msg) {
+        if (!msg->payloadlen) {
+            fprintf(stderr, "MQTT Error: malformed message length received.\n");
+            return;
+        }
+
+        // Get message
+        char* payload = (char*) msg->payload;
+
+        // Convert to std string
+        std::string message;
+        message += payload;
+
+        // Debugging TODO: wrap in debug statement
+        std::cout << message << '\n';
+
+        Communicator &comms = Communicator::getInstance();
+        comms.handle_message(message);
+    });
+
+    if (mosquitto_connect_async(mosq, comms.BROKER_ADDRESS.c_str(), comms.MQTT_PORT, comms.KEEPALIVE) != MOSQ_ERR_SUCCESS) {
+        fprintf(stderr, "MQTT Error: could not establish connection.\n");
+        return false;
+    }
+
+    mosquitto_subscribe(mosq, nullptr, comms.MQTT_TOPIC_IN.c_str(), 0);
+    mosquitto_loop_start(mosq);
+
+    return true;
 }
 
 /*******************************************************************************
@@ -93,6 +143,7 @@ int main(int argc, char* argv[]) {
     digitalWrite(STATUS_0_OUT_PIN, LOW);
 
     SortingRobotSystem robbie_de_robot(locator);
+    Communicator &comms = Communicator::getInstance();
 
     robbie_de_robot.check_bindings();
 
@@ -115,29 +166,27 @@ int main(int argc, char* argv[]) {
         // if (debug) {
         std::cout << "step\n";
 
-        heartbeat();
+        comms.heartbeat();
 
         // TODO:
             // When we take disk, increment counter!
 
         //TODO: after taking a disk, publish the message
         if (disk_taking % 15 == 0) {
-            take_disk();
+            comms.take_disk();
         }
         disk_taking++;
         // TODO: what logic triggers fatalError = true? Determine what kind of
         // error would this be
         if (fatalError == true) {
-            raise_emergency_stop();
+            comms.raise_emergency_stop();
         }
 
         // TODO: what logic triggers this? After detecting that our robot takes
         // "too many" or "too few" disks compared to the others
         if (robotFailsFairness == true) {
-            raise_error();
+            comms.raise_error();
         }
-
-
 
 
         logState(robbie_de_robot, t);
@@ -168,13 +217,13 @@ int main(int argc, char* argv[]) {
 
         // Finally, update the external hearbeat counts to track how long we
         // haven't heard from other bots on the factory floor
-        update_external_hearbeats();
+        comms.update_external_hearbeats();
 
         delay(1000); // 1000 ms
     }
 
     // Exiting program. Cleanup.
-    destroy_mqtt();
+    // comms.destroy_mqtt();
     // TODO: wiringPi cleanup...
 
     return 0;
