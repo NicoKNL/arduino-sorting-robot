@@ -4,7 +4,7 @@
 // Note: When using the serial monitor make sure to disable
 //       line endings by setting it to 'No line ending'.
 //       Default is 'Newline'.
-bool DEBUG = true;
+bool DEBUG = false;
 char input;
 bool black_debug_active;
 bool white_debug_active;
@@ -30,8 +30,8 @@ Servo sw; // servo white
 
 
 // The following values are guestimates of what looks to be correct. Please tweak.
-int angle_inactive = 100;
-int angle_active = 150;
+int angle_inactive = 120;
+int angle_active = 175;
 int move_delay = 1000;
 
 // Tracking position in logic
@@ -49,10 +49,10 @@ void setup() {
   sw.attach(white_OUT_PIN);
 
   //// Range of motion test.
-  // Initialize to min position (0)
-  moveBoth(0);
-  // Initialize to max position (180)
-  moveBoth(180);
+  // Initialize to min position
+  moveBoth(angle_inactive);
+  // Initialize to max position
+  moveBoth(angle_active);
 
   // Set as active to have good follow up behavior in the loop
   black_active = true;
