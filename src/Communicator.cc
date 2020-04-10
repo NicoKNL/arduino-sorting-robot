@@ -97,15 +97,25 @@ void Communicator::handle_message(std::string message) {
     else if (message.find("start") == 0) {
         std::cout << "[INFO] Received start\n";
         system_stop_requested = false; // Ensure this to remove ambiguity
+        system_emergency_stop_requested = false; // Ensure this to remove ambiguity
+        system_emergency_stopped = false; // Ensure this to remove ambiguity
+
         system_start_requested = true;
     }
     else if (message.find("stop") == 0) {
         std::cout << "[INFO] Received stop\n";
         system_start_requested = false; // Ensure this to remove ambiguity
+        system_emergency_stop_requested = false; // Ensure this to remove ambiguity
+        system_emergency_stopped = false; // Ensure this to remove ambiguity
+
         system_stop_requested = true;
     }
     else if (message.find("emergencyStop") == 0) {
         std::cout << "[INFO] Received emergency stop\n";
+        system_start_requested = false; // Ensure this to remove ambiguity
+        system_stop_requested = false; // Ensure this to remove ambiguity
+
+        system_emergency_stop_requested = true;
     }
     else if (message.find("tookDisk") == 0) {
         int external_robot_id = message[9] - '0';

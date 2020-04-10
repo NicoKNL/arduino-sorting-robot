@@ -169,11 +169,27 @@ int main(int argc, char* argv[]) {
         // std::cout << "system_stop   : " << comms.system_stop_requested << '\n';
         // std::cout << "system_state  : " << robbie_de_robot.master.in.getState() << '\n';
 
+        // ====================================
+        // Check if we are requested to pull the emergency breaks
+        // ====================================
+        // TODO: test with the robot functioning for real
+        if (comms.system_emergency_stop_requested || (comms.system_emergency_stopped && !comms.system_start_requested)) {
+            if (!comms.system_emergency_stopped) {
+                robbie_de_robot.master.in.emergency();
+                robbie_de_robot.master.in.stop();
+                comms.system_emergency_stopped = true;
+                comms.system_started = false; // Flag we started the system
+                comms.system_emergency_stop_requested = false; // Remove the flag for the request
+            }
+            delay(1000);
+            continue;
+        }
+
         // Stayin' alive 'live 'live 'live staaaayin alliiiiive
         comms.heartbeat();
 
         // ====================================
-        // Before system start logic
+        // Before system is started logic
         // ====================================
         if (!comms.system_started) {
             if (!comms.system_start_requested) {
@@ -182,7 +198,7 @@ int main(int argc, char* argv[]) {
             } else {
                 robbie_de_robot.master.in.start();
                 comms.system_started = true; // Flag we started the system
-                comms.system_start_requested = false; // Remove the flag for the start request
+                comms.system_start_requested = false; // Remove the flag for the request
             }
         }
 
