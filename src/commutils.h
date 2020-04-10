@@ -9,8 +9,8 @@
 #include <string>
 #include <sstream>
 
-const char * BROKER_ADDRESS = "86.91.204.180";
-// const char * BROKER_ADDRESS = "127.0.0.1";
+// const char * BROKER_ADDRESS = "86.91.204.180";
+const char * BROKER_ADDRESS = "127.0.0.1";
 const int MQTT_PORT = 1883;
 // const int MQTT_PORT = 23321;
 
@@ -19,7 +19,7 @@ const char * MQTT_TOPIC_OUT = "factory/robot2/out";
 const int OUR_ROBOT_ID = 2;
 const int KEEPALIVE = 60;
 const int HEARTBEAT_DELAY = 5;
-const int MAX_HEARTBEAT_DELAY = 60; // TODO: Change back to 60
+const int MAX_HEARTBEAT_DELAY = 5; // TODO: Change back to 60
 
 int HEARTBEAT_TRACKER = 0;
 std::vector<bool> EXTERNAL_ALIVE = {0, 1, 1, 1, 1};
