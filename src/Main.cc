@@ -214,31 +214,36 @@ int main(int argc, char* argv[]) {
         }
 
         // ====================================
-        // When system is started, first check if we need to wait
+        // When system is started, first check if we need to wait, i.e., is the scenario fair?
         // ====================================
         // TODO: we should test this more thoroughly...
-        if (comms.should_wait()) {
+        if (comms.should_wait()) { // Fairness test
             robbie_de_robot.master.in.forceWait();
             continue; // Reset to start of loop
         } else {
             current_state = robbie_de_robot.master.in.getState();
             if (current_state == 2) {  // == "Waiting"
                 robbie_de_robot.master.in.cancelWait();
+                continue;
             }
         }
 
         // ====================================
-        // When system is started, do all below
+        // The system is started and scenario is fair, thus do all below
         // ====================================
 
-        // Check if we are done ingesting a disk
-        // if so, we took a disk!
-        if (robbie_de_robot.ingestTimer.check_timer()) {
-            comms.take_disk();
+        current_state = robbie_de_robot.master.in.getState();
+        if (current_state == 4) { // IngestingDisk
+            // Check if we are done ingesting a disk
+            // if so, we took a disk!
+            if (robbie_de_robot.ingestTimer.check_timer()) {
+                comms.take_disk();
+            }
         }
 
         // TODO: what logic triggers fatalError = true? Determine what kind of
         // error would this be
+        // TODO: hook in additional timeout timers .....
         if (fatalError == true) {
             comms.raise_emergency();
         }
@@ -249,32 +254,21 @@ int main(int argc, char* argv[]) {
             comms.raise_error();
         }
 
+        current_state = robbie_de_robot.master.in.getState();
+        if (current_state == 5) { // "SortingDisk"
+            robbie_de_robot.sortingTimer.check_timer();
+        }
 
-        logState(robbie_de_robot, t);
-
-
-        logState(robbie_de_robot, t);
-        robbie_de_robot.sortingTimer.check_timer();
-        logState(robbie_de_robot, t);
-
-
+        // ====================================
         // Input sensor detection
+        // ====================================
+        // Testing and triggering the sensors
+        // which in turn can trigger system state transistions
         robbie_de_robot.factorFloorSensor.detect();
-        logState(robbie_de_robot, t);
-
         robbie_de_robot.wheelStopSensor.detect();
-        logState(robbie_de_robot, t);
-
         robbie_de_robot.cs.detect();
-        logState(robbie_de_robot, t);
-
         robbie_de_robot.beltSensorWhite.detect();
-        logState(robbie_de_robot, t);
-
         robbie_de_robot.beltSensorBlack.detect();
-        logState(robbie_de_robot, t);
-
-        std::cout << "post step\n";
 
         // Finally, update the external hearbeat counts to track how long we
         // haven't heard from other bots on the factory floor
@@ -284,7 +278,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Exiting program. Cleanup.
-    // comms.destroy_mqtt();
+    comms.destroy_mqtt();
     // TODO: wiringPi cleanup...
 
     return 0;

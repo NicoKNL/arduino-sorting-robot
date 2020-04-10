@@ -12,7 +12,7 @@ void Communicator::send_message(std::string message) {
     mosquitto_publish(mosq, nullptr, MQTT_TOPIC_OUT.c_str(), message.length(), message.c_str(), 0, false);
 }
 
-bool Communicator::should_wait() {
+int Communicator::fairness_balance() {
     int our_count = DISKS_TAKEN[OUR_ROBOT_ID];
     int their_count = 100; // Assume big number to resolve scenario where no other robots on factory floor
 
@@ -22,11 +22,18 @@ bool Communicator::should_wait() {
         their_count = std::min(DISKS_TAKEN[i], their_count);
     }
 
-    if (our_count - their_count > FAIRNESS_MARGIN) {
-        return true;
-    }
+    return our_count - their_count;
+}
 
-    return false;
+bool Communicator::is_fair() {
+    if (fairness_balance() > FAIRNESS_MARGIN) {
+        return false;
+    }
+    return true;
+}
+
+bool Communicator::should_wait() {
+    return !is_fair();
 }
 
 void Communicator::heartbeat() {
