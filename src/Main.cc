@@ -266,7 +266,7 @@ int main(int argc, char* argv[]) {
         // which in turn can trigger system state transistions
         robbie_de_robot.factorFloorSensor.detect();
         robbie_de_robot.wheelStopSensor.detect();
-        robbie_de_robot.cs.detect();
+        robbie_de_robot.cs.detect(); // color sensor
         robbie_de_robot.beltSensorWhite.detect();
         robbie_de_robot.beltSensorBlack.detect();
 
