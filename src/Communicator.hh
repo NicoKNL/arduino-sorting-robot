@@ -8,6 +8,7 @@
 #include <cstring>
 #include <string>
 #include <sstream>
+#include "SortingRobot.hh"
 
 class Communicator {
 public:
@@ -20,8 +21,10 @@ public:
     const std::string MQTT_TOPIC_OUT = "factory/robot2/out";
     const int KEEPALIVE = 60;
 
-private:
+    bool system_start_requested = false;
+    bool system_started = false;
 
+private:
     const int OUR_ROBOT_ID = 2;
     const int HEARTBEAT_DELAY = 5;
     const int MAX_HEARTBEAT_DELAY = 5; // TODO: Change back to 60
@@ -35,6 +38,7 @@ private:
     bool requested_disks_taken = false;
 
     mosquitto* mosq;
+    SortingRobotSystem* robbie_de_robot;
 
 public:
     static Communicator& getInstance() {
@@ -46,30 +50,31 @@ public:
 
     void operator=(Communicator const&) = delete;
 
+    void set_mosq(mosquitto * mosq);
 
-        void set_mosq(mosquitto * mosq);
+    void set_robot(SortingRobotSystem * robbie_de_robot);
 
-        void send_message(std::string message);
+    void send_message(std::string message);
 
-        void heartbeat();
+    void heartbeat();
 
-        void take_disk();
+    void take_disk();
 
-        void raise_emergency_stop();
+    void raise_emergency_stop();
 
-        void raise_error();
+    void raise_error();
 
-        void request_disk_counters();
+    void request_disk_counters();
 
-        void request_disks_taken();
+    void request_disks_taken();
 
-        void respond_disks_taken();
+    void respond_disks_taken();
 
-        void update_external_hearbeats();
+    void update_external_hearbeats();
 
-        void destroy_mqtt();
+    void destroy_mqtt();
 
-        void handle_message(std::string message);
+    void handle_message(std::string message);
 private:
     Communicator(){};
 };

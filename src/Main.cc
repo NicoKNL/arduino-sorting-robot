@@ -1,7 +1,7 @@
 #include <dzn/runtime.hh>
 #include <dzn/locator.hh>
 
-#include "commutils.hh"
+#include "Communicator.hh"
 
 #include "SortingRobot.hh"
 #include <iostream>
@@ -34,15 +34,11 @@
 #define COLOR_SENSOR_1_IN_PIN 5
 
 
-
-bool system_start_requested = false;
-bool system_started = false;
-
 void logState(SortingRobotSystem robo, std::vector<std::string> translation) {
     std::cout << "\n\n    [STATE] " << translation[robo.master.in.getState()] << "\n\n";
 }
 
-bool setup_mqtt() {
+bool setup_mqtt(SortingRobotSystem *robo) {
     mosquitto_lib_init();
 
     Communicator &comms = Communicator::getInstance();
@@ -56,6 +52,7 @@ bool setup_mqtt() {
     }
 
     comms.set_mosq(mosq);
+    comms.set_robot(robo);
 
     mosquitto_message_callback_set(mosq, [](mosquitto* _mosq, void* obj, const mosquitto_message* msg) {
         if (!msg->payloadlen) {
@@ -101,8 +98,10 @@ int main(int argc, char* argv[]) {
     "Off", "Idle", " Waiting", "Error", "IngestingDisk", "Sorting"
     };
 
+    SortingRobotSystem robbie_de_robot(locator);
+
     // Initialize libmosquitto
-    if (!setup_mqtt()) return 1;
+    if (!setup_mqtt(&robbie_de_robot)) return 1;
 
     // Dezyne trigger variables
     bool fatalError = false;
@@ -142,7 +141,6 @@ int main(int argc, char* argv[]) {
     digitalWrite(STATUS_1_OUT_PIN, LOW);
     digitalWrite(STATUS_0_OUT_PIN, LOW);
 
-    SortingRobotSystem robbie_de_robot(locator);
     Communicator &comms = Communicator::getInstance();
 
     robbie_de_robot.check_bindings();
@@ -160,11 +158,24 @@ int main(int argc, char* argv[]) {
     robbie_de_robot.beltSensorBlack.sensor.in.initialise(BLACK_SENSOR_IN_PIN);
 
     // Start the system! Just like Sten! <3
-    robbie_de_robot.master.in.start();
+    // robbie_de_robot.master.in.start();
 
     while (true) {
         // if (debug) {
         std::cout << "step\n";
+
+        if (!comms.system_started) {
+            if (!comms.system_start_requested) {
+                delay(500);
+                continue;
+            } else {
+                // robbie_de_robot->master.in.start();
+                comms.system_start_requested = false;
+            }
+        }
+
+        // When system is started, do all below
+        // ====================================
 
         comms.heartbeat();
 

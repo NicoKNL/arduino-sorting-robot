@@ -1,9 +1,12 @@
-#include "commutils.hh"
+#include "Communicator.hh"
 
 void Communicator::set_mosq(mosquitto * mosq){
     this->mosq = mosq;
 };
 
+void Communicator::set_robot(SortingRobotSystem * robbie_de_robot){
+    this->robbie_de_robot = robbie_de_robot;
+}
 
 void Communicator::send_message(std::string message) {
     mosquitto_publish(mosq, nullptr, MQTT_TOPIC_OUT.c_str(), message.length(), message.c_str(), 0, false);
@@ -93,7 +96,9 @@ void Communicator::handle_message(std::string message) {
     }
     else if (message.find("start") == 0) {
         //start the robot, sth like
-        //robbie_de_robot.master.in.start();
+        robbie_de_robot->master.in.start();
+
+        system_started = true;
         std::cout << "[INFO] Received start\n";
     }
     else if (message.find("stop") == 0) {
