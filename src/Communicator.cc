@@ -95,16 +95,14 @@ void Communicator::handle_message(std::string message) {
         }
     }
     else if (message.find("start") == 0) {
-        //start the robot, sth like
-        robbie_de_robot->master.in.start();
-
-        system_started = true;
         std::cout << "[INFO] Received start\n";
+        system_stop_requested = false; // Ensure this to remove ambiguity
+        system_start_requested = true;
     }
     else if (message.find("stop") == 0) {
-        //wait with sleep() or check some pins to know when the system finished sorting
-        //then stop
         std::cout << "[INFO] Received stop\n";
+        system_start_requested = false; // Ensure this to remove ambiguity
+        system_stop_requested = true;
     }
     else if (message.find("emergencyStop") == 0) {
         std::cout << "[INFO] Received emergency stop\n";

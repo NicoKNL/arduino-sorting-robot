@@ -164,20 +164,44 @@ int main(int argc, char* argv[]) {
         // if (debug) {
         std::cout << "step\n";
 
+        // std::cout << "system_started: " << comms.system_started << '\n';
+        // std::cout << "system_start  : " << comms.system_start_requested << '\n';
+        // std::cout << "system_stop   : " << comms.system_stop_requested << '\n';
+        // std::cout << "system_state  : " << robbie_de_robot.master.in.getState() << '\n';
+
+        // Stayin' alive 'live 'live 'live staaaayin alliiiiive
+        comms.heartbeat();
+
+        // ====================================
+        // Before system start logic
+        // ====================================
         if (!comms.system_started) {
             if (!comms.system_start_requested) {
-                delay(500);
+                delay(1000);
                 continue;
             } else {
-                // robbie_de_robot->master.in.start();
-                comms.system_start_requested = false;
+                robbie_de_robot.master.in.start();
+                comms.system_started = true; // Flag we started the system
+                comms.system_start_requested = false; // Remove the flag for the start request
             }
         }
 
+        // ====================================
+        // Check if we are requested to stop
+        // ====================================
+        if (comms.system_stop_requested) {
+            int current_state = robbie_de_robot.master.in.getState();
+            if (current_state == 1) {
+                robbie_de_robot.master.in.stop();
+                comms.system_stop_requested = false;
+                comms.system_started = false;
+                continue; // Reset to start of loop
+            }
+        }
+
+        // ====================================
         // When system is started, do all below
         // ====================================
-
-        comms.heartbeat();
 
         // TODO:
             // When we take disk, increment counter!

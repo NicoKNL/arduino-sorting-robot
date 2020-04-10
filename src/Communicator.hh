@@ -23,6 +23,7 @@ public:
 
     bool system_start_requested = false;
     bool system_started = false;
+    bool system_stop_requested = false;
 
 private:
     const int OUR_ROBOT_ID = 2;
