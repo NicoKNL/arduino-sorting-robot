@@ -12,6 +12,23 @@ void Communicator::send_message(std::string message) {
     mosquitto_publish(mosq, nullptr, MQTT_TOPIC_OUT.c_str(), message.length(), message.c_str(), 0, false);
 }
 
+bool Communicator::should_wait() {
+    int our_count = DISKS_TAKEN[OUR_ROBOT_ID];
+    int their_count = 100; // Assume big number to resolve scenario where no other robots on factory floor
+
+    for (int i = 1; i < 5; ++i) {
+        if (i == OUR_ROBOT_ID) continue;
+        if (!EXTERNAL_ALIVE[i]) continue;
+        their_count = std::min(DISKS_TAKEN[i], their_count);
+    }
+
+    if (our_count - their_count > FAIRNESS_MARGIN) {
+        return true;
+    }
+
+    return false;
+}
+
 void Communicator::heartbeat() {
     if (HEARTBEAT_TRACKER % HEARTBEAT_DELAY == 0) {
         send_message("heartbeat" + std::to_string(OUR_ROBOT_ID));
@@ -21,6 +38,7 @@ void Communicator::heartbeat() {
 
 void Communicator::take_disk() {
     std::cout << "[INFO] Sending tookDisk\n";
+    ++DISKS_TAKEN[OUR_ROBOT_ID];
     send_message("tookDisk:" + std::to_string(OUR_ROBOT_ID));
 }
 

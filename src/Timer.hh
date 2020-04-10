@@ -21,7 +21,7 @@ class Timer : public skel::Timer {
 
 public:
     Timer(const dzn::locator& loc);
-    void check_timer();
+    bool check_timer();
 };
 
 #endif //TIMER_HH

@@ -107,8 +107,6 @@ int main(int argc, char* argv[]) {
     bool fatalError = false;
     bool robotFailsFairness = false;
 
-    int disk_taking = 1;
-
     /*******************************************************************************
      * Initial setup wiringPi
      ******************************************************************************/
@@ -157,8 +155,8 @@ int main(int argc, char* argv[]) {
     robbie_de_robot.beltSensorWhite.sensor.in.initialise(WHITE_SENSOR_IN_PIN);
     robbie_de_robot.beltSensorBlack.sensor.in.initialise(BLACK_SENSOR_IN_PIN);
 
-    // Start the system! Just like Sten! <3
-    // robbie_de_robot.master.in.start();
+    // For additional tracking of the robot state
+    int current_state = robbie_de_robot.master.in.getState();
 
     while (true) {
         // if (debug) {
@@ -206,7 +204,7 @@ int main(int argc, char* argv[]) {
         // Check if we are requested to stop
         // ====================================
         if (comms.system_stop_requested) {
-            int current_state = robbie_de_robot.master.in.getState();
+            current_state = robbie_de_robot.master.in.getState();
             if (current_state == 1) {
                 robbie_de_robot.master.in.stop();
                 comms.system_stop_requested = false;
@@ -216,17 +214,29 @@ int main(int argc, char* argv[]) {
         }
 
         // ====================================
+        // When system is started, first check if we need to wait
+        // ====================================
+        // TODO: we should test this more thoroughly...
+        if (comms.should_wait()) {
+            robbie_de_robot.master.in.forceWait();
+            continue; // Reset to start of loop
+        } else {
+            current_state = robbie_de_robot.master.in.getState();
+            if (current_state == 2) {  // == "Waiting"
+                robbie_de_robot.master.in.cancelWait();
+            }
+        }
+
+        // ====================================
         // When system is started, do all below
         // ====================================
 
-        // TODO:
-            // When we take disk, increment counter!
-
-        //TODO: after taking a disk, publish the message
-        if (disk_taking % 15 == 0) {
+        // Check if we are done ingesting a disk
+        // if so, we took a disk!
+        if (robbie_de_robot.ingestTimer.check_timer()) {
             comms.take_disk();
         }
-        disk_taking++;
+
         // TODO: what logic triggers fatalError = true? Determine what kind of
         // error would this be
         if (fatalError == true) {
@@ -241,8 +251,8 @@ int main(int argc, char* argv[]) {
 
 
         logState(robbie_de_robot, t);
-        // Check timers
-        robbie_de_robot.ingestTimer.check_timer();
+
+
         logState(robbie_de_robot, t);
         robbie_de_robot.sortingTimer.check_timer();
         logState(robbie_de_robot, t);

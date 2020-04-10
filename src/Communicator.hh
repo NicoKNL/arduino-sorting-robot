@@ -31,7 +31,8 @@ private:
     const int OUR_ROBOT_ID = 2;
     const int HEARTBEAT_DELAY = 5;
     const int MAX_HEARTBEAT_DELAY = 5; // TODO: Change back to 60
-
+    const int FAIRNESS_MARGIN = 3;
+    
     int HEARTBEAT_TRACKER = 0;
     std::vector<bool> EXTERNAL_ALIVE = {0, 1, 1, 1, 1};
     std::vector<int> EXTERNAL_HEARTBEAT_CHECKER = {-10, -10, -10, -10, -10}; // We're being gracious here...
@@ -78,6 +79,8 @@ public:
     void destroy_mqtt();
 
     void handle_message(std::string message);
+
+    bool should_wait();
 private:
     Communicator(){};
 };
