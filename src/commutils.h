@@ -9,17 +9,17 @@
 #include <string>
 #include <sstream>
 
-// const char * BROKER_ADDRESS = "86.91.204.180";
-const char * BROKER_ADDRESS = "127.0.0.1";
+const char * BROKER_ADDRESS = "86.91.204.180";
+// const char * BROKER_ADDRESS = "127.0.0.1";
 const int MQTT_PORT = 1883;
 // const int MQTT_PORT = 23321;
 
-const char * MQTT_TOPIC_IN = "factory/robot0/in";
-const char * MQTT_TOPIC_OUT = "factory/robot0/out";
-const int OUR_ROBOT_ID = 3;
+const char * MQTT_TOPIC_IN = "factory/robot2/in";
+const char * MQTT_TOPIC_OUT = "factory/robot2/out";
+const int OUR_ROBOT_ID = 2;
 const int KEEPALIVE = 60;
 const int HEARTBEAT_DELAY = 5;
-const int MAX_HEARTBEAT_DELAY = 5; // TODO: Change back to 60
+const int MAX_HEARTBEAT_DELAY = 60; // TODO: Change back to 60
 
 int HEARTBEAT_TRACKER = 0;
 std::vector<bool> EXTERNAL_ALIVE = {0, 1, 1, 1, 1};
@@ -31,14 +31,13 @@ bool requested_disks_taken = false;
 
 mosquitto* mosq;
 
-
 void send_message(std::string message) {
     mosquitto_publish(mosq, nullptr, MQTT_TOPIC_OUT, message.length(), message.c_str(), 0, false);
 }
 
 void heartbeat() {
     if (HEARTBEAT_TRACKER % HEARTBEAT_DELAY == 0) {
-        send_message("hearbeat" + std::to_string(OUR_ROBOT_ID));
+        send_message("heartbeat" + std::to_string(OUR_ROBOT_ID));
     }
     ++HEARTBEAT_TRACKER;
 }
@@ -100,6 +99,8 @@ void update_external_hearbeats() {
 
 bool setup_mqtt() {
     mosquitto_lib_init();
+
+    // First arg here const char* with ID
     mosq = mosquitto_new(nullptr, true, nullptr);
 
     if (!mosq) {

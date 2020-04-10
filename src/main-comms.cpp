@@ -14,6 +14,7 @@ int main(int argc, char *argv[]) {
     bool fatalError = false;
     bool robotFailsFairness = false;
 
+    int disk_taking = 1;
 
     //Main loop
     while (true) {
@@ -25,8 +26,10 @@ int main(int argc, char *argv[]) {
             // When we take disk, increment counter!
 
         //TODO: after taking a disk, publish the message
-        take_disk();
-
+        if (disk_taking % 15 == 0) {
+            take_disk();
+        }
+        disk_taking++;
         // TODO: what logic triggers fatalError = true? Determine what kind of
         // error would this be
         if (fatalError == true) {

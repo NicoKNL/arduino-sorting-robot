@@ -1,4 +1,0 @@
-ToolSet: 3.0.7 (local)@C:\UniSoftware\OCaml64
-Options: 
-
-Options:

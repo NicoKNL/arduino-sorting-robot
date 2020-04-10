@@ -1,5 +1,0 @@
-// build with:
-g++ -lmosquitto main.cpp commutils.h -o commcheck
-
-// run with:
-./commcheck
