@@ -63,7 +63,7 @@ public:
 
     void take_disk();
 
-    void raise_emergency_stop();
+    void raise_emergency();
 
     void raise_error();
 

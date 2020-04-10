@@ -230,7 +230,7 @@ int main(int argc, char* argv[]) {
         // TODO: what logic triggers fatalError = true? Determine what kind of
         // error would this be
         if (fatalError == true) {
-            comms.raise_emergency_stop();
+            comms.raise_emergency();
         }
 
         // TODO: what logic triggers this? After detecting that our robot takes

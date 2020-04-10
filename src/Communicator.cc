@@ -20,18 +20,22 @@ void Communicator::heartbeat() {
 }
 
 void Communicator::take_disk() {
+    std::cout << "[INFO] Sending tookDisk\n";
     send_message("tookDisk:" + std::to_string(OUR_ROBOT_ID));
 }
 
-void Communicator::raise_emergency_stop() {
+void Communicator::raise_emergency() {
+    std::cout << "[INFO] Sending emergency\n";
     send_message("emergencyStop");
 }
 
 void Communicator::raise_error() {
+    std::cout << "[INFO] Sending error\n";
     send_message("error:" + std::to_string(OUR_ROBOT_ID));
 }
 
 void Communicator::request_disk_counters() {
+    std::cout << "[INFO] Sending respondDisksCounters content\n";
     send_message("requestDiskCounters");
 }
 
@@ -43,12 +47,13 @@ void Communicator::request_disks_taken() {
         DISKS_TAKEN[i] = 0;
     }
 
-
     // This method is for recovering. See final paragraph in protocol docs.
+    std::cout << "[INFO] Sending respondDisksTaken content\n";
     send_message("requestDisksTaken:" + std::to_string(OUR_ROBOT_ID));
 }
 
 void Communicator::respond_disks_taken() {
+    std::cout << "[INFO] Sending respondDisksTaken content\n";
     send_message("respondDisksTaken:" +
             std::to_string(OUR_ROBOT_ID) + "," +
             std::to_string(DISKS_TAKEN[1]) + "," +
@@ -74,8 +79,6 @@ void Communicator::update_external_hearbeats() {
     }
 }
 
-
-
 void Communicator::destroy_mqtt() {
     mosquitto_disconnect(mosq);
     mosquitto_loop_stop(mosq, true);
@@ -87,7 +90,7 @@ void Communicator::handle_message(std::string message) {
     if (message.find("heartbeat") == 0) {
         // whose hearbeat is it?
         int external_robot_id = message[9] - '0';
-        std::cout << external_robot_id << '\n';
+        std::cout << "[INFO] Received heartbeat of robot: " << external_robot_id << "\n";
 
         // Only keep track of robots that are announced as alive
         if (EXTERNAL_ALIVE[external_robot_id] && external_robot_id != OUR_ROBOT_ID) {
@@ -111,7 +114,7 @@ void Communicator::handle_message(std::string message) {
         system_stop_requested = true;
     }
     else if (message.find("emergencyStop") == 0) {
-        std::cout << "[INFO] Received emergency stop\n";
+        std::cout << "[INFO] Received emergencyStop\n";
         system_start_requested = false; // Ensure this to remove ambiguity
         system_stop_requested = false; // Ensure this to remove ambiguity
 
@@ -119,13 +122,14 @@ void Communicator::handle_message(std::string message) {
     }
     else if (message.find("tookDisk") == 0) {
         int external_robot_id = message[9] - '0';
-        // Does tookDisk redirect to our channel???
-        ++DISKS_TAKEN[external_robot_id];
+        std::cout << "[INFO] Received tookDisk of robot: " << external_robot_id << "\n";
 
+        ++DISKS_TAKEN[external_robot_id];
     }
     else if (message.find("requestDisksTaken") == 0) {
+        std::cout << "[INFO] Received requestDisksTaken\n";
+
         if (!requested_disks_taken) {
-            std::cout << " responding ..... \n";
             respond_disks_taken();
         }
     }
@@ -150,9 +154,10 @@ void Communicator::handle_message(std::string message) {
         std::cout << '\n';
     }
     else if (message.find("respondDisksTaken") == 0) {
+        // If we have sent the request to get the diskTaken from other robots...
         if (requested_disks_taken) {
             //TODO: from this message, fairness can be derived/defined
-            std::cout << "Received respondDisksTaken\n";
+            std::cout << "[INFO] Received respondDisksTaken\n";
 
             std::stringstream ss(message.substr(20));
             std::string tmp;
