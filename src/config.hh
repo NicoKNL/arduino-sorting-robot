@@ -1,3 +1,6 @@
+#ifndef CONFIG_HH
+#define CONFIG_HH
+
 struct Config {
     static const bool DEBUG = false;
 
@@ -24,3 +27,4 @@ struct Config {
     static const int COLOR_SENSOR_0_IN_PIN = 4;
     static const int COLOR_SENSOR_1_IN_PIN = 5;
 };
+#endif //CONFIG_HH

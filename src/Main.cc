@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 
-#include "wiringPi.h"
 #include "config.hh"
 #include "utils.hh"
 
@@ -25,61 +24,15 @@ int main(int argc, char* argv[]) {
     StatusReporter sr(Config::STATUS_0_OUT_PIN,
                       Config::STATUS_1_OUT_PIN,
                       Config::STATUS_2_OUT_PIN);
+    Communicator &comms = Communicator::getInstance();
 
-    // Initialize libmosquitto
+    // Initialize libmosquitto and wiringPi
     if (!setup_mqtt(&robbie_de_robot)) return 1;
+    if (!setup_wiring(&robbie_de_robot)) return 2;
 
     // Dezyne trigger variables
     bool fatalError = false;
     bool robotFailsFairness = false;
-
-    /*******************************************************************************
-     * Initial setup wiringPi
-     ******************************************************************************/
-    wiringPiSetup(); // Regular wiringPi pin mode setup
-
-    // OUTPUT PINS
-    pinMode(Config::MOVE_BELT_OUT_PIN, OUTPUT);
-    pinMode(Config::MAIN_PUSHER_OUT_PIN, OUTPUT);
-    pinMode(Config::WHITE_PUSHER_OUT_PIN, OUTPUT);
-    pinMode(Config::BLACK_PUSHER_OUT_PIN, OUTPUT);
-
-    pinMode(Config::STATUS_2_OUT_PIN, OUTPUT);
-    pinMode(Config::STATUS_1_OUT_PIN, OUTPUT);
-    pinMode(Config::STATUS_0_OUT_PIN, OUTPUT);
-
-    // INPUT PINS
-    pinMode(Config::MAIN_PRESENCE_IN_PIN, INPUT);
-    pinMode(Config::MAIN_PUSHER_ENDSTOP_IN_PIN, INPUT);
-    pinMode(Config::WHITE_SENSOR_IN_PIN, INPUT);
-    pinMode(Config::BLACK_SENSOR_IN_PIN, INPUT);
-    pinMode(Config::COLOR_SENSOR_0_IN_PIN, INPUT);
-    pinMode(Config::COLOR_SENSOR_1_IN_PIN, INPUT);
-
-    // ENSURE ALL PINS TO LOW
-    digitalWrite(Config::MOVE_BELT_OUT_PIN, LOW);
-    digitalWrite(Config::MAIN_PUSHER_OUT_PIN, LOW);
-    digitalWrite(Config::WHITE_PUSHER_OUT_PIN, LOW);
-    digitalWrite(Config::BLACK_PUSHER_OUT_PIN, LOW);
-    digitalWrite(Config::STATUS_2_OUT_PIN, LOW);
-    digitalWrite(Config::STATUS_1_OUT_PIN, LOW);
-    digitalWrite(Config::STATUS_0_OUT_PIN, LOW);
-
-    Communicator &comms = Communicator::getInstance();
-
-    robbie_de_robot.check_bindings();
-
-    // Initialize pins on components
-    robbie_de_robot.whiteActuator.actuator.in.initialise(Config::WHITE_PUSHER_OUT_PIN);
-    robbie_de_robot.blackActuator.actuator.in.initialise(Config::BLACK_PUSHER_OUT_PIN);
-    robbie_de_robot.wheelMotor.motor.in.initialise(Config::MAIN_PUSHER_OUT_PIN);
-    robbie_de_robot.beltMotor.motor.in.initialise(Config::MOVE_BELT_OUT_PIN);
-
-    robbie_de_robot.factorFloorSensor.sensor.in.initialise(Config::MAIN_PRESENCE_IN_PIN);
-    robbie_de_robot.wheelStopSensor.sensor.in.initialise(Config::MAIN_PUSHER_ENDSTOP_IN_PIN);
-    robbie_de_robot.cs.colourSensor.in.initialise(Config::COLOR_SENSOR_0_IN_PIN, Config::COLOR_SENSOR_1_IN_PIN);
-    robbie_de_robot.beltSensorWhite.sensor.in.initialise(Config::WHITE_SENSOR_IN_PIN);
-    robbie_de_robot.beltSensorBlack.sensor.in.initialise(Config::BLACK_SENSOR_IN_PIN);
 
     // For additional tracking of the robot state
     int current_state = robbie_de_robot.master.in.getState();
