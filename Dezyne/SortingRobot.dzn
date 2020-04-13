@@ -61,14 +61,14 @@ interface IMaster
 		
 		[state.Off] {
 			on start: {state = State.Idle;}
-			on stop: illegal;
-			on emergency: illegal;
+			on stop: {state = State.Off;}
+			on emergency: {state = State.Error;}
 			on forceWait: illegal;
 			on cancelWait: illegal;	
 		}
 		
 		[state.Idle] {
-			on start: illegal;
+			on start: {state = State.Idle;}
 			on stop: {state = State.Off;}
 			on emergency: {state = State.Error;}
 			on forceWait: {state = State.Waiting;}
@@ -76,7 +76,7 @@ interface IMaster
 		}
 		
 		[state.Waiting] {
-			on start: illegal;
+			on start: {state = State.Waiting;}
 			on stop: {state = State.Off;}
 			on emergency: {state = State.Error;}
 			on forceWait: {state = State.Waiting;}
@@ -126,6 +126,8 @@ component Master
 		
 		[state.Off] {
 			on master.start(): {state = IMaster.State.Idle;}
+			on master.stop(): {state = IMaster.State.Idle;}
+			on master.emergency(): {state = IMaster.State.Idle;}
 		}
 		
 		[state.Idle] {
