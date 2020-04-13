@@ -14,3 +14,8 @@ void StatusReporter::setStatus(int status) {
     digitalWrite(m_pin1, (status & (1 << 1)));
     digitalWrite(m_pin2, (status & (1 << 2)));
 }
+
+void StatusReporter::logState(SortingRobotSystem & robo) {
+	std::cout << "\n\n    [STATE] " << t[robo.master.in.getState()] << "\n\n";
+	setStatus(robo.master.in.getState());
+}

@@ -1,21 +1,14 @@
 #include <dzn/runtime.hh>
 #include <dzn/locator.hh>
-
-#include "Communicator.hh"
-
-#include "SortingRobot.hh"
 #include <iostream>
-#include "wiringPi.h"
 #include <vector>
 #include <string>
-#include "config.hh"
-#include "StatusReporter.hh"
 
-// TODO: Perhaps better to add to the StatusReporter singleton class
-void logState(SortingRobotSystem robo, StatusReporter sr, std::vector<std::string> translation) {
-	std::cout << "\n\n    [STATE] " << translation[robo.master.in.getState()] << "\n\n";
-	sr.setStatus(robo.master.in.getState());
-}
+#include "wiringPi.h"
+#include "config.hh"
+#include "Communicator.hh"
+#include "StatusReporter.hh"
+#include "SortingRobot.hh"
 
 bool setup_mqtt(SortingRobotSystem *robo) {
     mosquitto_lib_init();
@@ -72,11 +65,6 @@ int main(int argc, char* argv[]) {
     dzn::locator locator;
     dzn::runtime runtime;
     locator.set(runtime);
-
-    std::vector<std::string> t = // translation
-    {
-    "Off", "Idle", " Waiting", "Error", "IngestingDisk", "Sorting"
-    };
 
     SortingRobotSystem robbie_de_robot(locator);
     StatusReporter sr(Config::STATUS_0_OUT_PIN,
