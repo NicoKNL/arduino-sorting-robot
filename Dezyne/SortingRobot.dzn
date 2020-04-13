@@ -12,12 +12,15 @@ component SortingRobotSystem
 		m.master <=> master;
 		
 		Sensor factorFloorSensor;
+		Timer timeoutTimer;
 		factorFloorSensor.sensor <=> m.factoryFloorSensor;
+		timeoutTimer.timer <=> m.timeoutTimer;
 		
 		Ingester i;
 		Motor wheelMotor;
 		Sensor wheelStopSensor;
 		Timer ingestTimer;
+		
 		i.ingest <=> m.ingest;
 		i.wheelMotor <=> wheelMotor.motor;
 		i.wheelStopSensor <=> wheelStopSensor.sensor;
@@ -114,12 +117,15 @@ component Master
 	provides IMaster master;
 	requires IIngest ingest;
 	requires ISensor factoryFloorSensor;
+	requires ITimer timeoutTimer;	
 	requires ISortingSystem sortingSystem;
 
 	behaviour
 	{
 		IMaster.State state = IMaster.State.Off;
 		bool waitNext = false;
+		Long ingestTimeout = $10000$; // in milliseconds, currently 10 seconds
+		Long sortTimeout = $10000$; // in milliseconds, currently 10 seconds
 		
 		on master.getState(): reply(state);
 		on factoryFloorSensor.high(): {}
@@ -138,6 +144,7 @@ component Master
 			on factoryFloorSensor.high(): {
 				state = IMaster.State.IngestingDisk;
 				ingest.startIngest();
+				timeoutTimer.start(ingestTimeout);
 			}
 		}
 		
@@ -163,7 +170,11 @@ component Master
 			on ingest.finished(): {
 				state = IMaster.State.Sorting;
 				sortingSystem.startSorting();
-			}			
+				timeoutTimer.cancel();
+				timeoutTimer.start(sortTimeout);
+			}
+			
+			on timeoutTimer.timeout(): {state = IMaster.State.Error;}			
 		}
 		
 		[state.Sorting] {
@@ -172,6 +183,15 @@ component Master
 			on master.cancelWait(): {waitNext = false;}
 			
 			on sortingSystem.finished(): {
+				if (waitNext) {
+					waitNext = false;
+					state = IMaster.State.Waiting;
+				} else {
+					state = IMaster.State.Idle;
+				}
+			}
+			
+			on timeoutTimer.timeout(): {
 				if (waitNext) {
 					waitNext = false;
 					state = IMaster.State.Waiting;

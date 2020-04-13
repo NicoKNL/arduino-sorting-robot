@@ -394,6 +394,7 @@ namespace skel {
 
 #include "IIngest.hh"
 #include "ISensor.hh"
+#include "ITimer.hh"
 #include "ISortingSystem.hh"
 
 
@@ -406,6 +407,8 @@ struct Master
 
   ::IMaster::State::type state;
   bool waitNext;
+  long ingestTimeout;
+  long sortTimeout;
 
   ::IMaster::State::type reply_IMaster_State;
 
@@ -415,6 +418,7 @@ struct Master
 
   ::IIngest ingest;
   ::ISensor factoryFloorSensor;
+  ::ITimer timeoutTimer;
   ::ISortingSystem sortingSystem;
 
 
@@ -423,7 +427,7 @@ struct Master
   void dump_tree(std::ostream& os) const;
   friend std::ostream& operator << (std::ostream& os, const Master& m)  {
     (void)m;
-    return os << "[" << m.state <<", " << m.waitNext <<"]" ;
+    return os << "[" << m.state <<", " << m.waitNext <<", " << m.ingestTimeout <<", " << m.sortTimeout <<"]" ;
   }
   private:
   void master_start();
@@ -434,6 +438,7 @@ struct Master
   ::IMaster::State::type master_getState();
   void ingest_finished();
   void factoryFloorSensor_high();
+  void timeoutTimer_timeout();
   void sortingSystem_finished();
 
 };
@@ -449,6 +454,7 @@ struct Master
 #include <dzn/locator.hh>
 
 #include "Sensor.hh"
+#include "Timer.hh"
 #include "IIngest.hh"
 #include "Motor.hh"
 #include "Sensor.hh"
@@ -473,6 +479,7 @@ struct SortingRobotSystem
 
   ::Master m;
   ::Sensor factorFloorSensor;
+  ::Timer timeoutTimer;
   ::Ingester i;
   ::Motor wheelMotor;
   ::Sensor wheelStopSensor;

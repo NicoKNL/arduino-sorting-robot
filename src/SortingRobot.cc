@@ -18,15 +18,16 @@
 
 
 Master::Master(const dzn::locator& dzn_locator)
-: dzn_meta{"","Master",0,0,{& ingest.meta,& factoryFloorSensor.meta,& sortingSystem.meta},{},{[this]{master.check_bindings();},[this]{ingest.check_bindings();},[this]{factoryFloorSensor.check_bindings();},[this]{sortingSystem.check_bindings();}}}
+: dzn_meta{"","Master",0,0,{& ingest.meta,& factoryFloorSensor.meta,& timeoutTimer.meta,& sortingSystem.meta},{},{[this]{master.check_bindings();},[this]{ingest.check_bindings();},[this]{factoryFloorSensor.check_bindings();},[this]{timeoutTimer.check_bindings();},[this]{sortingSystem.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
-, state(::IMaster::State::Off), waitNext(false)
+, state(::IMaster::State::Off), waitNext(false), ingestTimeout(10000), sortTimeout(10000)
 
 , master({{"master",this,&dzn_meta},{"",0,0}})
 
 , ingest({{"",0,0},{"ingest",this,&dzn_meta}})
 , factoryFloorSensor({{"",0,0},{"factoryFloorSensor",this,&dzn_meta}})
+, timeoutTimer({{"",0,0},{"timeoutTimer",this,&dzn_meta}})
 , sortingSystem({{"",0,0},{"sortingSystem",this,&dzn_meta}})
 
 
@@ -40,6 +41,7 @@ Master::Master(const dzn::locator& dzn_locator)
   master.in.cancelWait = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_cancelWait();}, this->master.meta, "cancelWait");};
   ingest.out.finished = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->ingest) = false; return ingest_finished();}, this->ingest.meta, "finished");};
   factoryFloorSensor.out.high = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->factoryFloorSensor) = false; return factoryFloorSensor_high();}, this->factoryFloorSensor.meta, "high");};
+  timeoutTimer.out.timeout = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->timeoutTimer) = false; return timeoutTimer_timeout();}, this->timeoutTimer.meta, "timeout");};
   sortingSystem.out.finished = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sortingSystem) = false; return sortingSystem_finished();}, this->sortingSystem.meta, "finished");};
 
 
@@ -181,6 +183,8 @@ void Master::ingest_finished()
   {
     state = ::IMaster::State::Sorting;
     this->sortingSystem.in.startSorting();
+    this->timeoutTimer.in.cancel();
+    this->timeoutTimer.in.start(sortTimeout);
   }
   else if (!(state == ::IMaster::State::IngestingDisk)) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
@@ -198,8 +202,35 @@ void Master::factoryFloorSensor_high()
   {
     state = ::IMaster::State::IngestingDisk;
     this->ingest.in.startIngest();
+    this->timeoutTimer.in.start(ingestTimeout);
   }
   else 
+  return;
+
+}
+void Master::timeoutTimer_timeout()
+{
+  if (state == ::IMaster::State::IngestingDisk) 
+  {
+    state = ::IMaster::State::Error;
+  }
+  else if (state == ::IMaster::State::Sorting) 
+  {
+    {
+      if (waitNext) 
+      {
+        waitNext = false;
+        state = ::IMaster::State::Waiting;
+      }
+      else 
+      {
+        state = ::IMaster::State::Idle;
+      }
+    }
+  }
+  else if ((!(state == ::IMaster::State::Sorting) && !(state == ::IMaster::State::IngestingDisk))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else dzn_locator.get<dzn::illegal_handler>().illegal();
+
   return;
 
 }
@@ -239,13 +270,14 @@ void Master::dump_tree(std::ostream& os) const
 //SYSTEM
 
 SortingRobotSystem::SortingRobotSystem(const dzn::locator& dzn_locator)
-: dzn_meta{"","SortingRobotSystem",0,0,{},{& m.dzn_meta,& factorFloorSensor.dzn_meta,& i.dzn_meta,& wheelMotor.dzn_meta,& wheelStopSensor.dzn_meta,& ingestTimer.dzn_meta,& beltSensorWhite.dzn_meta,& beltSensorBlack.dzn_meta,& sortingSystem.dzn_meta,& cs.dzn_meta,& whiteActuator.dzn_meta,& blackActuator.dzn_meta,& beltMotor.dzn_meta,& sortingTimer.dzn_meta},{[this]{master.check_bindings();}}}
+: dzn_meta{"","SortingRobotSystem",0,0,{},{& m.dzn_meta,& factorFloorSensor.dzn_meta,& timeoutTimer.dzn_meta,& i.dzn_meta,& wheelMotor.dzn_meta,& wheelStopSensor.dzn_meta,& ingestTimer.dzn_meta,& beltSensorWhite.dzn_meta,& beltSensorBlack.dzn_meta,& sortingSystem.dzn_meta,& cs.dzn_meta,& whiteActuator.dzn_meta,& blackActuator.dzn_meta,& beltMotor.dzn_meta,& sortingTimer.dzn_meta},{[this]{master.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
 
 
 , m(dzn_locator)
 , factorFloorSensor(dzn_locator)
+, timeoutTimer(dzn_locator)
 , i(dzn_locator)
 , wheelMotor(dzn_locator)
 , wheelStopSensor(dzn_locator)
@@ -268,6 +300,8 @@ SortingRobotSystem::SortingRobotSystem(const dzn::locator& dzn_locator)
   m.dzn_meta.name = "m";
   factorFloorSensor.dzn_meta.parent = &dzn_meta;
   factorFloorSensor.dzn_meta.name = "factorFloorSensor";
+  timeoutTimer.dzn_meta.parent = &dzn_meta;
+  timeoutTimer.dzn_meta.name = "timeoutTimer";
   i.dzn_meta.parent = &dzn_meta;
   i.dzn_meta.name = "i";
   wheelMotor.dzn_meta.parent = &dzn_meta;
@@ -295,6 +329,7 @@ SortingRobotSystem::SortingRobotSystem(const dzn::locator& dzn_locator)
 
 
   connect(factorFloorSensor.sensor, m.factoryFloorSensor);
+  connect(timeoutTimer.timer, m.timeoutTimer);
   connect(i.ingest, m.ingest);
   connect(wheelMotor.motor, i.wheelMotor);
   connect(wheelStopSensor.sensor, i.wheelStopSensor);
