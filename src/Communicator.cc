@@ -203,9 +203,5 @@ void Communicator::handle_message(std::string message) {
 
             requested_disks_taken = false;
         }
-
-        //if the method from respondDiskCounters works, just copy here and change array name in the end"
-        //TODO: if "fair", call method to take/sort disks
-        //calls a method/modifies pins from Dezyne Main.cc
     }
 }

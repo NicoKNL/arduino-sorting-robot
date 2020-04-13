@@ -14,14 +14,14 @@ void Actuator::actuator_initialise(int pin) {
 
 void Actuator::actuator_extend() {
 	std::cout << "[Actuator] Extending!\n";
-	if (!Debug::DEBUG) {
+	if (!Config::DEBUG) {
 		digitalWrite(mPin, HIGH);
 	}
 }
 
 void Actuator::actuator_withdraw() {
 	std::cout << "[Actuator] Withdrawing!\n";
-	if (!Debug::DEBUG) {
+	if (!Config::DEBUG) {
 		digitalWrite(mPin, LOW);
 	}
 }

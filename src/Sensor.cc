@@ -16,7 +16,7 @@ void Sensor::detect() {
 	std::cout << "[Sensor] detecting!\n";
 	int state;
 
-	if (Debug::DEBUG) {
+	if (Config::DEBUG) {
 		std::cin >> state;
 	} else {
 		state = digitalRead(mPin);

@@ -1,5 +1,5 @@
 //
-// Better well stolen from Sten than badly written by me - Davey
+// Better well borrowed from Sten than badly written by me - Davey
 //
 
 #include "Timer.hh"

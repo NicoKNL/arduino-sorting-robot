@@ -14,14 +14,14 @@ void Motor::motor_initialise(int pin) {
 
 void Motor::motor_turnOn() {
 	std::cout << "[Motor] Turning on!\n";
-	if (!Debug::DEBUG) {
+	if (!Config::DEBUG) {
 		digitalWrite(mPin, HIGH);
 	}
 }
 
 void Motor::motor_turnOff() {
 	std::cout << "[Motor] Turning off!\n";
-	if (!Debug::DEBUG) {
+	if (!Config::DEBUG) {
 		digitalWrite(mPin, LOW);
 	}
 }

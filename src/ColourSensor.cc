@@ -24,7 +24,7 @@ void ColourSensor::detect() {
 	int stateA;
 	int stateB;
 
-	if (Debug::DEBUG) {
+	if (Config::DEBUG) {
 		std::cin >> stateA >> stateB;
 	} else {
 		stateA = digitalRead(mPinA);

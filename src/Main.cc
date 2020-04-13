@@ -9,33 +9,12 @@
 #include <vector>
 #include <string>
 #include "config.hh"
+#include "StatusReporter.hh"
 
-/*******************************************************************************
- * PIN LAYOUT
- ******************************************************************************/
-// General outputs
-#define MOVE_BELT_OUT_PIN 7
-#define MAIN_PUSHER_OUT_PIN 0
-#define WHITE_PUSHER_OUT_PIN 2
-#define BLACK_PUSHER_OUT_PIN 3
-
-// General inputs
-#define MAIN_PRESENCE_IN_PIN 1
-#define MAIN_PUSHER_ENDSTOP_IN_PIN 6
-#define WHITE_SENSOR_IN_PIN 26
-#define BLACK_SENSOR_IN_PIN 27
-
-// Pins which encode information via combinations
-#define STATUS_2_OUT_PIN 21
-#define STATUS_1_OUT_PIN 22
-#define STATUS_0_OUT_PIN 23
-
-#define COLOR_SENSOR_0_IN_PIN 4
-#define COLOR_SENSOR_1_IN_PIN 5
-
-
-void logState(SortingRobotSystem robo, std::vector<std::string> translation) {
-    std::cout << "\n\n    [STATE] " << translation[robo.master.in.getState()] << "\n\n";
+// TODO: Perhaps better to add to the StatusReporter singleton class
+void logState(SortingRobotSystem robo, StatusReporter sr, std::vector<std::string> translation) {
+	std::cout << "\n\n    [STATE] " << translation[robo.master.in.getState()] << "\n\n";
+	sr.setStatus(robo.master.in.getState());
 }
 
 bool setup_mqtt(SortingRobotSystem *robo) {
@@ -67,15 +46,16 @@ bool setup_mqtt(SortingRobotSystem *robo) {
         std::string message;
         message += payload;
 
-        // Debugging TODO: wrap in debug statement
-        std::cout << message << '\n';
+        if (Config::DEBUG) {
+            std::cout << "[INCOMING MESSAGE] " << message << '\n';
+        }
 
         Communicator &comms = Communicator::getInstance();
         comms.handle_message(message);
     });
 
     if (mosquitto_connect_async(mosq, comms.BROKER_ADDRESS.c_str(), comms.MQTT_PORT, comms.KEEPALIVE) != MOSQ_ERR_SUCCESS) {
-        fprintf(stderr, "MQTT Error: could not establish connection.\n");
+        fprintf(stderr, "[ERROR] MQTT could not establish connection.\n");
         return false;
     }
 
@@ -99,6 +79,9 @@ int main(int argc, char* argv[]) {
     };
 
     SortingRobotSystem robbie_de_robot(locator);
+    StatusReporter sr(Config::STATUS_0_OUT_PIN,
+                      Config::STATUS_1_OUT_PIN,
+                      Config::STATUS_2_OUT_PIN);
 
     // Initialize libmosquitto
     if (!setup_mqtt(&robbie_de_robot)) return 1;
@@ -113,47 +96,47 @@ int main(int argc, char* argv[]) {
     wiringPiSetup(); // Regular wiringPi pin mode setup
 
     // OUTPUT PINS
-    pinMode(MOVE_BELT_OUT_PIN, OUTPUT);
-    pinMode(MAIN_PUSHER_OUT_PIN, OUTPUT);
-    pinMode(WHITE_PUSHER_OUT_PIN, OUTPUT);
-    pinMode(BLACK_PUSHER_OUT_PIN, OUTPUT);
+    pinMode(Config::MOVE_BELT_OUT_PIN, OUTPUT);
+    pinMode(Config::MAIN_PUSHER_OUT_PIN, OUTPUT);
+    pinMode(Config::WHITE_PUSHER_OUT_PIN, OUTPUT);
+    pinMode(Config::BLACK_PUSHER_OUT_PIN, OUTPUT);
 
-    pinMode(STATUS_2_OUT_PIN, OUTPUT);
-    pinMode(STATUS_1_OUT_PIN, OUTPUT);
-    pinMode(STATUS_0_OUT_PIN, OUTPUT);
+    pinMode(Config::STATUS_2_OUT_PIN, OUTPUT);
+    pinMode(Config::STATUS_1_OUT_PIN, OUTPUT);
+    pinMode(Config::STATUS_0_OUT_PIN, OUTPUT);
 
     // INPUT PINS
-    pinMode(MAIN_PRESENCE_IN_PIN, INPUT);
-    pinMode(MAIN_PUSHER_ENDSTOP_IN_PIN, INPUT);
-    pinMode(WHITE_SENSOR_IN_PIN, INPUT);
-    pinMode(BLACK_SENSOR_IN_PIN, INPUT);
-    pinMode(COLOR_SENSOR_0_IN_PIN, INPUT);
-    pinMode(COLOR_SENSOR_1_IN_PIN, INPUT);
+    pinMode(Config::MAIN_PRESENCE_IN_PIN, INPUT);
+    pinMode(Config::MAIN_PUSHER_ENDSTOP_IN_PIN, INPUT);
+    pinMode(Config::WHITE_SENSOR_IN_PIN, INPUT);
+    pinMode(Config::BLACK_SENSOR_IN_PIN, INPUT);
+    pinMode(Config::COLOR_SENSOR_0_IN_PIN, INPUT);
+    pinMode(Config::COLOR_SENSOR_1_IN_PIN, INPUT);
 
     // ENSURE ALL PINS TO LOW
-    digitalWrite(MOVE_BELT_OUT_PIN, LOW);
-    digitalWrite(MAIN_PUSHER_OUT_PIN, LOW);
-    digitalWrite(WHITE_PUSHER_OUT_PIN, LOW);
-    digitalWrite(BLACK_PUSHER_OUT_PIN, LOW);
-    digitalWrite(STATUS_2_OUT_PIN, LOW);
-    digitalWrite(STATUS_1_OUT_PIN, LOW);
-    digitalWrite(STATUS_0_OUT_PIN, LOW);
+    digitalWrite(Config::MOVE_BELT_OUT_PIN, LOW);
+    digitalWrite(Config::MAIN_PUSHER_OUT_PIN, LOW);
+    digitalWrite(Config::WHITE_PUSHER_OUT_PIN, LOW);
+    digitalWrite(Config::BLACK_PUSHER_OUT_PIN, LOW);
+    digitalWrite(Config::STATUS_2_OUT_PIN, LOW);
+    digitalWrite(Config::STATUS_1_OUT_PIN, LOW);
+    digitalWrite(Config::STATUS_0_OUT_PIN, LOW);
 
     Communicator &comms = Communicator::getInstance();
 
     robbie_de_robot.check_bindings();
 
     // Initialize pins on components
-    robbie_de_robot.whiteActuator.actuator.in.initialise(WHITE_PUSHER_OUT_PIN);
-    robbie_de_robot.blackActuator.actuator.in.initialise(BLACK_PUSHER_OUT_PIN);
-    robbie_de_robot.wheelMotor.motor.in.initialise(MAIN_PUSHER_OUT_PIN);
-    robbie_de_robot.beltMotor.motor.in.initialise(MOVE_BELT_OUT_PIN);
+    robbie_de_robot.whiteActuator.actuator.in.initialise(Config::WHITE_PUSHER_OUT_PIN);
+    robbie_de_robot.blackActuator.actuator.in.initialise(Config::BLACK_PUSHER_OUT_PIN);
+    robbie_de_robot.wheelMotor.motor.in.initialise(Config::MAIN_PUSHER_OUT_PIN);
+    robbie_de_robot.beltMotor.motor.in.initialise(Config::MOVE_BELT_OUT_PIN);
 
-    robbie_de_robot.factorFloorSensor.sensor.in.initialise(MAIN_PRESENCE_IN_PIN);
-    robbie_de_robot.wheelStopSensor.sensor.in.initialise(MAIN_PUSHER_ENDSTOP_IN_PIN);
-    robbie_de_robot.cs.colourSensor.in.initialise(COLOR_SENSOR_0_IN_PIN, COLOR_SENSOR_1_IN_PIN);
-    robbie_de_robot.beltSensorWhite.sensor.in.initialise(WHITE_SENSOR_IN_PIN);
-    robbie_de_robot.beltSensorBlack.sensor.in.initialise(BLACK_SENSOR_IN_PIN);
+    robbie_de_robot.factorFloorSensor.sensor.in.initialise(Config::MAIN_PRESENCE_IN_PIN);
+    robbie_de_robot.wheelStopSensor.sensor.in.initialise(Config::MAIN_PUSHER_ENDSTOP_IN_PIN);
+    robbie_de_robot.cs.colourSensor.in.initialise(Config::COLOR_SENSOR_0_IN_PIN, Config::COLOR_SENSOR_1_IN_PIN);
+    robbie_de_robot.beltSensorWhite.sensor.in.initialise(Config::WHITE_SENSOR_IN_PIN);
+    robbie_de_robot.beltSensorBlack.sensor.in.initialise(Config::BLACK_SENSOR_IN_PIN);
 
     // For additional tracking of the robot state
     int current_state = robbie_de_robot.master.in.getState();
@@ -162,10 +145,12 @@ int main(int argc, char* argv[]) {
         // if (debug) {
         std::cout << "step\n";
 
-        // std::cout << "system_started: " << comms.system_started << '\n';
-        // std::cout << "system_start  : " << comms.system_start_requested << '\n';
-        // std::cout << "system_stop   : " << comms.system_stop_requested << '\n';
-        // std::cout << "system_state  : " << robbie_de_robot.master.in.getState() << '\n';
+        if (Config::DEBUG) {
+            std::cout << "system_started: " << comms.system_started << '\n';
+            std::cout << "system_start  : " << comms.system_start_requested << '\n';
+            std::cout << "system_stop   : " << comms.system_stop_requested << '\n';
+            std::cout << "system_state  : " << robbie_de_robot.master.in.getState() << '\n';
+        }
 
         // ====================================
         // Check if we are requested to pull the emergency breaks
