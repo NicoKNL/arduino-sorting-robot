@@ -48,6 +48,8 @@ int main(int argc, char* argv[]) {
             std::cout << "system_state  : " << robbie_de_robot.master.in.getState() << '\n';
         }
 
+        // TODO: Test if current_state of robbie is the error state? And if so, signal the error to the factory floor???
+
         // ====================================
         // Check if we are requested to pull the emergency breaks
         // ====================================
