@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
             std::cout << "system_started: " << comms.system_started << '\n';
             std::cout << "system_start  : " << comms.system_start_requested << '\n';
             std::cout << "system_stop   : " << comms.system_stop_requested << '\n';
-            // std::cout << "system_state  : " << robbie_de_robot.master.in.getState() << '\n';
+            std::cout << "system_state  : " << robbie_de_robot.m.state << '\n';
         }
 
         if (millis() - previous_time >= 1000) { // every second
@@ -112,13 +112,13 @@ int main(int argc, char* argv[]) {
         // ====================================
         // When system is started, first check if we need to wait, i.e., is the scenario fair?
         // ====================================
-        // TODO: we should test this more thoroughly...
         if (comms.should_wait()) { // Fairness test
-            robbie_de_robot.master.in.forceWait();
+            if (robbie_de_robot.m.state != 2) { // != "Waiting"
+                robbie_de_robot.master.in.forceWait();
+            }
             continue; // Reset to start of loop
         } else {
-            current_state = robbie_de_robot.m.state;//robbie_de_robot.master.in.getState();
-            if (current_state == 2) {  // == "Waiting"
+            if (robbie_de_robot.m.state == 2) {  // == "Waiting"
                 robbie_de_robot.master.in.cancelWait();
                 continue;
             }
@@ -127,7 +127,6 @@ int main(int argc, char* argv[]) {
         // ====================================
         // The system is started and scenario is fair, thus do all below
         // ====================================
-
         current_state = robbie_de_robot.m.state;//robbie_de_robot.master.in.getState();
         if (current_state == 4) { // IngestingDisk
             if (robbie_de_robot.timeoutTimer.check_timer()) {
