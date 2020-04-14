@@ -54,20 +54,20 @@ interface IMaster
 	in void emergency();
 	in void forceWait();
 	in void cancelWait();
-	in State getState();
+//	in State getState();
 	
 	behaviour
 	{
 		State state = State.Off;
 		
-		on getState: { reply(state); }
+//		on getState: {} //reply(state);}
 		
 		[state.Off] {
 			on start: {state = State.Idle;}
-			on stop: {state = State.Off;}
-			on emergency: {state = State.Error;}
+			on stop: illegal;
+			on emergency: illegal;
 			on forceWait: illegal;
-			on cancelWait: illegal;	
+			on cancelWait: illegal;		
 		}
 		
 		[state.Idle] {
@@ -127,20 +127,21 @@ component Master
 		Long ingestTimeout = $10000$; // in milliseconds, currently 10 seconds
 		Long sortTimeout = $10000$; // in milliseconds, currently 10 seconds
 		
-		on master.getState(): reply(state);
+//		on master.getState(): reply(state);
 		on factoryFloorSensor.high(): {}
 		
 		[state.Off] {
-			on master.start(): {state = IMaster.State.Idle;}
-			on master.stop(): {state = IMaster.State.Idle;}
-			on master.emergency(): {state = IMaster.State.Idle;}
+			on master.start(): {
+				state = IMaster.State.Idle;
+				sortingSystem.reset();
+			}
 		}
 		
 		[state.Idle] {
+			on master.start(): {state = IMaster.State.Idle;}			
 			on master.stop(): {state = IMaster.State.Off;}
 			on master.emergency(): {state = IMaster.State.Error;}
 			on master.forceWait(): {state = IMaster.State.Waiting;}
-			
 			on factoryFloorSensor.high(): {
 				state = IMaster.State.IngestingDisk;
 				ingest.startIngest();
@@ -149,6 +150,7 @@ component Master
 		}
 		
 		[state.Waiting] {
+			on master.start(): {state = IMaster.State.Waiting;}
 			on master.stop(): {state = IMaster.State.Off;}
 			on master.emergency(): {state = IMaster.State.Error;}
 			on master.forceWait(): {state = IMaster.State.Waiting;}
@@ -170,7 +172,6 @@ component Master
 			on ingest.finished(): {
 				state = IMaster.State.Sorting;
 				sortingSystem.startSorting();
-				timeoutTimer.cancel();
 				timeoutTimer.start(sortTimeout);
 			}
 			
@@ -192,6 +193,7 @@ component Master
 			}
 			
 			on timeoutTimer.timeout(): {
+				sortingSystem.reset();
 				if (waitNext) {
 					waitNext = false;
 					state = IMaster.State.Waiting;

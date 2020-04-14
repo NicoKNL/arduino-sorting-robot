@@ -3,6 +3,7 @@
 #include "IActuator.hh"
 class Actuator : public skel::Actuator {
 	int mPin = -1;
+	bool mState = false;
 	void actuator_initialise(int pin);
 
 public:

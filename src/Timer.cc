@@ -4,6 +4,7 @@
 
 #include "Timer.hh"
 #include <wiringPi.h>
+#include "config.hh"
 /**
  * Implementation of the timer.
  *
@@ -41,7 +42,9 @@ bool Timer::is_running() {
  * Checks whether the timer has run out.
  */
 bool Timer::check_timer() {
-    std::cout << "[Timer] Checking timer...\n";
+    if (Config::DEBUG) {
+        std::cout << "[Timer] Checking timer...\n";
+    }
     if (!is_running()) return false;
 
     if (millis() >= targetTime) {

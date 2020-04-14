@@ -30,7 +30,7 @@ public:
 private:
     const int OUR_ROBOT_ID = 2;
     const int HEARTBEAT_DELAY = 5;
-    const int MAX_HEARTBEAT_DELAY = 5; // TODO: Change back to 60
+    const int MAX_HEARTBEAT_DELAY = 60; // TODO: Change back to 60
     const int FAIRNESS_MARGIN = 3;
 
     int HEARTBEAT_TRACKER = 0;

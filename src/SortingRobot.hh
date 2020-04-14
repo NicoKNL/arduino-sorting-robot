@@ -53,7 +53,6 @@ struct IMaster
     std::function< void()> emergency;
     std::function< void()> forceWait;
     std::function< void()> cancelWait;
-    std::function< ::IMaster::State::type()> getState;
   } in;
 
   struct
@@ -70,7 +69,6 @@ struct IMaster
     if (! in.emergency) throw dzn::binding_error(meta, "in.emergency");
     if (! in.forceWait) throw dzn::binding_error(meta, "in.forceWait");
     if (! in.cancelWait) throw dzn::binding_error(meta, "in.cancelWait");
-    if (! in.getState) throw dzn::binding_error(meta, "in.getState");
 
 
   }
@@ -410,7 +408,6 @@ struct Master
   long ingestTimeout;
   long sortTimeout;
 
-  ::IMaster::State::type reply_IMaster_State;
 
   std::function<void ()> out_master;
 
@@ -435,7 +432,6 @@ struct Master
   void master_emergency();
   void master_forceWait();
   void master_cancelWait();
-  ::IMaster::State::type master_getState();
   void ingest_finished();
   void factoryFloorSensor_high();
   void timeoutTimer_timeout();

@@ -16,6 +16,6 @@ void StatusReporter::setStatus(int status) {
 }
 
 void StatusReporter::logState(SortingRobotSystem & robo) {
-	std::cout << "\n\n    [STATE] " << t[robo.master.in.getState()] << "\n\n";
-	setStatus(robo.master.in.getState());
+	std::cout << "\n\n    [STATE] " << t[robo.m.state] << "\n\n";
+	setStatus(robo.m.state);
 }

@@ -8,11 +8,14 @@ interface ISortingSystem {
 	
 	enum State { Idle, AwaitColourScan, SortWhite, SortBlack, SortOther };
 	
+	in void reset();
 	in void startSorting();
 	out void finished();
 	
 	behaviour {
 		State state = State.Idle;
+	
+		on reset: {}
 		
 		[state.Idle] {
 			on startSorting: {}
@@ -55,6 +58,12 @@ component SortingSystem {
 		on colourSensor.detectedUnknown(): {}
 		on beltSensorWhite.high(): {}
 		on beltSensorBlack.high(): {}
+		on sortingSystem.reset(): {
+			state = ISortingSystem.State.Idle;
+			beltMotor.turnOff();
+			whiteActuator.withdraw();
+			blackActuator.withdraw();
+		}
 		
 		[state.Idle] {
 			on sortingSystem.startSorting(): {

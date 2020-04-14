@@ -13,15 +13,23 @@ void Motor::motor_initialise(int pin) {
 }
 
 void Motor::motor_turnOn() {
-	std::cout << "[Motor] Turning on!\n";
+	if (mState != true) {
+		std::cout << "[Motor] Turning on!\n";
+	}
+
 	if (!Config::DEBUG) {
 		digitalWrite(mPin, HIGH);
 	}
+	mState = true;
 }
 
 void Motor::motor_turnOff() {
-	std::cout << "[Motor] Turning off!\n";
+	if (mState != false) {
+		std::cout << "[Motor] Turning off!\n";
+	}
+
 	if (!Config::DEBUG) {
 		digitalWrite(mPin, LOW);
 	}
+	mState = false;
 }

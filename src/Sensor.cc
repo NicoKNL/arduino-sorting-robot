@@ -13,19 +13,25 @@ void Sensor::sensor_initialise(int pin) {
 }
 
 void Sensor::detect() {
-	std::cout << "[Sensor] detecting!\n";
 	int state;
 
 	if (Config::DEBUG) {
+		std::cout << "[Sensor] detecting!\n";
 		std::cin >> state;
 	} else {
 		state = digitalRead(mPin);
 	}
 
 	if (state == 0) {
-		std::cout << "[Sensor] Nothing detected...\n";
+		if (Config::DEBUG) {
+			std::cout << "[Sensor] Nothing detected...\n";
+		}
+		mState = false;
 	} else {
-		std::cout << "[Sensor] Setting to high!\n";
+		if (mState != true) {
+			std::cout << "[Sensor] Setting to high!\n";
+		}
 		sensor.out.high();
+		mState = true;
 	}
 }

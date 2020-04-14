@@ -10,7 +10,7 @@
 #include "Communicator.hh"
 #include "StatusReporter.hh"
 #include "SortingRobot.hh"
-
+// #include "wiringPi.h"
 
 /*******************************************************************************
  * ENTRY POINT CODE
@@ -35,17 +35,30 @@ int main(int argc, char* argv[]) {
     bool robotFailsFairness = false;
 
     // For additional tracking of the robot state
-    int current_state = robbie_de_robot.master.in.getState();
+    int current_state = robbie_de_robot.m.state;//robbie_de_robot.master.in.getState();
+    uint previous_time = millis();
 
     while (true) {
-        // if (debug) {
-        std::cout << "step\n";
-
         if (Config::DEBUG) {
             std::cout << "system_started: " << comms.system_started << '\n';
             std::cout << "system_start  : " << comms.system_start_requested << '\n';
             std::cout << "system_stop   : " << comms.system_stop_requested << '\n';
-            std::cout << "system_state  : " << robbie_de_robot.master.in.getState() << '\n';
+            // std::cout << "system_state  : " << robbie_de_robot.master.in.getState() << '\n';
+        }
+
+        if (millis() - previous_time >= 1000) { // every second
+            if (!comms.system_emergency_stopped) {
+                // Stayin' alive 'live 'live 'live staaaayin alliiiiive
+                comms.heartbeat();
+                // Update the external hearbeat counts to track how long we
+                // haven't heard from other bots on the factory floor
+                comms.update_external_hearbeats();
+            }
+            // Log the state of our robot to the console and the LED system
+            sr.logState(robbie_de_robot);
+
+            previous_time = millis();
+
         }
 
         // TODO: Test if current_state of robbie is the error state? And if so, signal the error to the factory floor???
@@ -62,19 +75,18 @@ int main(int argc, char* argv[]) {
                 comms.system_started = false; // Flag we started the system
                 comms.system_emergency_stop_requested = false; // Remove the flag for the request
             }
-            delay(1000);
+            // delay(1000);
             continue;
         }
 
-        // Stayin' alive 'live 'live 'live staaaayin alliiiiive
-        comms.heartbeat();
+
 
         // ====================================
         // Before system is started logic
         // ====================================
         if (!comms.system_started) {
             if (!comms.system_start_requested) {
-                delay(1000);
+                // delay(1000);
                 continue;
             } else {
                 robbie_de_robot.master.in.start();
@@ -87,7 +99,7 @@ int main(int argc, char* argv[]) {
         // Check if we are requested to stop
         // ====================================
         if (comms.system_stop_requested) {
-            current_state = robbie_de_robot.master.in.getState();
+            current_state = robbie_de_robot.m.state;//robbie_de_robot.master.in.getState();
             if (current_state == 1) {
                 robbie_de_robot.master.in.stop();
                 comms.system_stop_requested = false;
@@ -104,7 +116,7 @@ int main(int argc, char* argv[]) {
             robbie_de_robot.master.in.forceWait();
             continue; // Reset to start of loop
         } else {
-            current_state = robbie_de_robot.master.in.getState();
+            current_state = robbie_de_robot.m.state;//robbie_de_robot.master.in.getState();
             if (current_state == 2) {  // == "Waiting"
                 robbie_de_robot.master.in.cancelWait();
                 continue;
@@ -115,8 +127,12 @@ int main(int argc, char* argv[]) {
         // The system is started and scenario is fair, thus do all below
         // ====================================
 
-        current_state = robbie_de_robot.master.in.getState();
+        current_state = robbie_de_robot.m.state;//robbie_de_robot.master.in.getState();
         if (current_state == 4) { // IngestingDisk
+            if (robbie_de_robot.timeoutTimer.check_timer()) {
+                // We go to error state...
+            }
+
             // Check if we are done ingesting a disk
             // if so, we took a disk!
             if (robbie_de_robot.ingestTimer.check_timer()) {
@@ -137,8 +153,12 @@ int main(int argc, char* argv[]) {
             comms.raise_error();
         }
 
-        current_state = robbie_de_robot.master.in.getState();
+        current_state = robbie_de_robot.m.state;//robbie_de_robot.master.in.getState();
         if (current_state == 5) { // "SortingDisk"
+            if (robbie_de_robot.timeoutTimer.check_timer()) {
+                // We go to idle/waiting state...
+            }
+
             robbie_de_robot.sortingTimer.check_timer();
         }
 
@@ -153,11 +173,7 @@ int main(int argc, char* argv[]) {
         robbie_de_robot.beltSensorWhite.detect();
         robbie_de_robot.beltSensorBlack.detect();
 
-        // Finally, update the external hearbeat counts to track how long we
-        // haven't heard from other bots on the factory floor
-        comms.update_external_hearbeats();
-
-        delay(1000); // 1000 ms
+        // delay(1000); // 1000 ms
     }
 
     // Exiting program. Cleanup.

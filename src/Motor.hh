@@ -3,6 +3,7 @@
 #include "IMotor.hh"
 class Motor : public skel::Motor {
 	int mPin = -1;
+	bool mState = false;
 	void motor_initialise(int pin);
 
 public:

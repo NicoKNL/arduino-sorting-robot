@@ -111,6 +111,7 @@ void Communicator::destroy_mqtt() {
     mosquitto_lib_cleanup();
 }
 
+// TODO: get disk counter signal?
 void Communicator::handle_message(std::string message) {
     if (message.find("heartbeat") == 0) {
         // whose hearbeat is it?

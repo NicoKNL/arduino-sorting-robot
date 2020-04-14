@@ -48,6 +48,7 @@ struct ISortingSystem
 
   struct
   {
+    std::function< void()> reset;
     std::function< void()> startSorting;
   } in;
 
@@ -61,6 +62,7 @@ struct ISortingSystem
 
   void check_bindings() const
   {
+    if (! in.reset) throw dzn::binding_error(meta, "in.reset");
     if (! in.startSorting) throw dzn::binding_error(meta, "in.startSorting");
 
     if (! out.finished) throw dzn::binding_error(meta, "out.finished");
@@ -423,6 +425,7 @@ struct SortingSystem
     return os << "[" << m.state <<", " << m.delay <<"]" ;
   }
   private:
+  void sortingSystem_reset();
   void sortingSystem_startSorting();
   void colourSensor_detectedWhite();
   void colourSensor_detectedBlack();

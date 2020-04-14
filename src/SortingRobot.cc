@@ -45,7 +45,6 @@ Master::Master(const dzn::locator& dzn_locator)
   sortingSystem.out.finished = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sortingSystem) = false; return sortingSystem_finished();}, this->sortingSystem.meta, "finished");};
 
 
-  master.in.getState = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->master) = false; return master_getState();}, this->master.meta, "getState");};
 
 
 
@@ -57,7 +56,15 @@ void Master::master_start()
   {
     state = ::IMaster::State::Idle;
   }
-  else if (!(state == ::IMaster::State::Off)) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if (state == ::IMaster::State::Idle) 
+  {
+    state = ::IMaster::State::Idle;
+  }
+  else if (state == ::IMaster::State::Waiting) 
+  {
+    state = ::IMaster::State::Waiting;
+  }
+  else if ((!(state == ::IMaster::State::Waiting) && (!(state == ::IMaster::State::Idle) && !(state == ::IMaster::State::Off)))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -65,11 +72,7 @@ void Master::master_start()
 }
 void Master::master_stop()
 {
-  if (state == ::IMaster::State::Off) 
-  {
-    state = ::IMaster::State::Idle;
-  }
-  else if (state == ::IMaster::State::Idle) 
+  if (state == ::IMaster::State::Idle) 
   {
     state = ::IMaster::State::Off;
   }
@@ -81,7 +84,7 @@ void Master::master_stop()
   {
     state = ::IMaster::State::Off;
   }
-  else if ((!(state == ::IMaster::State::Error) && (!(state == ::IMaster::State::Waiting) && (!(state == ::IMaster::State::Idle) && !(state == ::IMaster::State::Off))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if ((!(state == ::IMaster::State::Error) && (!(state == ::IMaster::State::Waiting) && !(state == ::IMaster::State::Idle)))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -89,11 +92,7 @@ void Master::master_stop()
 }
 void Master::master_emergency()
 {
-  if (state == ::IMaster::State::Off) 
-  {
-    state = ::IMaster::State::Idle;
-  }
-  else if (state == ::IMaster::State::Idle) 
+  if (state == ::IMaster::State::Idle) 
   {
     state = ::IMaster::State::Error;
   }
@@ -113,7 +112,7 @@ void Master::master_emergency()
   {
     state = ::IMaster::State::Error;
   }
-  else if ((!(state == ::IMaster::State::Sorting) && (!(state == ::IMaster::State::IngestingDisk) && (!(state == ::IMaster::State::Error) && (!(state == ::IMaster::State::Waiting) && (!(state == ::IMaster::State::Idle) && !(state == ::IMaster::State::Off))))))) dzn_locator.get<dzn::illegal_handler>().illegal();
+  else if ((!(state == ::IMaster::State::Sorting) && (!(state == ::IMaster::State::IngestingDisk) && (!(state == ::IMaster::State::Error) && (!(state == ::IMaster::State::Waiting) && !(state == ::IMaster::State::Idle)))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
 
   return;
@@ -171,19 +170,12 @@ void Master::master_cancelWait()
   return;
 
 }
-::IMaster::State::type Master::master_getState()
-{
-  { this->reply_IMaster_State = state; }
-
-  return this->reply_IMaster_State;
-}
 void Master::ingest_finished()
 {
   if (state == ::IMaster::State::IngestingDisk) 
   {
     state = ::IMaster::State::Sorting;
     this->sortingSystem.in.startSorting();
-    this->timeoutTimer.in.cancel();
     this->timeoutTimer.in.start(sortTimeout);
   }
   else if (!(state == ::IMaster::State::IngestingDisk)) dzn_locator.get<dzn::illegal_handler>().illegal();
@@ -216,6 +208,7 @@ void Master::timeoutTimer_timeout()
   }
   else if (state == ::IMaster::State::Sorting) 
   {
+    this->sortingSystem.in.reset();
     {
       if (waitNext) 
       {

@@ -13,15 +13,21 @@ void Actuator::actuator_initialise(int pin) {
 }
 
 void Actuator::actuator_extend() {
-	std::cout << "[Actuator] Extending!\n";
+	if (mState != true) {
+		std::cout << "[Actuator] Extending!\n";
+	}
 	if (!Config::DEBUG) {
 		digitalWrite(mPin, HIGH);
 	}
+	mState = true;
 }
 
 void Actuator::actuator_withdraw() {
-	std::cout << "[Actuator] Withdrawing!\n";
+	if (mState != false) {
+		std::cout << "[Actuator] Withdrawing!\n";
+	}
 	if (!Config::DEBUG) {
 		digitalWrite(mPin, LOW);
 	}
+	mState = false;
 }

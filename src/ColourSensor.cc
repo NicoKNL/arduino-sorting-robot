@@ -14,7 +14,6 @@ void ColourSensor::colourSensor_initialise(int pinA, int pinB) {
 }
 
 void ColourSensor::detect() {
-	std::cout << "[ColourSensor] detecting...\n";
 
 	// 00 - nothing
 	// 01 - white disk
@@ -25,6 +24,7 @@ void ColourSensor::detect() {
 	int stateB;
 
 	if (Config::DEBUG) {
+		std::cout << "[ColourSensor] detecting...\n";
 		std::cin >> stateA >> stateB;
 	} else {
 		stateA = digitalRead(mPinA);
@@ -48,6 +48,8 @@ void ColourSensor::detect() {
 		colourSensor.out.detectedUnknown();
 	}
 	else {
-		std::cout << "[ColourSensor] nothing detected.\n";
+		if (Config::DEBUG) {
+			std::cout << "[ColourSensor] nothing detected.\n";
+		}
 	}
 }
