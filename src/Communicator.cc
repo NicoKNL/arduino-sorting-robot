@@ -26,6 +26,15 @@ int Communicator::fairness_balance() {
 }
 
 bool Communicator::is_fair() {
+    // Check if we're the only robot alive
+    int alive = 0;
+    for (int i = 1; i < 5; ++i) {
+        if (EXTERNAL_ALIVE[i]) ++alive;
+    }
+
+    if (alive <= 1) return true; // Always fair if we're running yolo solo
+
+    // Else check fairness counter by margin
     if (fairness_balance() > FAIRNESS_MARGIN) {
         return false;
     }

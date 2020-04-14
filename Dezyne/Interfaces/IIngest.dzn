@@ -6,11 +6,14 @@ interface IIngest {
 	
 	enum State { Idle, Monitoring, Ingesting };
 	
+	in void reset();
 	in void startIngest();
 	out void finished();
 	
 	behaviour {
 		State state = State.Idle;
+		
+		on reset: {}
 		
 		[state.Idle] {
 			on startIngest: {}
@@ -38,6 +41,10 @@ component Ingester {
 		Long delay = $3000$; // in milliseconds, currently 5 seconds
 		
 		on wheelStopSensor.high(): {}
+		on ingest.reset(): {
+			state = IIngest.State.Idle;
+			wheelMotor.turnOff();	
+		}
 		
 		[state.Idle] {
 			on ingest.startIngest(): {

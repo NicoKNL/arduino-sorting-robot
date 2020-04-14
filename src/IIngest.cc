@@ -33,6 +33,7 @@ Ingester::Ingester(const dzn::locator& dzn_locator)
 {
   dzn_rt.performs_flush(this) = true;
 
+  ingest.in.reset = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->ingest) = false; return ingest_reset();}, this->ingest.meta, "reset");};
   ingest.in.startIngest = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->ingest) = false; return ingest_startIngest();}, this->ingest.meta, "startIngest");};
   wheelStopSensor.out.high = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->wheelStopSensor) = false; return wheelStopSensor_high();}, this->wheelStopSensor.meta, "high");};
   timer.out.timeout = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->timer) = false; return timer_timeout();}, this->timer.meta, "timeout");};
@@ -43,9 +44,20 @@ Ingester::Ingester(const dzn::locator& dzn_locator)
 
 }
 
+void Ingester::ingest_reset()
+{
+
+  {
+    state = ::IIngest::State::Idle;
+    this->wheelMotor.in.turnOff();
+  }
+
+  return;
+
+}
 void Ingester::ingest_startIngest()
 {
-  if (state == ::IIngest::State::Idle) 
+  if (state == ::IIngest::State::Idle)
   {
     state = ::IIngest::State::Monitoring;
     this->timer.in.start(delay);
@@ -62,19 +74,19 @@ void Ingester::wheelStopSensor_high()
   {
     ;
   }
-  if (state == ::IIngest::State::Ingesting) 
+  if (state == ::IIngest::State::Ingesting)
   {
     state = ::IIngest::State::Idle;
     this->wheelMotor.in.turnOff();
     this->ingest.out.finished();
   }
-  else 
+  else
   return;
 
 }
 void Ingester::timer_timeout()
 {
-  if (state == ::IIngest::State::Monitoring) 
+  if (state == ::IIngest::State::Monitoring)
   {
     state = ::IIngest::State::Ingesting;
     this->wheelMotor.in.turnOn();

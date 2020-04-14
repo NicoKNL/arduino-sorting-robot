@@ -124,7 +124,7 @@ component Master
 	{
 		IMaster.State state = IMaster.State.Off;
 		bool waitNext = false;
-		Long ingestTimeout = $10000$; // in milliseconds, currently 10 seconds
+		Long ingestTimeout = $5000$; // in milliseconds, currently 10 seconds
 		Long sortTimeout = $10000$; // in milliseconds, currently 10 seconds
 		
 //		on master.getState(): reply(state);
@@ -175,7 +175,10 @@ component Master
 				timeoutTimer.start(sortTimeout);
 			}
 			
-			on timeoutTimer.timeout(): {state = IMaster.State.Error;}			
+			on timeoutTimer.timeout(): {
+				ingest.reset();
+				state = IMaster.State.Error;
+			}			
 		}
 		
 		[state.Sorting] {

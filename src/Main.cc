@@ -58,6 +58,7 @@ int main(int argc, char* argv[]) {
             sr.logState(robbie_de_robot);
 
             previous_time = millis();
+            // std::cout << "comms: " << comms.should_wait() << '\n';
 
         }
 

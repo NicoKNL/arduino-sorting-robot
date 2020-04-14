@@ -21,7 +21,7 @@ Master::Master(const dzn::locator& dzn_locator)
 : dzn_meta{"","Master",0,0,{& ingest.meta,& factoryFloorSensor.meta,& timeoutTimer.meta,& sortingSystem.meta},{},{[this]{master.check_bindings();},[this]{ingest.check_bindings();},[this]{factoryFloorSensor.check_bindings();},[this]{timeoutTimer.check_bindings();},[this]{sortingSystem.check_bindings();}}}
 , dzn_rt(dzn_locator.get<dzn::runtime>())
 , dzn_locator(dzn_locator)
-, state(::IMaster::State::Off), waitNext(false), ingestTimeout(10000), sortTimeout(10000)
+, state(::IMaster::State::Off), waitNext(false), ingestTimeout(5000), sortTimeout(10000)
 
 , master({{"master",this,&dzn_meta},{"",0,0}})
 
@@ -205,6 +205,7 @@ void Master::timeoutTimer_timeout()
 {
   if (state == ::IMaster::State::IngestingDisk) 
   {
+    this->ingest.in.reset();
     state = ::IMaster::State::Error;
   }
   else if (state == ::IMaster::State::Sorting) 

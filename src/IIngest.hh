@@ -48,6 +48,7 @@ struct IIngest
 
   struct
   {
+    std::function< void()> reset;
     std::function< void()> startIngest;
   } in;
 
@@ -61,6 +62,7 @@ struct IIngest
 
   void check_bindings() const
   {
+    if (! in.reset) throw dzn::binding_error(meta, "in.reset");
     if (! in.startIngest) throw dzn::binding_error(meta, "in.startIngest");
 
     if (! out.finished) throw dzn::binding_error(meta, "out.finished");
@@ -305,6 +307,7 @@ struct Ingester
     return os << "[" << m.state <<", " << m.delay <<"]" ;
   }
   private:
+  void ingest_reset();
   void ingest_startIngest();
   void wheelStopSensor_high();
   void timer_timeout();
