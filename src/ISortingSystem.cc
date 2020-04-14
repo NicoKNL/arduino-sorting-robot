@@ -58,6 +58,8 @@ void SortingSystem::sortingSystem_reset()
   {
     state = ::ISortingSystem::State::Idle;
     this->beltMotor.in.turnOff();
+    this->whiteActuator.in.withdraw();
+    this->blackActuator.in.withdraw();
   }
 
   return;
