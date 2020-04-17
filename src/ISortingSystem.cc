@@ -67,7 +67,7 @@ void SortingSystem::sortingSystem_reset()
 }
 void SortingSystem::sortingSystem_startSorting()
 {
-  if (state == ::ISortingSystem::State::Idle)
+  if (state == ::ISortingSystem::State::Idle) 
   {
     state = ::ISortingSystem::State::AwaitColourScan;
     this->beltMotor.in.turnOn();
@@ -84,12 +84,12 @@ void SortingSystem::colourSensor_detectedWhite()
   {
     ;
   }
-  if (state == ::ISortingSystem::State::AwaitColourScan)
+  if (state == ::ISortingSystem::State::AwaitColourScan) 
   {
     this->whiteActuator.in.extend();
     state = ::ISortingSystem::State::SortWhite;
   }
-  else
+  else 
   return;
 
 }
@@ -99,12 +99,12 @@ void SortingSystem::colourSensor_detectedBlack()
   {
     ;
   }
-  if (state == ::ISortingSystem::State::AwaitColourScan)
+  if (state == ::ISortingSystem::State::AwaitColourScan) 
   {
     this->blackActuator.in.extend();
     state = ::ISortingSystem::State::SortBlack;
   }
-  else
+  else 
   return;
 
 }
@@ -114,11 +114,11 @@ void SortingSystem::colourSensor_detectedUnknown()
   {
     ;
   }
-  if (state == ::ISortingSystem::State::AwaitColourScan)
+  if (state == ::ISortingSystem::State::AwaitColourScan) 
   {
     state = ::ISortingSystem::State::SortOther;
   }
-  else
+  else 
   return;
 
 }
@@ -128,11 +128,11 @@ void SortingSystem::beltSensorWhite_high()
   {
     ;
   }
-  if (state == ::ISortingSystem::State::SortWhite)
+  if (state == ::ISortingSystem::State::SortWhite) 
   {
     this->timer.in.start(delay);
   }
-  else
+  else 
   return;
 
 }
@@ -142,35 +142,35 @@ void SortingSystem::beltSensorBlack_high()
   {
     ;
   }
-  if (state == ::ISortingSystem::State::SortBlack)
+  if (state == ::ISortingSystem::State::SortBlack) 
   {
     this->timer.in.start(delay);
   }
-  else if (state == ::ISortingSystem::State::SortOther)
+  else if (state == ::ISortingSystem::State::SortOther) 
   {
     this->timer.in.start(delay);
   }
-  else
+  else 
   return;
 
 }
 void SortingSystem::timer_timeout()
 {
-  if (state == ::ISortingSystem::State::SortWhite)
+  if (state == ::ISortingSystem::State::SortWhite) 
   {
     state = ::ISortingSystem::State::Idle;
     this->whiteActuator.in.withdraw();
     this->beltMotor.in.turnOff();
     this->sortingSystem.out.finished();
   }
-  else if (state == ::ISortingSystem::State::SortBlack)
+  else if (state == ::ISortingSystem::State::SortBlack) 
   {
     state = ::ISortingSystem::State::Idle;
     this->blackActuator.in.withdraw();
     this->beltMotor.in.turnOff();
     this->sortingSystem.out.finished();
   }
-  else if (state == ::ISortingSystem::State::SortOther)
+  else if (state == ::ISortingSystem::State::SortOther) 
   {
     state = ::ISortingSystem::State::Idle;
     this->beltMotor.in.turnOff();

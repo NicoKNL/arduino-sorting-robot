@@ -11,7 +11,7 @@ interface ITimer {
 		
 		[state.Idle] {
 			on start: state = State.Running;
-			on cancel: illegal;
+			on cancel: state = State.Idle;
 		}	
 		
 		[state.Running] {

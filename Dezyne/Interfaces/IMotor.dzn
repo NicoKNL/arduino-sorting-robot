@@ -14,7 +14,7 @@ interface IMotor
 		[state.Off] {
 			on initialise: {state = State.Off;}
 			on turnOn: {state = State.On;}
-			on turnOff: illegal;
+			on turnOff: {state = State.Off;}
 		}
 		
 		[state.On] {

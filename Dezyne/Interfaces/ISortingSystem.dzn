@@ -15,10 +15,10 @@ interface ISortingSystem {
 	behaviour {
 		State state = State.Idle;
 	
-		on reset: {}
+		on reset: {state = State.Idle;}
 		
 		[state.Idle] {
-			on startSorting: {}
+			on startSorting: { state = State.AwaitColourScan; }
 		}
 		
 		[state.AwaitColourScan] {
@@ -58,6 +58,7 @@ component SortingSystem {
 		on colourSensor.detectedUnknown(): {}
 		on beltSensorWhite.high(): {}
 		on beltSensorBlack.high(): {}
+		
 		on sortingSystem.reset(): {
 			state = ISortingSystem.State.Idle;
 			beltMotor.turnOff();
