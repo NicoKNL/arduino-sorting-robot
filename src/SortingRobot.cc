@@ -55,6 +55,7 @@ void Master::master_start()
   if (state == ::IMaster::State::Off) 
   {
     state = ::IMaster::State::Idle;
+    this->ingest.in.reset();
     this->sortingSystem.in.reset();
   }
   else if (state == ::IMaster::State::Idle) 
