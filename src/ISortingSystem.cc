@@ -39,6 +39,7 @@ SortingSystem::SortingSystem(const dzn::locator& dzn_locator)
 
   sortingSystem.in.reset = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sortingSystem) = false; return sortingSystem_reset();}, this->sortingSystem.meta, "reset");};
   sortingSystem.in.startSorting = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sortingSystem) = false; return sortingSystem_startSorting();}, this->sortingSystem.meta, "startSorting");};
+  sortingSystem.in.emergency = [&](){return dzn::call_in(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->sortingSystem) = false; return sortingSystem_emergency();}, this->sortingSystem.meta, "emergency");};
   colourSensor.out.detectedWhite = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->colourSensor) = false; return colourSensor_detectedWhite();}, this->colourSensor.meta, "detectedWhite");};
   colourSensor.out.detectedBlack = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->colourSensor) = false; return colourSensor_detectedBlack();}, this->colourSensor.meta, "detectedBlack");};
   colourSensor.out.detectedUnknown = [&](){return dzn::call_out(this,[=]{ dzn_locator.get<dzn::runtime>().skip_block(&this->colourSensor) = false; return colourSensor_detectedUnknown();}, this->colourSensor.meta, "detectedUnknown");};
@@ -74,6 +75,17 @@ void SortingSystem::sortingSystem_startSorting()
   }
   else if (!(state == ::ISortingSystem::State::Idle)) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();
+
+  return;
+
+}
+void SortingSystem::sortingSystem_emergency()
+{
+
+  {
+    state = ::ISortingSystem::State::Idle;
+    this->beltMotor.in.turnOff();
+  }
 
   return;
 

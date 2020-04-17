@@ -50,6 +50,7 @@ struct ISortingSystem
   {
     std::function< void()> reset;
     std::function< void()> startSorting;
+    std::function< void()> emergency;
   } in;
 
   struct
@@ -64,6 +65,7 @@ struct ISortingSystem
   {
     if (! in.reset) throw dzn::binding_error(meta, "in.reset");
     if (! in.startSorting) throw dzn::binding_error(meta, "in.startSorting");
+    if (! in.emergency) throw dzn::binding_error(meta, "in.emergency");
 
     if (! out.finished) throw dzn::binding_error(meta, "out.finished");
 
@@ -427,6 +429,7 @@ struct SortingSystem
   private:
   void sortingSystem_reset();
   void sortingSystem_startSorting();
+  void sortingSystem_emergency();
   void colourSensor_detectedWhite();
   void colourSensor_detectedBlack();
   void colourSensor_detectedUnknown();

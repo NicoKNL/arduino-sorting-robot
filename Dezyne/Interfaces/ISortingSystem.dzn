@@ -10,12 +10,14 @@ interface ISortingSystem {
 	
 	in void reset();
 	in void startSorting();
+	in void emergency();
 	out void finished();
 	
 	behaviour {
 		State state = State.Idle;
 	
 		on reset: {state = State.Idle;}
+		on emergency: {state = State.Idle;}
 		
 		[state.Idle] {
 			on startSorting: { state = State.AwaitColourScan; }
@@ -64,6 +66,11 @@ component SortingSystem {
 			beltMotor.turnOff();
 			whiteActuator.withdraw();
 			blackActuator.withdraw();
+		}
+		
+		on sortingSystem.emergency(): {
+			state = ISortingSystem.State.Idle;
+			beltMotor.turnOff();
 		}
 		
 		[state.Idle] {

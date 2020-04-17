@@ -108,10 +108,14 @@ void Master::master_emergency()
   else if (state == ::IMaster::State::IngestingDisk) 
   {
     state = ::IMaster::State::Error;
+    this->sortingSystem.in.emergency();
+    this->ingest.in.reset();
   }
   else if (state == ::IMaster::State::Sorting) 
   {
     state = ::IMaster::State::Error;
+    this->sortingSystem.in.emergency();
+    this->ingest.in.reset();
   }
   else if ((!(state == ::IMaster::State::Sorting) && (!(state == ::IMaster::State::IngestingDisk) && (!(state == ::IMaster::State::Error) && (!(state == ::IMaster::State::Waiting) && !(state == ::IMaster::State::Idle)))))) dzn_locator.get<dzn::illegal_handler>().illegal();
   else dzn_locator.get<dzn::illegal_handler>().illegal();

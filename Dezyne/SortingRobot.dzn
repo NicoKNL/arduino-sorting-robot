@@ -165,7 +165,12 @@ component Master
 		}
 		
 		[state.IngestingDisk] {
-			on master.emergency(): {state = IMaster.State.Error;}
+			on master.emergency(): {
+				state = IMaster.State.Error;
+				sortingSystem.emergency();
+				ingest.reset();
+			}
+			
 			on master.forceWait(): {waitNext = true;}
 			on master.cancelWait(): {waitNext = false;}
 			
@@ -182,7 +187,12 @@ component Master
 		}
 		
 		[state.Sorting] {
-			on master.emergency(): {state = IMaster.State.Error;}
+			on master.emergency(): {
+				state = IMaster.State.Error;
+				sortingSystem.emergency();
+				ingest.reset();
+			}
+			
 			on master.forceWait(): {waitNext = true;}
 			on master.cancelWait(): {waitNext = false;}
 			
