@@ -134,7 +134,8 @@ int main(int argc, char* argv[]) {
         current_state = robbie_de_robot.m.state;//robbie_de_robot.master.in.getState();
         if (current_state == 4) { // IngestingDisk
             if (robbie_de_robot.timeoutTimer.check_timer()) {
-                // We go to error state...
+                // We go to error state...potentially blocking the main belt!!!
+                comms.raise_emergency();
             }
 
             // Check if we are done ingesting a disk
@@ -142,19 +143,6 @@ int main(int argc, char* argv[]) {
             if (robbie_de_robot.ingestTimer.check_timer()) {
                 comms.take_disk();
             }
-        }
-
-        // TODO: what logic triggers fatalError = true? Determine what kind of
-        // error would this be
-        // TODO: hook in additional timeout timers .....
-        if (fatalError == true) {
-            comms.raise_emergency();
-        }
-
-        // TODO: what logic triggers this? After detecting that our robot takes
-        // "too many" or "too few" disks compared to the others
-        if (robotFailsFairness == true) {
-            comms.raise_error();
         }
 
         current_state = robbie_de_robot.m.state;//robbie_de_robot.master.in.getState();

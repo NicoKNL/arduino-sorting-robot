@@ -60,7 +60,8 @@ void Communicator::take_disk() {
 
 void Communicator::raise_emergency() {
     std::cout << "[INFO] Sending emergency\n";
-    send_message("emergencyStop");
+    send_message("emergency");
+    handle_message("emergencyStop");
 }
 
 void Communicator::raise_error() {
@@ -148,6 +149,15 @@ void Communicator::handle_message(std::string message) {
 
         system_stop_requested = true;
     }
+    else if (message.find("error") == 0) {
+        // whose hearbeat is it?
+        int external_robot_id = message[6] - '0';
+        std::cout << "[INFO] Error received of robot: " << external_robot_id << "\n";
+        // The robot has indicated it is violating fairness, so we won't consider it anymore
+        // when determining our own fairness...
+        EXTERNAL_ALIVE[external_robot_id] = false;
+
+    }
     else if (message.find("emergencyStop") == 0) {
         std::cout << "[INFO] Received emergencyStop\n";
         system_start_requested = false; // Ensure this to remove ambiguity
@@ -168,12 +178,12 @@ void Communicator::handle_message(std::string message) {
             respond_disks_taken();
         }
     }
-    else if (message.find("respondDiskCounters") == 0) {
+    else if (message.find("respondDisksCounters") == 0) {
         //hacky way: otherwise the nr of disks in the end
         //from the last robot, are not taken into account
-        std::cout << "[INFO] Received respondDiskCounters\n";
+        std::cout << "[INFO] Received respondDisksCounters\n";
 
-        std::stringstream ss(message.substr(20));
+        std::stringstream ss(message.substr(21));
         std::string tmp;
 
         int i = 1;
