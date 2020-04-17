@@ -133,6 +133,7 @@ component Master
 		[state.Off] {
 			on master.start(): {
 				state = IMaster.State.Idle;
+				ingest.reset();				
 				sortingSystem.reset();
 			}
 		}

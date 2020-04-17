@@ -113,14 +113,18 @@ int main(int argc, char* argv[]) {
         // When system is started, first check if we need to wait, i.e., is the scenario fair?
         // ====================================
         if (comms.should_wait()) { // Fairness test
-            if (robbie_de_robot.m.state != 2) { // != "Waiting"
+            // If the waitNext boolean is not already set, and we're not already waiting, set it.
+            if (robbie_de_robot.m.state != 2 && !robbie_de_robot.m.waitNext) { // != "Waiting"
                 robbie_de_robot.master.in.forceWait();
             }
-            continue; // Reset to start of loop
-        } else {
+
+            // Check if we are already waiting, then we continue and reset our loop
             if (robbie_de_robot.m.state == 2) {  // == "Waiting"
-                robbie_de_robot.master.in.cancelWait();
                 continue;
+            }
+        } else {
+            if (robbie_de_robot.m.state == 2) {
+                robbie_de_robot.master.in.cancelWait();
             }
         }
 
