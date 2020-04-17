@@ -13,10 +13,10 @@ interface IIngest {
 	behaviour {
 		State state = State.Idle;
 		
-		on reset: {}
+		on reset: { state = State.Idle; }
 		
 		[state.Idle] {
-			on startIngest: {}
+			on startIngest: { state = State.Monitoring; }
 		}
 		
 		[state.Monitoring] {
@@ -43,6 +43,7 @@ component Ingester {
 		on wheelStopSensor.high(): {}
 		on ingest.reset(): {
 			state = IIngest.State.Idle;
+			timer.cancel();
 			wheelMotor.turnOff();	
 		}
 		
