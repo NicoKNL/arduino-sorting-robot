@@ -10,6 +10,7 @@ The goal of the project was to create an autonymous system which could:
 * And sort the disks into bins based on color
 
 # Demo video
+*Click to watch the video.*
 [![Watch the video](https://img.youtube.com/vi/2bJaizOmCdo/maxresdefault.jpg)](https://youtu.be/2bJaizOmCdo)
 
 # Hardware
